@@ -1,0 +1,26 @@
+# Envio entities (the event-history projection). One row per on-chain action.
+# These become Postgres tables in the indexer's DB; mirror/forward into the
+# canonical Neon schema's flow tables as needed.
+
+type ReserveAction {
+  id: ID! # txHash-logIndex
+  kind: String! # 'supply' | 'withdraw' | 'borrow' | 'repay'
+  reserve: String! # underlying asset address (lowercased)
+  user: String!
+  amount: BigInt!
+  blockNumber: Int!
+  timestamp: Int!
+  txHash: String!
+}
+
+# Running per-reserve flow totals (cheap rollup for the dashboard).
+type ReserveFlow {
+  id: ID! # reserve address
+  reserve: String!
+  totalSupplied: BigInt!
+  totalWithdrawn: BigInt!
+  totalBorrowed: BigInt!
+  totalRepaid: BigInt!
+  actionCount: Int!
+  lastBlock: Int!
+}

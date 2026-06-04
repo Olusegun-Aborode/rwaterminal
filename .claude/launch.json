@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "rwa-terminal", "runtimeExecutable": "python3", "runtimeArgs": ["-m","http.server","5182"], "port": 5182 }
+  ]
+}

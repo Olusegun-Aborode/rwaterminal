@@ -1,0 +1,14 @@
+{
+  "name": "rwa-terminal-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Envio HyperIndex for Aave Horizon event history (flows/holders)",
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start"
+  },
+  "devDependencies": {
+    "envio": "^2.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+.dev.vars
+*.log
+.DS_Store
+indexer/generated/
+indexer/.env
+.env
+__pycache__/

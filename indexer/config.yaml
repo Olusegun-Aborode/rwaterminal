@@ -1,0 +1,28 @@
+# Envio HyperIndex — Aave Horizon event history (flows). This is the EVENT-history
+# half (the Worker handles STATE history). No public Horizon subgraph exists, so we
+# index events ourselves. Self-host (free) or deploy to Envio Cloud.
+#
+# Setup:  cd indexer && npx envio@latest dev   (after filling start_block + RwaAToken addresses)
+name: rwa-terminal-indexer
+networks:
+  - id: 1 # Ethereum mainnet
+    start_block: 0 # TODO: set to the Horizon Pool deploy block (find via Etherscan "Contract Creation")
+    contracts:
+      - name: HorizonPool
+        address:
+          - "0xAe05Cd22df81871bc7cC2a04BeCfb516bFe332C8"
+        handler: src/EventHandlers.ts
+        events:
+          - event: "Supply(address indexed reserve, address user, address indexed onBehalfOf, uint256 amount, uint16 indexed referralCode)"
+          - event: "Withdraw(address indexed reserve, address indexed user, address indexed to, uint256 amount)"
+          - event: "Borrow(address indexed reserve, address user, address indexed onBehalfOf, uint256 amount, uint8 interestRateMode, uint256 borrowRate, uint16 indexed referralCode)"
+          - event: "Repay(address indexed reserve, address indexed user, address indexed repayer, uint256 amount, bool useATokens)"
+      # RwaAToken contracts (Mint/Burn/BalanceTransfer) — populate addresses from
+      # scripts/horizon.reserves.json (the aToken field), then uncomment:
+      # - name: RwaAToken
+      #   address: []
+      #   handler: src/EventHandlers.ts
+      #   events:
+      #     - event: "Mint(address indexed caller, address indexed onBehalfOf, uint256 value, uint256 balanceIncrease, uint256 index)"
+      #     - event: "Burn(address indexed from, address indexed target, uint256 value, uint256 balanceIncrease, uint256 index)"
+      #     - event: "BalanceTransfer(address indexed from, address indexed to, uint256 value, uint256 index)"

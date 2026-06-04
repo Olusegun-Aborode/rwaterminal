@@ -1,0 +1,25 @@
+name = "rwa-terminal-worker"
+main = "src/index.ts"
+compatibility_date = "2024-11-27"
+compatibility_flags = ["nodejs_compat"]
+
+# ── Cron: pull Horizon every 5 minutes ──
+[triggers]
+crons = ["*/5 * * * *"]
+
+# ── KV: holds the latest snapshot the dashboard reads ──
+# Create with:  wrangler kv namespace create HORIZON_KV
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "HORIZON_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# ── Non-secret vars ──
+[vars]
+HORIZON_POOL = "0xAe05Cd22df81871bc7cC2a04BeCfb516bFe332C8"
+HORIZON_ORACLE = "0x985BcfAB7e0f4EF2606CC5b64FC1A16311880442"
+HORIZON_DATA_PROVIDER = "0x53519c32f73fE1797d10210c4950fFeBa3b21504"
+
+# ── Secrets (DO NOT put here — set via CLI/dashboard) ──
+# wrangler secret put RPC_URL         (your Alchemy https URL)
+# wrangler secret put DATABASE_URL    (your Neon connection string)
