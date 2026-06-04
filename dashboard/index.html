@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RWA Terminal — Market Overview</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=p2-hero" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
@@ -36,13 +36,18 @@
       );
     }
 
-    function Metric({label, value, sub, spark, sparkColor}) {
+    function Delta({pct}) {
+      if (pct==null || !isFinite(pct)) return null;
+      const up = pct>=0;
+      return <span className={`delta ${up?'up':'down'}`}>{up?'▲':'▼'} {Math.abs(pct).toFixed(2)}%<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:4}}>30d</span></span>;
+    }
+    function Metric({label, value, sub, delta}) {
+      const hasDelta = delta!=null && isFinite(delta);
       return (
-        <div className="panel" style={{padding:'18px 20px',display:'flex',flexDirection:'column',gap:4}}>
+        <div className="hero-metric">
           <div className="metric-label">{label}</div>
-          <div className="metric-value" style={{fontSize:28}}>{value}</div>
-          <div className="metric-footer">{sub}</div>
-          {spark && spark.length>1 && <div style={{marginTop:6}}><Sparkline values={spark} color={sparkColor||'var(--orange)'} width={150} height={30} /></div>}
+          <div className="metric-value">{value}</div>
+          <div className="metric-footer">{hasDelta ? <Delta pct={delta}/> : <span>{sub}</span>}</div>
         </div>
       );
     }
@@ -129,6 +134,26 @@
         name: cls, color: CLASS_COLORS[cls]||'#9599A1', values: days.map(d=> (byDayClass[d]&&byDayClass[d][cls])||0)
       })).filter(s=>s.values.some(v=>v>0)) : [];
       const areaLabels = days.map(s=>{ const dt=new Date(s+'T00:00:00Z'); return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
+      // 30-day deltas for the hero metrics (from the carry-forward daily history)
+      const sumCls = (o, cls) => cls.reduce((s,c)=>s+((o&&o[c])||0),0);
+      const delta30 = (cls) => {
+        if(!hist || days.length<2) return null;
+        const last=days[days.length-1];
+        const target=new Date(new Date(last+'T00:00:00Z').getTime()-30*864e5).toISOString().slice(0,10);
+        let prev=null; for(const d of days){ if(d<=target) prev=d; else break; }
+        if(!prev) return null; // not enough history for a true 30d delta -> show the subline instead
+        const cur=sumCls(byDayClass[last],cls), old=sumCls(byDayClass[prev],cls);
+        return old>0 ? (cur-old)/old*100 : null;
+      };
+      const rwaDelta = delta30(rwaClassNames);
+      const stableDelta = delta30(['Stablecoin']);
+      const Badges = (
+        <>
+          <DataQualityBadge level={qLevel} label={`Grade ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
+          {T.reconciliation && <span className="risk-pill" title={`Our Horizon TVL ${navUSD(T.horizon_supplied_usd)} vs DefiLlama ${navUSD(T.reconciliation.defillama_supplied_usd)} (${T.reconciliation.gap_pct>0?'+':''}${T.reconciliation.gap_pct}%) · Tier-3 cross-check`} style={{cursor:'help',background:T.reconciliation.status==='verified'?'var(--green-soft)':'var(--orange-soft)',color:T.reconciliation.status==='verified'?'var(--green)':'var(--orange)'}}>{T.reconciliation.status==='verified'?'✓ Verified':'⚠ Degraded'} vs DefiLlama</span>}
+          <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}>Scope · Horizon</span>
+        </>
+      );
       const METRIC_LABELS = {value:'Total RWA Value', holders:'Asset Holders', active:'Active Addresses', transfer:'Transfer Volume'};
       // ── Event-indexer metrics (Envio): holders / active addrs / transfer volume ──
       const evBy = (events && events.by_asset) || {};
@@ -217,24 +242,31 @@
           </aside>
 
           <main className="main">
-            <div className="page-header">
-              <div>
-                <h1 className="page-title">{view==='overview'?'RWA Market — Overview':view==='by-class'?'By Asset Class':'By Issuer'}</h1>
-                <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported / supply × NAV) · stablecoins split out · <b>Horizon-sourced</b> (not the full market) · as of block {D.block.toLocaleString()}</div>
+            {view==='overview' ? (
+              <div className="hero">
+                <h1 className="page-title hero-title">RWA Market Overview</h1>
+                <p className="page-welcome">Live tokenized real-world assets on <b>Aave Horizon</b> — fund AUM, issuers, holders and on-chain flows, refreshed continuously and reconciled against DefiLlama. A focused, fully-sourced slice of the market rather than the whole of it.</p>
+                <div className="hero-metrics">
+                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} delta={rwaDelta} sub={`${T.rwa_count} funds · not the full market`} />
+                  <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} delta={stableDelta} sub="full circulating supply" />
+                  <Metric label="Asset Holders" value={events&&events.totals?window.fmtNum(events.totals.holders,0):'—'} sub={`across ${T.rwa_count} funds · via indexer`} />
+                  <Metric label="Active Addresses" value={events&&events.totals?window.fmtNum(events.totals.active_addresses,0):'—'} sub="since genesis · via indexer" />
+                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
+                </div>
+                <div className="hero-status">
+                  {Badges}
+                  <span className="hero-asof">as of block {D.block.toLocaleString()}</span>
+                </div>
               </div>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <DataQualityBadge level={qLevel} label={`Grade ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
-                {T.reconciliation && <span className="risk-pill" title={`Our Horizon TVL ${navUSD(T.horizon_supplied_usd)} vs DefiLlama ${navUSD(T.reconciliation.defillama_supplied_usd)} (${T.reconciliation.gap_pct>0?'+':''}${T.reconciliation.gap_pct}%) · Tier-3 cross-check`} style={{cursor:'help',background:T.reconciliation.status==='verified'?'var(--green-soft)':'var(--orange-soft)',color:T.reconciliation.status==='verified'?'var(--green)':'var(--orange)'}}>{T.reconciliation.status==='verified'?'✓ Verified':'⚠ Degraded'} vs DefiLlama</span>}
-                <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}>Scope · Horizon</span>
+            ) : (
+              <div className="page-header">
+                <div>
+                  <h1 className="page-title">{view==='by-class'?'By Asset Class':'By Issuer'}</h1>
+                  <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported / supply × NAV) · stablecoins split out · <b>Horizon-sourced</b> (not the full market) · as of block {D.block.toLocaleString()}</div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>{Badges}</div>
               </div>
-            </div>
-
-            <div className="grid grid-4" style={{marginBottom:16}}>
-              <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} sub={`${T.rwa_count} funds · not the full market`} />
-              <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} sub="full circulating supply" />
-              <Metric label="Issuers" value={issuerCount} sub="across the RWA funds" />
-              <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
-            </div>
+            )}
 
             {view==='overview' && <>
               <div className="panel" ref={chartRef} style={{marginBottom:16}}>

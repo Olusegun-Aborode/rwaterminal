@@ -482,6 +482,26 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .page-subtitle .ok { color: var(--green); }
 
+/* ─── rwa.xyz-style hero (overview) ─── */
+.hero { margin-bottom: 26px; }
+.hero-title { font-size: 30px; margin: 0 0 10px; }
+.page-welcome {
+  font-family: var(--font-sans); font-size: 14px; line-height: 1.62;
+  color: var(--fg-muted); max-width: 760px; margin: 0 0 22px;
+}
+.hero-metrics {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 28px;
+  padding: 22px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.hero-metric { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.hero-metric .metric-value { font-size: 30px; }
+.hero-metric .metric-footer { margin-top: 1px; }
+.hero-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.hero-asof { font-family: var(--font-mono); font-size: 11px; color: var(--fg-dim); margin-left: auto; }
+@media (max-width: 1180px) { .hero-metrics { grid-template-columns: repeat(3, 1fr); row-gap: 24px; } }
+@media (max-width: 680px) { .hero-metrics { grid-template-columns: repeat(2, 1fr); gap: 18px; } .hero-title { font-size: 24px; } .hero-asof { margin-left: 0; } }
+
 /* Time range buttons */
 .time-range {
   display: inline-flex; align-items: center; gap: 2px;
