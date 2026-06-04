@@ -1,0 +1,6 @@
+# Cloudflare Pages headers.
+# HTML must always revalidate so a deploy shows up on the next load (no stale hero/charts).
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

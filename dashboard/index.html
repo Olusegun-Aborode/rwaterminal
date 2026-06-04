@@ -25,6 +25,21 @@
     const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Other':'#9599A1' };
     const navUSD = (v) => v==null ? '—' : window.fmtUSD(v, v>=1e9?2:1);
 
+    // Measure a container so charts render at the panel's true pixel width (fills desktop)
+    function useElementWidth(initial) {
+      const ref = React.useRef(null);
+      const [w, setW] = useState(initial || 900);
+      React.useLayoutEffect(() => {
+        const el = ref.current; if(!el) return;
+        const measure = () => { const cw = Math.floor(el.clientWidth); if(cw>0) setW(cw); };
+        measure();
+        let ro; if(window.ResizeObserver){ ro = new ResizeObserver(measure); ro.observe(el); }
+        window.addEventListener('resize', measure);
+        return () => { if(ro) ro.disconnect(); window.removeEventListener('resize', measure); };
+      }, []);
+      return [ref, w];
+    }
+
     function ThemeToggle() {
       const [theme, setTheme] = useState(document.body.getAttribute('data-theme')||'dark');
       const set = (t) => { document.body.setAttribute('data-theme', t); try{localStorage.setItem('theme',t)}catch(e){} setTheme(t); };
@@ -94,6 +109,8 @@
       const [events, setEvents] = useState(null);
       const [flows, setFlows] = useState(null);
       const chartRef = React.useRef(null);
+      const [chartWrapRef, CW] = useElementWidth(900);
+      const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
       useEffect(() => {
         if (!WORKER_URL) return; let alive=true; const base = WORKER_URL.replace(/\/$/,'');
         const load = () => {
@@ -288,21 +305,22 @@
                   </div>
                 </div>
                 <div className="panel-body">
+                  <div ref={chartWrapRef} style={{width:'100%'}}>
                   {metric==='value'
                     ? (areaSeries.length
-                        ? <AreaChart series={areaSeries} stacked width={900} height={280} labels={areaLabels} />
+                        ? <AreaChart series={areaSeries} stacked width={CW} height={CH} labels={areaLabels} />
                         : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
                     : metric==='transfer'
                       ? (txSeries.length
                           ? <div>
-                              <AreaChart series={txSeries} stacked width={900} height={280} labels={txLabels} formatter={window.fmtUSD} />
+                              <AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} />
                               <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>daily gross flow (supply + withdraw + borrow + repay) · via Envio indexer{flows&&flows.actions?` · ${Number(flows.actions).toLocaleString()} actions`:''}</div>
                             </div>
                           : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{flows?'No transfer volume yet':'Loading transfer volume…'}</div></div>)
                       : (events
                           ? (metricRows(metric).length
                               ? <div style={{paddingTop:4}}>
-                                  <StackedBarChart {...barData(metric)} width={900} height={280} formatter={cnt} />
+                                  <StackedBarChart {...barData(metric)} width={CW} height={CH} formatter={cnt} />
                                   <div style={{display:'flex',gap:14,flexWrap:'wrap',alignItems:'center',marginTop:10}}>
                                     {barLegend(metric).map(c=>(<span key={c} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11,color:'var(--fg-muted)'}}><span className="legend-swatch" style={{background:CLASS_COLORS[c]||'#9599A1'}} />{c}</span>))}
                                     <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginLeft:'auto',letterSpacing:'0.04em'}}>{metricNote[metric]} · via Envio indexer{events.synced_block?` · block ${Number(events.synced_block).toLocaleString()}`:''}</span>
@@ -310,6 +328,7 @@
                                 </div>
                               : <div style={{height:280,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>No {METRIC_LABELS[metric].toLowerCase()} recorded yet</span></div>)
                           : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading {METRIC_LABELS[metric].toLowerCase()} from the indexer…</div></div></div>)}
+                  </div>
                 </div>
               </div>
 
