@@ -7,12 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 [triggers]
 crons = ["*/5 * * * *"]
 
-# ── KV: holds the latest snapshot the dashboard reads ──
-# Create with:  wrangler kv namespace create HORIZON_KV
-# then paste the returned id below.
-[[kv_namespaces]]
-binding = "HORIZON_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# ── KV (OPTIONAL — add after the first green deploy, for caching) ──
+# Dashboard → Storage & Databases → KV → Create namespace "HORIZON_KV",
+# then uncomment the 3 lines below, paste the id, and redeploy.
+# [[kv_namespaces]]
+# binding = "HORIZON_KV"
+# id = "PASTE_KV_NAMESPACE_ID"
 
 # ── Non-secret vars ──
 [vars]

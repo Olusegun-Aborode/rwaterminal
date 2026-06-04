@@ -14,7 +14,7 @@ Built on the Datum Labs dashboard kit. **Everything in the stack is free-tier.**
    Envio HyperIndex ──streams events──▶ Neon (flows/holders)  ◀── uses the same RPC ────────┘
 ```
 
-`worker/` = state history + live snapshot · `indexer/` = event history · `db/` = schema · `dashboard/` = UI · `scripts/` = the Python reference enumerator.
+worker (repo root) = state history + live snapshot · `indexer/` = event history · `db/` = schema · `dashboard/` = UI · `scripts/` = the Python reference enumerator.
 
 ---
 
@@ -35,14 +35,13 @@ Built on the Datum Labs dashboard kit. **Everything in the stack is free-tier.**
 **Option A — Git integration (the "Cloning git repository" flow you're in):**
 1. Push this repo to GitHub (see bottom).
 2. Cloudflare dashboard → Workers & Pages → Create → **Connect to Git** → pick this repo.
-3. Set **Root directory = `worker`**. Cloudflare runs `npm install` + `wrangler deploy`.
-4. Before the first successful deploy you must create the KV namespace and set secrets (Option B steps 2–4) — the build needs the KV id in `wrangler.toml` and the secrets at runtime.
+3. **Leave Root directory as default (repo root)** — the worker config is at the root. Cloudflare runs `npm install` + `npx wrangler deploy` automatically.
+4. The build goes green with no extra setup (KV is optional). To make the endpoints *work*, add the `RPC_URL` secret (and optionally `DATABASE_URL`) in the Worker's **Settings → Variables and Secrets**.
 
 **Option B — CLI (simplest to get running):**
 Run each command on its own line — do NOT paste the trailing `# ...` notes (zsh
 treats `#` as an argument, not a comment).
 ```bash
-cd worker
 npm install
 npx wrangler login
 npx wrangler kv namespace create HORIZON_KV

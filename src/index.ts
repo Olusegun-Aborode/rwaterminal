@@ -18,9 +18,9 @@ import { mainnet } from "viem/chains";
 import { neon } from "@neondatabase/serverless";
 
 export interface Env {
-  HORIZON_KV: KVNamespace;
-  RPC_URL: string;          // secret
-  DATABASE_URL: string;     // secret
+  HORIZON_KV?: KVNamespace;   // optional — add after first deploy for caching
+  RPC_URL: string;            // secret (required)
+  DATABASE_URL?: string;      // optional secret — set to enable Neon history
   HORIZON_POOL: string;
   HORIZON_ORACLE: string;
   HORIZON_DATA_PROVIDER: string;
@@ -165,20 +165,24 @@ async function persist(env: Env, snap: any) {
 export default {
   async scheduled(_e: ScheduledController, env: Env, ctx: ExecutionContext) {
     const snap = await buildSnapshot(env);
-    await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-    ctx.waitUntil(persist(env, snap).catch(err => console.error("persist failed:", err)));
+    if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
+    if (env.DATABASE_URL) ctx.waitUntil(persist(env, snap).catch(err => console.error("persist failed:", err)));
   },
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     const cors = { "access-control-allow-origin": "*", "content-type": "application/json" };
     if (url.pathname === "/api/snapshot") {
-      const latest = await env.HORIZON_KV.get("latest");
-      return new Response(latest ?? JSON.stringify({ error: "no snapshot yet — wait for first cron run" }), { headers: cors });
+      const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
+      if (latest) return new Response(latest, { headers: cors });
+      const snap = await buildSnapshot(env);            // no KV cache yet -> compute live
+      if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
+      return new Response(JSON.stringify(snap), { headers: cors });
     }
     if (url.pathname === "/api/refresh") { // manual trigger for testing
       const snap = await buildSnapshot(env);
-      await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-      return new Response(JSON.stringify({ ok: true, block: snap.block }), { headers: cors });
+      if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
+      if (env.DATABASE_URL) await persist(env, snap).catch(e => console.error(e));
+      return new Response(JSON.stringify({ ok: true, block: snap.block, reserves: snap.reserves.length }), { headers: cors });
     }
     return new Response(JSON.stringify({ status: "rwa-terminal-worker", routes: ["/api/snapshot", "/api/refresh"] }), { headers: cors });
   },
