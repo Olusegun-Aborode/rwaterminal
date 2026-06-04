@@ -2,6 +2,7 @@
   "name": "rwa-terminal-indexer",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Envio HyperIndex for Aave Horizon event history (flows/holders)",
   "scripts": {
     "codegen": "envio codegen",

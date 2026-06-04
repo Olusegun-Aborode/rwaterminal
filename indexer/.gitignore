@@ -5,3 +5,6 @@ generated/
 
 # deps
 node_modules/
+
+# local-only test config (RPC data source; never committed)
+config.local.yaml
