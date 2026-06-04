@@ -113,7 +113,7 @@
                       const ns = r.nav_state;
                       return (<tr key={i}>
                         <td><div className="asset"><div className="asset-icon" style={{background:r.known?'var(--blue)':'var(--red)'}}>{r.label.slice(0,2)}</div><div><div className="asset-name">{r.label==='?'?r.symbol_onchain:r.label}</div><div className="asset-sub">{r.symbol_onchain}</div></div></div></td>
-                        <td style={{color:'var(--fg-muted)',fontSize:12}}>{r.issuer}</td>
+                        <td style={{color:'var(--fg-muted)',fontSize:12}}>{typeof r.issuer==='string'?r.issuer:''}</td>
                         <td className="num">${num(r.oracle_price_usd, r.oracle_price_usd>100?2:4)}</td>
                         <td className="num">{num(r.total_supplied,0)}</td>
                         <td className="num">{money(r.supplied_usd)}</td>
