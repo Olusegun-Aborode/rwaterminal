@@ -16,59 +16,115 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
   <script src="horizon.data.js"></script>
+  <script type="text/babel" src="charts.jsx"></script>
+  <script type="text/babel" src="widgets.jsx"></script>
 
   <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect } = React;
     const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
-    const money = (n) => n==null ? '—' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(1)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(0)+'K':'$'+Number(n).toFixed(2));
-    const CLASS_COLORS = { 'US Treasuries':'var(--blue)', 'Private Credit (CLO)':'var(--purple)', 'Private Credit':'var(--orange)', 'Crypto Carry':'var(--cyan)', 'Stablecoin':'var(--green)', 'Other':'var(--fg-dim)' };
+    const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Other':'#9599A1' };
+    const navUSD = (v) => v==null ? '—' : window.fmtUSD(v, v>=1e9?2:1);
 
-    function KPI({label, value, sub, subColor, big}) {
+    function ThemeToggle() {
+      const [theme, setTheme] = useState(document.body.getAttribute('data-theme')||'dark');
+      const set = (t) => { document.body.setAttribute('data-theme', t); try{localStorage.setItem('theme',t)}catch(e){} setTheme(t); };
       return (
-        <div className="panel" style={{padding:'18px 20px'}}>
-          <div className="metric-label">{label}</div>
-          <div className="metric-value" style={{fontSize:big?32:26,marginTop:6}}>{value}</div>
-          {sub && <div className="metric-footer" style={{marginTop:6,color:subColor||'var(--fg-muted)'}}>{sub}</div>}
+        <div className="theme-toggle" role="tablist" aria-label="Theme">
+          <button className={theme==='light'?'active':''} onClick={()=>set('light')} title="Light"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+          <button className={theme==='dark'?'active':''} onClick={()=>set('dark')} title="Dark"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
         </div>
       );
     }
-    function Flag({tone, children}) {
-      const c={red:['var(--red-soft)','var(--red)'],yellow:['var(--orange-soft)','var(--orange)'],green:['var(--green-soft)','var(--green)'],muted:['var(--bg-2)','var(--fg-muted)']}[tone||'muted'];
-      return <span className="risk-pill" style={{background:c[0],color:c[1]}}>{children}</span>;
-    }
-    function Bars({rows, total, fmt, colorFor}) {
-      const max = Math.max(...rows.map(r=>r.aum), 1);
+
+    function Metric({label, value, sub, spark, sparkColor}) {
       return (
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {rows.map((r,i)=>(
-            <div key={i}>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
-                <span style={{color:'var(--fg)'}}>{r.name} <span style={{color:'var(--fg-dim)',fontFamily:'var(--font-mono)',fontSize:10}}>· {r.count}</span></span>
-                <span className="mono" style={{color:'var(--fg-muted)'}}>{fmt(r.aum)} <span style={{color:'var(--fg-dim)'}}>· {total?Math.round(r.aum/total*100):0}%</span></span>
+        <div className="panel" style={{padding:'18px 20px',display:'flex',flexDirection:'column',gap:4}}>
+          <div className="metric-label">{label}</div>
+          <div className="metric-value" style={{fontSize:28}}>{value}</div>
+          <div className="metric-footer">{sub}</div>
+          {spark && spark.length>1 && <div style={{marginTop:6}}><Sparkline values={spark} color={sparkColor||'var(--orange)'} width={150} height={30} /></div>}
+        </div>
+      );
+    }
+
+    function AssetDrawer({asset, onClose}) {
+      const r = asset;
+      const row = (k,v) => <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{color:'var(--fg-muted)',fontSize:12}}>{k}</span><span className="mono" style={{fontSize:12,textAlign:'right'}}>{v}</span></div>;
+      return (
+        <ExpandModal open={!!r} title={r ? `${r.label} — ${r.asset_class}` : ''} onClose={onClose}>
+          {r && <div style={{padding:'4px 4px 12px'}}>
+            <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:14}}>
+              <div className="asset-icon" style={{width:38,height:38,background:CLASS_COLORS[r.asset_class]}}>{(r.label||'?').slice(0,2)}</div>
+              <div><div style={{fontSize:18,fontWeight:600}}>{r.label}</div><div className="asset-sub">{r.symbol_onchain} · {typeof r.issuer==='string'?r.issuer:''}</div></div>
+              <div style={{marginLeft:'auto'}}>{r.nav_state==='fresh'?<DataQualityBadge level="ok" label="NAV FRESH"/>:r.nav_state==='value_only'?<DataQualityBadge level="degraded" label="VALUE-ONLY"/>:r.nav_state==='stale'?<DataQualityBadge level="broken" label="STALE"/>:<DataQualityBadge level="degraded" label={r.nav_state||'—'}/>}</div>
+            </div>
+            <div className="grid grid-2" style={{gap:24}}>
+              <div>
+                {row('Asset class', r.asset_class)}
+                {row('Issuer', typeof r.issuer==='string'?r.issuer:'—')}
+                {row('Fund AUM', navUSD(r.asset_aum))}
+                {row('NAV', r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'—')}
+                {row('Token supply', r.token_total_supply!=null?window.fmtNum(r.token_total_supply,2):'—')}
               </div>
-              <div style={{height:8,background:'var(--bg-2)',borderRadius:4,overflow:'hidden'}}>
-                <div style={{height:'100%',width:(r.aum/max*100)+'%',background:colorFor(r.name),borderRadius:4}} />
+              <div>
+                {row('On Aave Horizon', r.supplied_usd>0?navUSD(r.supplied_usd):'0 — not deposited here')}
+                {row('LTV (Horizon)', r.ltv_pct!=null?r.ltv_pct+'%':'—')}
+                {row('Liq. threshold', r.liq_threshold_pct!=null?r.liq_threshold_pct+'%':'—')}
+                {row('NAV freshness', r.nav_state==='value_only'?'off-chain (issuer)':(r.nav_state||'—'))}
+                {row('Contract', (r.address||'').slice(0,10)+'…')}
               </div>
             </div>
-          ))}
-        </div>
+            <div style={{marginTop:14}}><a className="dropdown-trigger" href="horizon.html">View on Aave Horizon →</a></div>
+          </div>}
+        </ExpandModal>
       );
     }
 
     function App() {
-      const [D, setD] = React.useState(window.HORIZON_DATA);
-      React.useEffect(() => {
+      const [D, setD] = useState(window.HORIZON_DATA);
+      const [view, setView] = useState('overview');
+      const [sel, setSel] = useState(null);
+      useEffect(() => {
         if (!WORKER_URL) return; let alive=true;
         const load = () => fetch(WORKER_URL.replace(/\/$/,'')+'/api/snapshot').then(r=>r.json()).then(j=>{ if(alive && j && j.totals) setD(j); }).catch(()=>{});
         load(); const id=setInterval(load,60000); return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
-      const asOf = new Date(D.fetched_at*1000);
-      const grade = T.grade; const gradeColor = {A:'var(--green)',B:'var(--green)',C:'var(--yellow)',D:'var(--red)'}[grade];
       const reserves = D.reserves;
-      const assets = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
-      const rwaClasses = (T.by_class||[]).filter(c=>c.name!=='Stablecoin');
-      const issuers = (T.by_issuer||[]).filter(i=>i.aum>0);
-      const issuerCount = new Set(reserves.filter(r=>!r.is_stable).map(r=>r.issuer)).size;
+      const grade = T.grade;
+      const qLevel = grade==='A'||grade==='B' ? 'ok' : grade==='C' ? 'degraded' : 'broken';
+      const groupBy = (key, filt) => { const g={}; reserves.filter(filt).forEach(r=>{const k=r[key]||'Other';(g[k]=g[k]||{name:k,value:0,count:0});g[k].value+=r.asset_aum||0;g[k].count++;}); return Object.values(g).sort((a,b)=>b.value-a.value); };
+      const byClass = groupBy('asset_class', r=>!r.is_stable);
+      const byIssuer = groupBy('issuer', r=>!r.is_stable);
+      const issuerCount = byIssuer.length;
+      const treeItems = byClass.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
+      const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
+
+      const NAV = [
+        {sec:'Market', items:[
+          {id:'overview', icon:'◆', name:'Overview'},
+          {id:'by-class', icon:'◷', name:'By Asset Class', count:byClass.length},
+          {id:'by-issuer', icon:'§', name:'By Issuer', count:issuerCount},
+        ]},
+      ];
+
+      const AssetTable = ({rows, groupLabel}) => (
+        <table className="datatable">
+          <thead><tr><th>Asset</th><th>Class</th><th>Issuer</th><th className="num">NAV</th><th className="num">Fund AUM</th><th className="num">On Horizon</th></tr></thead>
+          <tbody>
+            {rows.map((r,i)=>(
+              <tr key={i} onClick={()=>setSel(r)}>
+                <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{(r.label||'?').slice(0,2)}</div><div><div className="asset-name">{r.label}</div><div className="asset-sub">{r.symbol_onchain}</div></div></div></td>
+                <td><span className="risk-pill" style={{background:'var(--bg-2)',color:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{r.asset_class}</span></td>
+                <td style={{color:'var(--fg-muted)',fontSize:12}}>{typeof r.issuer==='string'?r.issuer:''}</td>
+                <td className="num">{r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'—'}</td>
+                <td className="num" style={{fontWeight:600}}>{navUSD(r.asset_aum)}</td>
+                <td className="num" style={{color:r.supplied_usd>0?'var(--fg)':'var(--fg-dim)'}}>{r.supplied_usd>0?navUSD(r.supplied_usd):'0 on Horizon'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
 
       return (
         <>
@@ -77,14 +133,22 @@
               <div className="topbar-brand"><img src="assets/brand/datum-loop.webp" style={{width:22,height:22,borderRadius:4,objectFit:'cover'}}/><span className="topbar-brand-name">datum<span style={{color:'var(--orange)'}}>labs</span></span></div>
               <span className="topbar-terminal"><span className="prompt">❯</span><span>rwa-terminal · market overview</span></span>
             </div>
-            <div className="topbar-right"><span className="live-pill"><span className="dot"/>LIVE · block {D.block.toLocaleString()}</span></div>
+            <div className="topbar-right">
+              <DataSourceBadge source="onchain + issuer APIs" lastUpdated={D.fetched_at*1000} tone="green" />
+              <span className="live-pill"><span className="dot"/>LIVE · block {D.block.toLocaleString()}</span>
+              <ThemeToggle />
+            </div>
           </header>
 
           <aside className="sidebar">
-            <div className="sidebar-section-label">Market</div>
-            <a className="nav-item active"><span className="nav-icon">◆</span><span>Overview</span></a>
-            <a className="nav-item"><span className="nav-icon">◷</span><span>By Asset Class</span><span className="nav-count">{rwaClasses.length}</span></a>
-            <a className="nav-item"><span className="nav-icon">§</span><span>By Issuer</span><span className="nav-count">{issuerCount}</span></a>
+            {NAV.map(s=>(<div key={s.sec}>
+              <div className="sidebar-section-label">{s.sec}</div>
+              {s.items.map(it=>(
+                <a key={it.id} className={`nav-item ${view===it.id?'active':''}`} onClick={()=>setView(it.id)}>
+                  <span className="nav-icon">{it.icon}</span><span>{it.name}</span>{it.count!=null && <span className="nav-count">{it.count}</span>}
+                </a>
+              ))}
+            </div>))}
             <div className="sidebar-section-label">Venues</div>
             <a className="nav-item" href="horizon.html"><span className="nav-icon">▦</span><span>Aave Horizon</span><span className="nav-count">{T.reserve_count}</span></a>
             <a className="nav-item" style={{opacity:.5}}><span className="nav-icon">▦</span><span>Morpho</span><span className="nav-count">P2</span></a>
@@ -99,65 +163,72 @@
           <main className="main">
             <div className="page-header">
               <div>
-                <h1 className="page-title">RWA Market — Overview</h1>
-                <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported where available, else supply × NAV) · stablecoins split out · Phase 1: Horizon-sourced · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
+                <h1 className="page-title">{view==='overview'?'RWA Market — Overview':view==='by-class'?'By Asset Class':'By Issuer'}</h1>
+                <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported / supply × NAV) · stablecoins split out · <b>Horizon-sourced</b> (not the full market) · as of block {D.block.toLocaleString()}</div>
               </div>
-            </div>
-
-            <div className="panel" style={{padding:'12px 16px',marginBottom:16,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-              <span style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.1em',color:'var(--fg-muted)'}}>DATA QUALITY</span>
-              <span style={{fontFamily:'var(--font-mono)',fontWeight:700,fontSize:18,color:gradeColor}}>{grade}</span>
-              {T.unknown_count>0 ? <Flag tone="red">{T.unknown_count} unmapped</Flag> : <Flag tone="green">all {T.reserve_count} assets mapped</Flag>}
-              <Flag tone="muted">{T.nav_value_only} NAV value-only</Flag>
-              <Flag tone="yellow">SCOPE · Aave Horizon only</Flag>
-              <span style={{marginLeft:'auto',fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)'}}>AUM ≠ venue-supplied · enumerated via getReservesList</span>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <DataQualityBadge level={qLevel} label={`GRADE ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
+                <span className="risk-pill" style={{background:'var(--orange-soft)',color:'var(--orange)'}}>SCOPE · HORIZON</span>
+              </div>
             </div>
 
             <div className="grid grid-4" style={{marginBottom:16}}>
-              <KPI big label="RWA AUM · Horizon-sourced" value={money(T.rwa_aum)} sub={`${T.rwa_count} funds · NOT the full RWA market`} />
-              <KPI label="Stablecoins" value={money(T.stablecoin_aum)} sub="full circulating supply" />
-              <KPI label="Issuers" value={issuerCount} sub="across the RWA funds" />
-              <KPI label="On Aave Horizon" value={money(T.horizon_supplied_usd)} sub="venue lens · supplied" subColor="var(--fg-dim)" />
+              <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} sub={`${T.rwa_count} funds · not the full market`} />
+              <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} sub="full circulating supply" />
+              <Metric label="Issuers" value={issuerCount} sub="across the RWA funds" />
+              <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
             </div>
 
-            <div className="grid grid-2" style={{marginBottom:16}}>
-              <div className="panel">
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Composition by Asset Class</span><span className="panel-badge">RWA · ex-stablecoin</span></div>
-                <div className="panel-body"><Bars rows={rwaClasses} total={T.rwa_aum} fmt={money} colorFor={n=>CLASS_COLORS[n]||'var(--fg-dim)'} /></div>
+            {view==='overview' && <>
+              <div className="grid grid-2" style={{marginBottom:16,alignItems:'start'}}>
+                <div className="panel">
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Composition by Asset Class</span><span className="panel-badge">RWA · EX-STABLECOIN</span></div>
+                  <div className="panel-body"><Treemap items={treeItems} width={420} height={260} onSelect={()=>setView('by-class')} /></div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> By Issuer</span><span className="panel-badge">RWA AUM</span></div>
+                  <div className="panel-body"><Leaderboard items={byIssuer.map(i=>({name:i.name,value:i.value,dot:'var(--orange)'}))} /></div>
+                </div>
               </div>
               <div className="panel">
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> By Issuer</span><span className="panel-badge">RWA AUM</span></div>
-                <div className="panel-body"><Bars rows={issuers} total={T.rwa_aum+T.stablecoin_aum} fmt={money} colorFor={()=>'var(--orange)'} /></div>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Assets</span><span className="panel-badge">FUND AUM · "ON HORIZON" IS A VENUE TAG · click a row</span></div>
+                <div className="panel-body flush"><AssetTable rows={assetsSorted} /></div>
               </div>
-            </div>
+            </>}
 
-            <div className="panel">
-              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Assets</span><span className="panel-badge">FUND AUM · "ON HORIZON" IS A VENUE TAG</span></div>
-              <div className="panel-body flush">
-                <table className="datatable">
-                  <thead><tr><th>Asset</th><th>Class</th><th>Issuer</th><th className="num">NAV</th><th className="num">Fund AUM</th><th className="num">On Horizon</th><th>Venue</th></tr></thead>
-                  <tbody>
-                    {assets.map((r,i)=>(
-                      <tr key={i} onClick={()=>{window.location.href='horizon.html';}}>
-                        <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{(r.label||'?').slice(0,2)}</div><div><div className="asset-name">{r.label}</div><div className="asset-sub">{r.symbol_onchain}</div></div></div></td>
-                        <td><span className="risk-pill" style={{background:'var(--bg-2)',color:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{r.asset_class}</span></td>
-                        <td style={{color:'var(--fg-muted)',fontSize:12}}>{typeof r.issuer==='string'?r.issuer:''}</td>
-                        <td className="num">{r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'—'}</td>
-                        <td className="num" style={{fontWeight:600}}>{money(r.asset_aum)}</td>
-                        <td className="num" style={{color:(r.supplied_usd>0)?'var(--fg)':'var(--fg-dim)'}}>{r.supplied_usd>0?money(r.supplied_usd):'0 on Horizon'}</td>
-                        <td>{r.supplied_usd>0?<Flag tone="green">HORIZON</Flag>:<Flag tone="muted">not on Horizon</Flag>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {view==='by-class' && <>
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Classes</span><span className="panel-badge">{byClass.length} CLASSES · RWA AUM</span></div>
+                <div className="panel-body"><Treemap items={treeItems} width={900} height={300} /></div>
               </div>
-            </div>
+              {byClass.map(c=>(
+                <div className="panel" key={c.name} style={{marginBottom:16}}>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:CLASS_COLORS[c.name]}}>●</span> {c.name}</span><span className="panel-badge">{navUSD(c.value)} · {c.count} {c.count>1?'funds':'fund'}</span></div>
+                  <div className="panel-body flush"><AssetTable rows={assetsSorted.filter(r=>r.asset_class===c.name)} /></div>
+                </div>
+              ))}
+            </>}
+
+            {view==='by-issuer' && <>
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Issuers by RWA AUM</span><span className="panel-badge">{issuerCount} ISSUERS</span></div>
+                <div className="panel-body"><Leaderboard items={byIssuer.map(i=>({name:i.name+'  ('+i.count+')',value:i.value,dot:'var(--orange)'}))} /></div>
+              </div>
+              {byIssuer.map(iss=>(
+                <div className="panel" key={iss.name} style={{marginBottom:16}}>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> {iss.name}</span><span className="panel-badge">{navUSD(iss.value)} · {iss.count} {iss.count>1?'funds':'fund'}</span></div>
+                  <div className="panel-body flush"><AssetTable rows={assetsSorted.filter(r=>r.issuer===iss.name)} /></div>
+                </div>
+              ))}
+            </>}
           </main>
 
           <footer className="statusbar">
             <div className="left"><span style={{color:'var(--orange)'}}>❯</span><span>rwa-terminal</span><span className="sep">│</span><span>source: <span style={{color:'var(--green)'}}>onchain + issuer APIs</span></span><span className="sep">│</span><span>Phase 1</span></div>
             <div className="right"><span>block #{D.block.toLocaleString()}</span><span className="sep">│</span><span>Powered by DatumLabs</span></div>
           </footer>
+
+          <AssetDrawer asset={sel} onClose={()=>setSel(null)} />
         </>
       );
     }
