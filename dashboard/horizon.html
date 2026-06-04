@@ -87,16 +87,7 @@
                 <h1 className="page-title">Aave Horizon — Live Reserves</h1>
                 <div className="page-subtitle">Venue lens: <b>Horizon-supplied × oracle price</b> (a venue position, <i>not</i> fund AUM — see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
               </div>
-            </div>
-
-            {/* Data-quality banner */}
-            <div className="panel" style={{padding:'12px 16px',marginBottom:16,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-              <span style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.1em',color:'var(--fg-muted)'}}>DATA QUALITY</span>
-              <span style={{fontFamily:'var(--font-mono)',fontWeight:700,fontSize:18,color:gradeColor}}>{grade}</span>
-              {T.unknown_count>0 ? <Flag tone="red">{T.unknown_count} unmapped asset</Flag> : <Flag tone="green">all {T.reserve_count} reserves mapped</Flag>}
-              <Flag tone="muted">{T.nav_value_only} NAV feeds value-only · freshness via issuer feed</Flag>
-              {T.nav_stale>0 && <Flag tone="yellow">{T.nav_stale} stale</Flag>}
-              <span style={{marginLeft:'auto',fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)'}}>enumerated dynamically via getReservesList — never hardcoded</span>
+              <span className="risk-pill" title={`Data quality ${grade}: ${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV · ${T.nav_stale} stale. Details on the Methodology page.`} style={{background:'var(--bg-2)',color:gradeColor,cursor:'help',whiteSpace:'nowrap'}}>● GRADE {grade}</span>
             </div>
 
             <div className="grid grid-4" style={{marginBottom:16}}>

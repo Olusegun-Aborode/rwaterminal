@@ -237,6 +237,22 @@ export default {
       }), { headers: cors });
     }
     try {
+    if (url.pathname === "/api/history") {
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [] }), { headers: cors });
+      const sql = neon(env.DATABASE_URL);
+      // hourly last-value AUM per asset (joined to contract address so the UI can
+      // group by class). Metric = total RWA value over time; holders/active/transfer
+      // are NOT here — they need the event indexer (Phase 2).
+      const rows = await sql`
+        SELECT t.contract_address AS addr,
+               to_char(date_trunc('hour', h.ts), 'YYYY-MM-DD"T"HH24:00:00') AS hr,
+               (array_agg(h.aum ORDER BY h.ts DESC))[1] AS aum
+        FROM asset_aum_history h JOIN token t ON t.asset_id = h.asset_id
+        WHERE h.ts > now() - interval '14 days'
+        GROUP BY t.contract_address, date_trunc('hour', h.ts)
+        ORDER BY hr`;
+      return new Response(JSON.stringify({ points: rows }), { headers: cors });
+    }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
       if (latest) return new Response(latest, { headers: cors });

@@ -84,10 +84,14 @@
       const [D, setD] = useState(window.HORIZON_DATA);
       const [view, setView] = useState('overview');
       const [sel, setSel] = useState(null);
+      const [metric, setMetric] = useState('value');
+      const [hist, setHist] = useState(null);
       useEffect(() => {
-        if (!WORKER_URL) return; let alive=true;
-        const load = () => fetch(WORKER_URL.replace(/\/$/,'')+'/api/snapshot').then(r=>r.json()).then(j=>{ if(alive && j && j.totals) setD(j); }).catch(()=>{});
-        load(); const id=setInterval(load,60000); return ()=>{alive=false;clearInterval(id);};
+        if (!WORKER_URL) return; let alive=true; const base = WORKER_URL.replace(/\/$/,'');
+        const load = () => fetch(base+'/api/snapshot').then(r=>r.json()).then(j=>{ if(alive && j && j.totals) setD(j); }).catch(()=>{});
+        load(); const id=setInterval(load,60000);
+        fetch(base+'/api/history').then(r=>r.json()).then(j=>{ if(alive) setHist(j.points||[]); }).catch(()=>{});
+        return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
       const reserves = D.reserves;
@@ -99,6 +103,15 @@
       const issuerCount = byIssuer.length;
       const treeItems = byClass.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
       const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
+      // Total RWA Value over time, stacked by category (from /api/history)
+      const classOf = {}; reserves.forEach(r=>{ if(r.address) classOf[r.address.toLowerCase()]=r.asset_class; });
+      const hours = hist ? [...new Set(hist.map(p=>p.hr))].sort() : [];
+      const rwaClassNames = [...new Set(reserves.filter(r=>!r.is_stable).map(r=>r.asset_class))];
+      const areaSeries = (hist && hours.length>1) ? rwaClassNames.map(cls=>({
+        name: cls, color: CLASS_COLORS[cls]||'#9599A1',
+        values: hours.map(h=> hist.filter(p=>p.hr===h && classOf[(p.addr||'').toLowerCase()]===cls).reduce((s,p)=>s+Number(p.aum),0))
+      })).filter(s=>s.values.some(v=>v>0)) : [];
+      const METRIC_LABELS = {value:'Total RWA Value', holders:'Asset Holders', active:'Active Addresses', transfer:'Transfer Volume'};
 
       const NAV = [
         {sec:'Market', items:[
@@ -180,19 +193,35 @@
             </div>
 
             {view==='overview' && <>
-              <div className="grid grid-2" style={{marginBottom:16,alignItems:'start'}}>
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header">
+                  <span className="panel-title"><span className="bullet">●</span> {METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· by RWA category</span></span>
+                  <div className="time-range">
+                    {['value','holders','active','transfer'].map(m=>(
+                      <button key={m} className={metric===m?'active':''} onClick={()=>setMetric(m)}>{ {value:'Value',holders:'Holders',active:'Active Addrs',transfer:'Transfer Vol'}[m] }</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="panel-body">
+                  {metric==='value'
+                    ? (areaSeries.length
+                        ? <AreaChart series={areaSeries} stacked width={900} height={280} />
+                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({hours.length} so far).</div></div></div>)
+                    : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:13,color:'var(--fg-muted)'}}>{METRIC_LABELS[metric]} — requires the event indexer</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:8,maxWidth:380}}>Holders / active addresses / transfer volume are event-level data. Phase 2 wires an Envio indexer over Horizon's Mint / Burn / BalanceTransfer events.</div></div></div>}
+                </div>
+              </div>
+
+              <div className="grid grid-2" style={{marginBottom:16}}>
                 <div className="panel">
-                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Composition by Asset Class</span><span className="panel-badge">RWA · EX-STABLECOIN</span></div>
-                  <div className="panel-body"><Treemap items={treeItems} width={420} height={260} onSelect={()=>setView('by-class')} /></div>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Holders</span><span className="panel-badge">PER FUND</span></div>
+                  <div className="panel-body" style={{minHeight:236,display:'grid',placeItems:'center',textAlign:'center'}}>
+                    <div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Holder counts require the event indexer</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6,maxWidth:300}}>Phase 2 — Envio over Mint/Burn/BalanceTransfer (RWA aTokens emit no free Transfer events).</div></div>
+                  </div>
                 </div>
                 <div className="panel">
                   <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> By Issuer</span><span className="panel-badge">RWA AUM</span></div>
-                  <div className="panel-body"><Leaderboard items={byIssuer.map(i=>({name:i.name,value:i.value,dot:'var(--orange)'}))} /></div>
+                  <div className="panel-body" style={{minHeight:236}}><Leaderboard items={byIssuer.map(i=>({name:i.name,value:i.value,dot:'var(--orange)'}))} /></div>
                 </div>
-              </div>
-              <div className="panel">
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Assets</span><span className="panel-badge">FUND AUM · "ON HORIZON" IS A VENUE TAG · click a row</span></div>
-                <div className="panel-body flush"><AssetTable rows={assetsSorted} /></div>
               </div>
             </>}
 
