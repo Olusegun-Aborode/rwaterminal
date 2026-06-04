@@ -148,6 +148,32 @@ async function fetchEvents(): Promise<any> {
   };
 }
 
+// Daily transfer-volume time series from ReserveAction (powers the Transfer Volume
+// area chart). Hasura caps 1000 rows/query + exposes no aggregates, so we page in
+// parallel and bucket by (day, reserve) into raw token units (UI converts to USD).
+async function fetchFlows(): Promise<any> {
+  const PAGE = 1000, MAX_PAGES = 12; // 12k-action headroom; offsets past the data return []
+  const pages = await Promise.all(Array.from({ length: MAX_PAGES }, (_, p) =>
+    fetch(INDEXER_GRAPHQL, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: `{ ReserveAction(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { timestamp reserve amount } }` }),
+    }).then(r => r.json()).catch(() => null)
+  ));
+  const daily: Record<string, Record<string, number>> = {};
+  let total = 0;
+  for (const pg of pages) {
+    const rows = (pg as any)?.data?.ReserveAction || [];
+    total += rows.length;
+    for (const a of rows) {
+      const day = new Date(Number(a.timestamp) * 1000).toISOString().slice(0, 10);
+      const res = (a.reserve || "").toLowerCase();
+      (daily[day] ||= {});
+      daily[day][res] = (daily[day][res] || 0) + Number(a.amount); // raw token base units
+    }
+  }
+  return { ok: true, actions: total, days: Object.keys(daily).length, daily };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -325,7 +351,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/history", "/api/events", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/events", "/api/flows", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -347,6 +373,10 @@ export default {
     if (url.pathname === "/api/events") {
       const ev = await fetchEvents();
       return new Response(JSON.stringify(ev), { headers: { ...cors, "cache-control": "max-age=60" } });
+    }
+    if (url.pathname === "/api/flows") {
+      const fl = await fetchFlows();
+      return new Response(JSON.stringify(fl), { headers: { ...cors, "cache-control": "max-age=300" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;

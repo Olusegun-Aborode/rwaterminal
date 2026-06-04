@@ -186,7 +186,7 @@ function AreaChart({ series, stacked = false, width = 800, height = 280, formatt
 }
 
 // ── StackedBarChart ──────────────────────────────────────
-function StackedBarChart({ data, keys, colors, width = 800, height = 220, formatter = fmtUSD }) {
+function StackedBarChart({ data, keys, colors, width = 800, height = 220, formatter = fmtUSD, labels = null }) {
   const padL = 54, padR = 18, padT = 12, padB = 26;
   const iw = width - padL - padR, ih = height - padT - padB;
   const [hover, setHover] = useState(null);
@@ -214,9 +214,9 @@ function StackedBarChart({ data, keys, colors, width = 800, height = 220, format
             </text>
           </g>
         ))}
-        {[0, Math.floor(n/4), Math.floor(n/2), Math.floor(3*n/4), n-1].map(i => (
+        {(labels ? data.map((_, i) => i) : [0, Math.floor(n/4), Math.floor(n/2), Math.floor(3*n/4), n-1]).map(i => (
           <text key={i} x={x(i) + bw / 2} y={height - 8} textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="var(--fg-muted)">
-            {daysAgoLabel(i, n)}
+            {labels ? labels[i] : daysAgoLabel(i, n)}
           </text>
         ))}
         {data.map((d, i) => {
@@ -248,13 +248,13 @@ function StackedBarChart({ data, keys, colors, width = 800, height = 220, format
           left: Math.min(hover.x + 12, width - 180),
           top: 10,
         }}>
-          <div className="t-date">{daysAgoLabel(hover.i, n)}</div>
-          {keys.map((k, ki) => (
+          <div className="t-date">{labels ? labels[hover.i] : daysAgoLabel(hover.i, n)}</div>
+          {keys.map((k, ki) => data[hover.i][k] > 0 ? (
             <div key={k} className="t-row">
               <span className="t-label"><span className="legend-swatch" style={{ background: colors[ki], marginRight: 6 }} />{k}</span>
               <span>{formatter(data[hover.i][k], 1)}</span>
             </div>
-          ))}
+          ) : null)}
           <div className="t-row" style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.2)' }}>
             <span className="t-label">TOTAL</span>
             <span>{formatter(totals[hover.i], 1)}</span>
