@@ -85,33 +85,61 @@ async function buildSnapshot(env: Env) {
   const block = await client.getBlockNumber();
   const reserves = (await client.readContract({ address: DP, abi: dpAbi, functionName: "getAllReservesTokens" })) as any[];
 
-  const out: any[] = [];
-  for (const { symbol, tokenAddress } of reserves) {
-    const addr = getAddress(tokenAddress);
-    const [label, issuer] = KNOWN[addr.toLowerCase()] ?? [symbol, "? UNKNOWN"];
-    const cfg = (await client.readContract({ address: DP, abi: dpAbi, functionName: "getReserveConfigurationData", args: [addr] })) as any[];
-    const dec = Number(cfg[0]); const ltv = Number(cfg[1]) / 100; const lqt = Number(cfg[2]) / 100;
-    const rd = (await client.readContract({ address: DP, abi: dpAbi, functionName: "getReserveData", args: [addr] })) as any[];
-    const supplied = Number(rd[2]) / 10 ** dec;
-    const supplyApy = Number(rd[5]) / 1e27 * 100;
-    let price = 0; try { price = Number(await client.readContract({ address: OR, abi: oracleAbi, functionName: "getAssetPrice", args: [addr] })) / 1e8; } catch {}
-    const src = (await client.readContract({ address: OR, abi: oracleAbi, functionName: "getSourceOfAsset", args: [addr] })) as string;
+  const addrs = reserves.map((r: any) => getAddress(r.tokenAddress));
 
-    let navState: string | null = null, navUpdated: number | null = null, navFreshSrc: string | null = null, navValue: number | null = null;
+  // ── Reads via multicall: Cloudflare's free plan caps a Worker at 50 subrequests,
+  //    so we batch ~65 contract reads into 2 multicalls instead of 65 fetches. ──
+  const c1: any[] = [];
+  for (const a of addrs) {
+    c1.push({ address: DP, abi: dpAbi, functionName: "getReserveConfigurationData", args: [a] });
+    c1.push({ address: DP, abi: dpAbi, functionName: "getReserveData", args: [a] });
+    c1.push({ address: OR, abi: oracleAbi, functionName: "getAssetPrice", args: [a] });
+    c1.push({ address: OR, abi: oracleAbi, functionName: "getSourceOfAsset", args: [a] });
+  }
+  const r1: any[] = await client.multicall({ contracts: c1, allowFailure: true });
+  const sources: (string | null)[] = addrs.map((_: any, i: number) => r1[i * 4 + 3]?.status === "success" ? (r1[i * 4 + 3].result as string) : null);
+
+  const oc: any[] = []; const ocMap: number[] = [];
+  sources.forEach((src, i) => {
     if (src && BigInt(src) !== 0n) {
-      const agg = getAddress(src);
-      let aggDec = 8; try { aggDec = Number(await client.readContract({ address: agg, abi: aggAbi, functionName: "decimals" })); } catch {}
-      try {
-        const lr = (await client.readContract({ address: agg, abi: aggAbi, functionName: "latestRoundData" })) as any[];
-        navUpdated = Number(lr[3]); navValue = Number(lr[1]) / 10 ** aggDec;
-        navFreshSrc = "onchain_roundData"; navState = (now - navUpdated) > 172800 ? "stale" : "fresh";
-      } catch {
-        try { navValue = Number(await client.readContract({ address: agg, abi: aggAbi, functionName: "latestAnswer" })) / 10 ** aggDec; navFreshSrc = "onchain_latestAnswer_no_ts"; navState = "value_only"; }
-        catch { navState = "unreadable"; }
-      }
+      const sa = getAddress(src); ocMap.push(i);
+      oc.push({ address: sa, abi: aggAbi, functionName: "decimals" });
+      oc.push({ address: sa, abi: aggAbi, functionName: "latestRoundData" });
+      oc.push({ address: sa, abi: aggAbi, functionName: "latestAnswer" });
     }
-    // off-chain issuer freshness for value-only feeds
-    const iss = await fetchIssuer(addr, now);
+  });
+  const r2: any[] = oc.length ? await client.multicall({ contracts: oc, allowFailure: true }) : [];
+  const oracleBy: Record<number, any> = {};
+  ocMap.forEach((ri, k) => {
+    const dec = r2[k * 3]?.status === "success" ? Number(r2[k * 3].result) : 8;
+    const lr = r2[k * 3 + 1], la = r2[k * 3 + 2];
+    let nav: number | null = null, navTs: number | null = null, answer: number | null = null;
+    if (lr?.status === "success") { const t = lr.result as any[]; navTs = Number(t[3]); nav = Number(t[1]) / 10 ** dec; }
+    if (la?.status === "success") answer = Number(la.result) / 10 ** dec;
+    oracleBy[ri] = { dec, nav, navTs, answer };
+  });
+
+  const issAll = await Promise.all(addrs.map((a: string) => fetchIssuer(a, now)));
+
+  const out: any[] = [];
+  for (let i = 0; i < reserves.length; i++) {
+    const symbol = reserves[i].symbol; const addr = addrs[i];
+    const [label, issuer] = KNOWN[addr.toLowerCase()] ?? [symbol, "? UNKNOWN"];
+    const cfg = r1[i * 4]?.status === "success" ? (r1[i * 4].result as any[]) : [8, 0, 0];
+    const dec = Number(cfg[0]); const ltv = Number(cfg[1]) / 100; const lqt = Number(cfg[2]) / 100;
+    const rd = r1[i * 4 + 1]?.status === "success" ? (r1[i * 4 + 1].result as any[]) : null;
+    const supplied = rd ? Number(rd[2]) / 10 ** dec : 0;
+    const supplyApy = rd ? Number(rd[5]) / 1e27 * 100 : 0;
+    const price = r1[i * 4 + 2]?.status === "success" ? Number(r1[i * 4 + 2].result) / 1e8 : 0;
+    const src = sources[i];
+    const ob = oracleBy[i];
+    let navState: string | null = null, navUpdated: number | null = null, navFreshSrc: string | null = null, navValue: number | null = null;
+    if (ob) {
+      if (ob.nav != null) { navUpdated = ob.navTs; navValue = ob.nav; navFreshSrc = "onchain_roundData"; navState = (now - (ob.navTs ?? 0)) > 172800 ? "stale" : "fresh"; }
+      else if (ob.answer != null) { navValue = ob.answer; navFreshSrc = "onchain_latestAnswer_no_ts"; navState = "value_only"; }
+      else navState = "unreadable";
+    }
+    const iss = issAll[i];
     let offNav = null, offAsofTs = null, offAum = null, offSrc = null;
     if (iss) {
       offNav = iss.nav; offAsofTs = iss.asof_ts; offAum = iss.aum; offSrc = iss.source;
@@ -124,6 +152,7 @@ async function buildSnapshot(env: Env) {
       offchain_nav: offNav, offchain_nav_asof_ts: offAsofTs, offchain_aum: offAum, offchain_source: offSrc,
       is_stable: STABLE.has(label), known: label !== "?" && !issuer.startsWith("?") });
   }
+
   const tot = out.reduce((s, r) => s + r.supplied_usd, 0);
   const stab = out.filter(r => r.is_stable).reduce((s, r) => s + r.supplied_usd, 0);
   const major = out.filter(r => !r.is_stable && (!r.known || r.nav_state === "stale" || r.nav_state === "unreadable")).length;
@@ -135,32 +164,30 @@ async function buildSnapshot(env: Env) {
       nav_value_only: minor, nav_stale: out.filter(r => r.nav_state === "stale").length, unknown_count: out.filter(r => !r.known).length } };
 }
 
-/** Append the snapshot to Neon history (upserts the spine by contract address). */
+/** Append the snapshot to Neon as ONE batched transaction (1 subrequest).
+ *  Assumes the issuer/asset/token spine is seeded (history rows look up ids by
+ *  contract address); a reserve with no seeded token is simply skipped. */
 async function persist(env: Env, snap: any) {
+  if (!env.DATABASE_URL) return;
   const sql = neon(env.DATABASE_URL);
-  await sql`INSERT INTO chain (chain_id, name) VALUES (1,'Ethereum') ON CONFLICT (chain_id) DO NOTHING`;
   const ts = new Date(snap.fetched_at * 1000).toISOString();
+  const stmts: any[] = [];
   for (const r of snap.reserves) {
-    const issuerRow = await sql`INSERT INTO issuer (name) VALUES (${r.issuer}) ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING issuer_id`;
-    const issuerId = issuerRow[0].issuer_id;
-    const assetRow = await sql`INSERT INTO asset (name, display_ticker, issuer_id) VALUES (${r.label}, ${r.label}, ${issuerId})
-      ON CONFLICT DO NOTHING RETURNING asset_id`;
-    let assetId = assetRow[0]?.asset_id;
-    if (!assetId) assetId = (await sql`SELECT asset_id FROM asset WHERE name=${r.label} LIMIT 1`)[0]?.asset_id;
     const addr = r.address.toLowerCase();
-    const tokRow = await sql`INSERT INTO token (asset_id, chain_id, contract_address, decimals, symbol)
-      VALUES (${assetId}, 1, ${addr}, ${r.decimals}, ${r.symbol_onchain})
-      ON CONFLICT (chain_id, contract_address) DO UPDATE SET decimals=EXCLUDED.decimals RETURNING token_id`;
-    const tokenId = tokRow[0].token_id;
     if (r.nav_value != null)
-      await sql`INSERT INTO asset_nav_history (asset_id, ts, nav, source, updated_at_onchain, is_stale)
-        VALUES (${assetId}, ${ts}, ${r.nav_value}, ${r.nav_freshness_source ?? "onchain"},
-        ${r.nav_updated_at ? new Date(r.nav_updated_at * 1000).toISOString() : null}, ${r.nav_state === "stale"})
-        ON CONFLICT DO NOTHING`;
+      stmts.push(sql`INSERT INTO asset_nav_history (asset_id, ts, nav, source, updated_at_onchain, is_stale)
+        SELECT t.asset_id, ${ts}, ${r.nav_value}, ${r.nav_freshness_source ?? "onchain"},
+               ${r.nav_updated_at ? new Date(r.nav_updated_at * 1000).toISOString() : null}, ${r.nav_state === "stale"}
+        FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
     if (r.supplied_usd != null)
-      await sql`INSERT INTO asset_aum_history (asset_id, ts, aum, source) VALUES (${assetId}, ${ts}, ${r.supplied_usd}, 'onchain_derived') ON CONFLICT DO NOTHING`;
-    await sql`INSERT INTO token_supply_history (token_id, ts, total_supply) VALUES (${tokenId}, ${ts}, ${r.total_supplied}) ON CONFLICT DO NOTHING`;
+      stmts.push(sql`INSERT INTO asset_aum_history (asset_id, ts, aum, source)
+        SELECT t.asset_id, ${ts}, ${r.supplied_usd}, 'onchain_derived'
+        FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
+    stmts.push(sql`INSERT INTO token_supply_history (token_id, ts, total_supply)
+      SELECT t.token_id, ${ts}, ${r.total_supplied}
+      FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
   }
+  if (stmts.length) await sql.transaction(stmts);
 }
 
 export default {
