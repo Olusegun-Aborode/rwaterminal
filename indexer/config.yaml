@@ -6,7 +6,11 @@
 # start_block + RwaAToken addresses below are resolved on-chain (do not hardcode a
 # stale set; re-run scripts/enumerate_horizon.py if reserves change).
 name: rwa-terminal-indexer
-networks:
+# Opt into transaction.hash (block.number/timestamp are available by default).
+field_selection:
+  transaction_fields:
+    - hash
+chains:
   - id: 1 # Ethereum mainnet
     start_block: 23125535 # Horizon Pool deploy block (2025-08-12)
     contracts:
