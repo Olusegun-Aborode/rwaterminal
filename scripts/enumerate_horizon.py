@@ -135,10 +135,10 @@ for sym_onchain, addr in reserves:
                 nav_state = "value_only"   # value OK; freshness must come from issuer feed
             except Exception:
                 nav_state = "unreadable"
-    issuer = fetch_issuer(addr)
+    iss = fetch_issuer(addr)
     off_nav=off_asof=off_asof_ts=off_aum=off_src=None
-    if issuer:
-        off_nav, off_asof, off_asof_ts, off_aum, off_src = issuer["nav"], issuer["asof"], issuer["asof_ts"], issuer.get("aum"), issuer["source"]
+    if iss:
+        off_nav, off_asof, off_asof_ts, off_aum, off_src = iss["nav"], iss["asof"], iss["asof_ts"], iss.get("aum"), iss["source"]
         off_age_h = round((now-off_asof_ts)/3600,1)
         # value-only on-chain feed now has an off-chain timestamp -> treat as fresh
         if nav_state in ("value_only", None) and off_age_h <= 72:

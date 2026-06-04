@@ -7,3 +7,7 @@ indexer/generated/
 indexer/.env
 .env
 __pycache__/
+
+# transient generated data (root)
+/horizon.reserves.json
+/horizon.data.js
