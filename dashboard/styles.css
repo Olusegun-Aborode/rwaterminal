@@ -8,7 +8,7 @@
  */
 
 /* ─── Fonts ─── */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
@@ -196,6 +196,65 @@ body[data-aesthetic="modern"] .panel-title {
   text-transform: none;
   font-weight: 600;
 }
+
+/* ═══ Aesthetic: Institutional — clean SaaS (Inter, sentence case, roomy, neutral) ═══
+   The "Artemis look": one neutral sans everywhere (incl. numbers), no uppercase /
+   letter-spacing, more whitespace, colour reserved for data — not chrome. */
+body[data-aesthetic="institutional"] {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --panel-radius: 12px;
+  --panel-pad: 22px;
+  --grid-gap: 18px;
+}
+/* numbers + labels in clean sans (with tabular figures), never mono */
+body[data-aesthetic="institutional"] .mono,
+body[data-aesthetic="institutional"] .metric-value,
+body[data-aesthetic="institutional"] .metric-label,
+body[data-aesthetic="institutional"] .metric-footer,
+body[data-aesthetic="institutional"] .panel-title,
+body[data-aesthetic="institutional"] .panel-badge,
+body[data-aesthetic="institutional"] .sidebar-section-label,
+body[data-aesthetic="institutional"] .nav-item,
+body[data-aesthetic="institutional"] .nav-count,
+body[data-aesthetic="institutional"] .page-title,
+body[data-aesthetic="institutional"] .page-subtitle,
+body[data-aesthetic="institutional"] .risk-pill,
+body[data-aesthetic="institutional"] .datatable,
+body[data-aesthetic="institutional"] .datatable thead th,
+body[data-aesthetic="institutional"] .asset-sub,
+body[data-aesthetic="institutional"] .statusbar,
+body[data-aesthetic="institutional"] .topbar-brand-name,
+body[data-aesthetic="institutional"] .topbar-terminal,
+body[data-aesthetic="institutional"] .panel-body svg text {
+  font-family: var(--font-sans) !important;
+  font-variant-numeric: tabular-nums;
+}
+/* sentence case, normal spacing (kill the terminal UPPERCASE + tracking) */
+body[data-aesthetic="institutional"] .metric-label,
+body[data-aesthetic="institutional"] .panel-title,
+body[data-aesthetic="institutional"] .panel-badge,
+body[data-aesthetic="institutional"] .sidebar-section-label,
+body[data-aesthetic="institutional"] .datatable thead th,
+body[data-aesthetic="institutional"] .asset-sub,
+body[data-aesthetic="institutional"] .caps,
+body[data-aesthetic="institutional"] .risk-pill {
+  text-transform: none;
+  letter-spacing: 0;
+}
+/* SaaS weights / sizes / tone */
+body[data-aesthetic="institutional"] .metric-value { font-weight: 600; letter-spacing: -0.02em; }
+body[data-aesthetic="institutional"] .metric-label { color: var(--fg-muted); font-size: 12px; font-weight: 500; }
+body[data-aesthetic="institutional"] .page-title { font-weight: 600; letter-spacing: -0.02em; }
+body[data-aesthetic="institutional"] .panel-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+body[data-aesthetic="institutional"] .panel-badge { font-size: 11px; color: var(--fg-dim); }
+body[data-aesthetic="institutional"] .sidebar-section-label { font-size: 11px; font-weight: 600; color: var(--fg-dim); }
+body[data-aesthetic="institutional"] .panel-header { background: transparent; }
+body[data-aesthetic="institutional"] .panel { box-shadow: var(--shadow-sm); }
+/* neutral chrome: drop the ❯ terminal prompts + the orange bullet glyphs */
+body[data-aesthetic="institutional"] .topbar-terminal .prompt,
+body[data-aesthetic="institutional"] .panel-title .bullet { display: none; }
+body[data-aesthetic="institutional"] .nav-item.active { background: var(--hover); color: var(--fg); }
+body[data-aesthetic="institutional"] .nav-item.active::before { background: var(--fg); }
 
 /* Density */
 body[data-density="compact"] {
