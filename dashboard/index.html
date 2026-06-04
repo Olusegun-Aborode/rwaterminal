@@ -59,9 +59,9 @@
     function Metric({label, value, sub, delta}) {
       const hasDelta = delta!=null && isFinite(delta);
       return (
-        <div className="hero-metric">
+        <div className="panel" style={{padding:'18px 20px',display:'flex',flexDirection:'column',gap:5}}>
           <div className="metric-label">{label}</div>
-          <div className="metric-value">{value}</div>
+          <div className="metric-value" style={{fontSize:28}}>{value}</div>
           <div className="metric-footer">{hasDelta ? <Delta pct={delta}/> : <span>{sub}</span>}</div>
         </div>
       );
@@ -262,17 +262,16 @@
             {view==='overview' ? (
               <div className="hero">
                 <h1 className="page-title hero-title">RWA Market Overview</h1>
-                <p className="page-welcome">Live tokenized real-world assets on <b>Aave Horizon</b> — fund AUM, issuers, holders and on-chain flows, refreshed continuously and reconciled against DefiLlama. A focused, fully-sourced slice of the market rather than the whole of it.</p>
-                <div className="hero-metrics">
-                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} delta={rwaDelta} sub={`${T.rwa_count} funds · not the full market`} />
-                  <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} delta={stableDelta} sub="full circulating supply" />
-                  <Metric label="Asset Holders" value={events&&events.totals?window.fmtNum(events.totals.holders,0):'—'} sub={`across ${T.rwa_count} funds · via indexer`} />
-                  <Metric label="Active Addresses" value={events&&events.totals?window.fmtNum(events.totals.active_addresses,0):'—'} sub="since genesis · via indexer" />
-                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
-                </div>
-                <div className="hero-status">
+                <p className="page-welcome">A live terminal for tokenized real-world assets — tracking fund AUM, issuers, holders and on-chain flows across asset classes, sourced on-chain and reconciled against DefiLlama. Phase 1 covers the funds live on <b>Aave Horizon</b>, with more venues to follow.</p>
+                <div className="hero-status" style={{marginTop:0,marginBottom:18}}>
                   {Badges}
                   <span className="hero-asof">as of block {D.block.toLocaleString()}</span>
+                </div>
+                <div className="grid grid-4">
+                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} sub={`${T.rwa_count} funds · not the full market`} />
+                  <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} sub="full circulating supply" />
+                  <Metric label="Issuers" value={issuerCount} sub="across the RWA funds" />
+                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
                 </div>
               </div>
             ) : (
