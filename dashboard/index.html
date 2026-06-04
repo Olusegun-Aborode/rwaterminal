@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RWA Terminal — Aave Horizon (live)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="dark" data-aesthetic="evolved" data-density="cozy">
+  <script>
+    (function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
+  <div id="root" class="shell">
+    <div class="boot-splash"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+  <script src="horizon.data.js"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev"; // live worker — dashboard auto-refreshes from /api/snapshot
+    const money = (n) => n==null ? '—' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(2)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Number(n).toFixed(2));
+    const num = (n,d=2) => n==null ? '—' : Number(n).toLocaleString(undefined,{maximumFractionDigits:d});
+
+    function KPI({label, value, sub, subColor}) {
+      return (
+        <div className="panel" style={{padding:'18px 20px'}}>
+          <div className="metric-label">{label}</div>
+          <div className="metric-value" style={{fontSize:28,marginTop:6}}>{value}</div>
+          {sub && <div className="metric-footer" style={{marginTop:6,color:subColor||'var(--fg-muted)'}}>{sub}</div>}
+        </div>
+      );
+    }
+    function Flag({tone, children}) {
+      const c={red:['var(--red-soft)','var(--red)'],yellow:['var(--orange-soft)','var(--orange)'],green:['var(--green-soft)','var(--green)'],muted:['var(--bg-2)','var(--fg-muted)']}[tone||'muted'];
+      return <span className="risk-pill" style={{background:c[0],color:c[1]}}>{children}</span>;
+    }
+
+    function App() {
+      const [D, setD] = React.useState(window.HORIZON_DATA);
+      React.useEffect(() => {
+        if (!WORKER_URL) return; let alive = true;
+        const load = () => fetch(WORKER_URL.replace(/\/$/,'') + '/api/snapshot').then(r=>r.json()).then(j=>{ if (alive && j && j.totals) setD(j); }).catch(()=>{});
+        load(); const id = setInterval(load, 60000);
+        return () => { alive = false; clearInterval(id); };
+      }, []);
+      const T = D.totals;
+      const asOf = new Date(D.fetched_at*1000);
+      const grade = T.grade;
+      const gradeColor = {A:'var(--green)',B:'var(--green)',C:'var(--yellow)',D:'var(--red)'}[grade];
+      const reserves = D.reserves;
+      const rwa = reserves.filter(r=>!r.is_stable);
+      const stables = reserves.filter(r=>r.is_stable);
+      return (
+        <>
+          <header className="topbar">
+            <div className="topbar-left">
+              <div className="topbar-brand"><img src="assets/brand/datum-loop.webp" style={{width:22,height:22,borderRadius:4,objectFit:'cover'}}/><span className="topbar-brand-name">datum<span style={{color:'var(--orange)'}}>labs</span></span></div>
+              <span className="topbar-terminal"><span className="prompt">❯</span><span>rwa-terminal · venue: aave-horizon</span></span>
+            </div>
+            <div className="topbar-right">
+              <span className="live-pill"><span className="dot"/>LIVE · block {D.block.toLocaleString()}</span>
+            </div>
+          </header>
+
+          <aside className="sidebar">
+            <div className="sidebar-section-label">Venues</div>
+            <a className="nav-item active"><span className="nav-icon">◆</span><span>Aave Horizon</span><span className="nav-count">{T.reserve_count}</span></a>
+            <a className="nav-item"><span className="nav-icon">▦</span><span>Morpho</span><span className="nav-count" style={{opacity:.5}}>P2</span></a>
+            <div className="sidebar-section-label">Lenses</div>
+            <a className="nav-item"><span className="nav-icon">◎</span><span>By Asset Class</span></a>
+            <a className="nav-item"><span className="nav-icon">§</span><span>By Issuer</span></a>
+            <div style={{marginTop:'auto',padding:'16px 10px 8px',borderTop:'1px solid var(--border)'}}>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.1em'}}>BUILT WITH</div>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-muted)',marginTop:3}}>@datumlabs/<span style={{color:'var(--orange)'}}>dashboard-kit</span></div>
+            </div>
+          </aside>
+
+          <main className="main">
+            <div className="page-header">
+              <div>
+                <h1 className="page-title">Aave Horizon — Live Reserves</h1>
+                <div className="page-subtitle">Lens: <b>asset-level supply × oracle price</b> · stablecoins included (split out) · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
+              </div>
+            </div>
+
+            {/* Data-quality banner */}
+            <div className="panel" style={{padding:'12px 16px',marginBottom:16,display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+              <span style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.1em',color:'var(--fg-muted)'}}>DATA QUALITY</span>
+              <span style={{fontFamily:'var(--font-mono)',fontWeight:700,fontSize:18,color:gradeColor}}>{grade}</span>
+              {T.unknown_count>0 ? <Flag tone="red">{T.unknown_count} unmapped asset</Flag> : <Flag tone="green">all {T.reserve_count} reserves mapped</Flag>}
+              <Flag tone="muted">{T.nav_value_only} NAV feeds value-only · freshness via issuer feed</Flag>
+              {T.nav_stale>0 && <Flag tone="yellow">{T.nav_stale} stale</Flag>}
+              <span style={{marginLeft:'auto',fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)'}}>enumerated dynamically via getReservesList — never hardcoded</span>
+            </div>
+
+            <div className="grid grid-4" style={{marginBottom:16}}>
+              <KPI label="Total Supplied" value={money(T.total_supplied_usd)} sub={`${T.reserve_count} reserves`} />
+              <KPI label="RWA Collateral" value={money(T.rwa_usd)} sub={`${T.rwa_count} assets · non-stablecoin`} />
+              <KPI label="Stablecoin Liquidity" value={money(T.stablecoin_usd)} sub="GHO · USDC · RLUSD" />
+              <KPI label="Headline Split" value={`${Math.round(T.rwa_usd/T.total_supplied_usd*100)}% RWA`} sub={`${Math.round(T.stablecoin_usd/T.total_supplied_usd*100)}% stablecoin`} />
+            </div>
+
+            <div className="panel" style={{marginBottom:16}}>
+              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> RWA Collateral Reserves</span><span className="panel-badge">{rwa.length} ASSETS · LIVE</span></div>
+              <div className="panel-body flush">
+                <table className="datatable">
+                  <thead><tr><th>Asset</th><th>Issuer</th><th className="num">Oracle Price</th><th className="num">Supplied</th><th className="num">Supplied $</th><th className="num">LTV</th><th className="num">Liq. Thr</th><th className="num">NAV Age</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {rwa.map((r,i)=>{
+                      const ns = r.nav_state;
+                      return (<tr key={i}>
+                        <td><div className="asset"><div className="asset-icon" style={{background:r.known?'var(--blue)':'var(--red)'}}>{r.label.slice(0,2)}</div><div><div className="asset-name">{r.label==='?'?r.symbol_onchain:r.label}</div><div className="asset-sub">{r.symbol_onchain}</div></div></div></td>
+                        <td style={{color:'var(--fg-muted)',fontSize:12}}>{r.issuer}</td>
+                        <td className="num">${num(r.oracle_price_usd, r.oracle_price_usd>100?2:4)}</td>
+                        <td className="num">{num(r.total_supplied,0)}</td>
+                        <td className="num">{money(r.supplied_usd)}</td>
+                        <td className="num">{r.ltv_pct}%</td>
+                        <td className="num">{r.liq_threshold_pct}%</td>
+                        <td className="num">{r.nav_state==='value_only'?'off-chain':(r.nav_age_hours==null?'—':r.nav_age_hours+'h')}</td>
+                        <td>{!r.known? <Flag tone="red">UNMAPPED</Flag> : r.frozen? <Flag tone="muted">FROZEN</Flag> : ns==='stale'? <Flag tone="yellow">NAV STALE</Flag> : ns==='value_only'? <Flag tone="muted">VALUE-ONLY</Flag> : ns==='unreadable'? <Flag tone="red">NAV UNREAD</Flag> : <Flag tone="green">OK</Flag>}</td>
+                      </tr>);
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Borrowable Stablecoin Pools</span><span className="panel-badge">{stables.length} POOLS</span></div>
+              <div className="panel-body flush">
+                <table className="datatable">
+                  <thead><tr><th>Stablecoin</th><th className="num">Oracle Price</th><th className="num">Supplied</th><th className="num">Supplied $</th><th className="num">Peg Dev</th></tr></thead>
+                  <tbody>
+                    {stables.map((r,i)=>{const dev=((r.oracle_price_usd-1)*10000);return(
+                      <tr key={i}>
+                        <td><div className="asset"><div className="asset-icon" style={{background:'var(--green)'}}>{r.label.slice(0,2)}</div><div className="asset-name">{r.label}</div></div></td>
+                        <td className="num">${num(r.oracle_price_usd,4)}</td>
+                        <td className="num">{num(r.total_supplied,0)}</td>
+                        <td className="num">{money(r.supplied_usd)}</td>
+                        <td className="num" style={{color:Math.abs(dev)>50?'var(--red)':'var(--fg-muted)'}}>{dev>0?'+':''}{dev.toFixed(0)} bps</td>
+                      </tr>);})}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+
+          <footer className="statusbar">
+            <div className="left"><span style={{color:'var(--orange)'}}>❯</span><span>rwa-terminal</span><span className="sep">│</span><span>source: <span style={{color:'var(--green)'}}>onchain (live)</span></span><span className="sep">│</span><span>Phase 1 · Horizon slice</span></div>
+            <div className="right"><span>block #{D.block.toLocaleString()}</span><span className="sep">│</span><span>Powered by DatumLabs</span></div>
+          </footer>
+        </>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
