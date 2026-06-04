@@ -191,8 +191,9 @@
                 <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported / supply × NAV) · stablecoins split out · <b>Horizon-sourced</b> (not the full market) · as of block {D.block.toLocaleString()}</div>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <DataQualityBadge level={qLevel} label={`GRADE ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
-                <span className="risk-pill" style={{background:'var(--orange-soft)',color:'var(--orange)'}}>SCOPE · HORIZON</span>
+                <DataQualityBadge level={qLevel} label={`Grade ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
+                {T.reconciliation && <span className="risk-pill" title={`Our Horizon TVL ${navUSD(T.horizon_supplied_usd)} vs DefiLlama ${navUSD(T.reconciliation.defillama_supplied_usd)} (${T.reconciliation.gap_pct>0?'+':''}${T.reconciliation.gap_pct}%) · Tier-3 cross-check`} style={{cursor:'help',background:T.reconciliation.status==='verified'?'var(--green-soft)':'var(--orange-soft)',color:T.reconciliation.status==='verified'?'var(--green)':'var(--orange)'}}>{T.reconciliation.status==='verified'?'✓ Verified':'⚠ Degraded'} vs DefiLlama</span>}
+                <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}>Scope · Horizon</span>
               </div>
             </div>
 

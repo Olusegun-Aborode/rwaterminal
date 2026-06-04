@@ -83,6 +83,35 @@ async function fetchIssuer(addr: string, now: number) {
   } catch { return null; }
 }
 
+// Centrifuge GraphQL — NAV + freshness for JTRSY/JAAA (the on-chain LlamaGuard
+// adapters are value-only; this is the real source, like centrifuge.io itself).
+async function fetchCentrifuge(): Promise<Record<string, { nav: number; computedAt: number }>> {
+  const out: Record<string, { nav: number; computedAt: number }> = {};
+  try {
+    const r: any = await (await fetch("https://api.centrifuge.io", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "{ tokens { items { symbol tokenPrice tokenPriceComputedAt } } }" }),
+    })).json();
+    for (const t of (r?.data?.tokens?.items || [])) {
+      if ((t.symbol === "JTRSY" || t.symbol === "JAAA") && t.tokenPrice) {
+        out[t.symbol] = { nav: Number(t.tokenPrice) / 1e18, computedAt: Math.floor(Number(t.tokenPriceComputedAt) / 1000) };
+      }
+    }
+  } catch {}
+  return out;
+}
+
+// DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
+// net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
+async function fetchDefiLlamaHorizon(): Promise<number | null> {
+  try {
+    const r: any = await (await fetch("https://api.llama.fi/protocol/aave-horizon-rwa")).json();
+    const c = r?.currentChainTvls || {};
+    const gross = (c["Ethereum"] || 0) + (c["borrowed"] || 0);
+    return gross > 0 ? gross : null;
+  } catch { return null; }
+}
+
 async function buildSnapshot(env: Env) {
   if (!env.RPC_URL) throw new Error("RPC_URL secret is not set on this Worker — add it under Settings > Variables and Secrets (type: Secret).");
   const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
@@ -126,7 +155,11 @@ async function buildSnapshot(env: Env) {
     oracleBy[ri] = { dec, nav, navTs, answer };
   });
 
-  const issAll = await Promise.all(addrs.map((a: string) => fetchIssuer(a, now)));
+  const [issAll, centri, defiHorizon] = await Promise.all([
+    Promise.all(addrs.map((a: string) => fetchIssuer(a, now))),
+    fetchCentrifuge(),
+    fetchDefiLlamaHorizon(),
+  ]);
 
   const out: any[] = [];
   for (let i = 0; i < reserves.length; i++) {
@@ -152,6 +185,11 @@ async function buildSnapshot(env: Env) {
     if (iss) {
       offNav = iss.nav; offAsofTs = iss.asof_ts; offAum = iss.aum; offSrc = iss.source;
       if ((navState === "value_only" || navState === null) && (now - iss.asof_ts) <= 259200) { navState = "fresh"; navFreshSrc = iss.source; navUpdated = iss.asof_ts; }
+    }
+    // Centrifuge GraphQL — authoritative NAV + freshness for JTRSY/JAAA (value-only on-chain)
+    const cf = centri[label];
+    if (cf && (navState === "value_only" || navState === "unreadable" || navState === null) && (now - cf.computedAt) <= 604800) {
+      navValue = cf.nav; navState = "fresh"; navFreshSrc = "centrifuge_graphql"; navUpdated = cf.computedAt;
     }
     const suppliedUsd = price * supplied;
     const navForAum = navValue ?? price;
@@ -180,6 +218,12 @@ async function buildSnapshot(env: Env) {
   const major = out.filter(r => !r.is_stable && (!r.known || r.nav_state === "stale" || r.nav_state === "unreadable")).length;
   const minor = out.filter(r => !r.is_stable && r.nav_state === "value_only").length;
   const grade = major === 0 && minor === 0 ? "A" : major === 0 ? "B" : major <= 2 ? "C" : "D";
+  // Tier-3 reconciliation: our on-chain Horizon TVL vs DefiLlama's independent number
+  const recon = defiHorizon ? {
+    source: "defillama", defillama_supplied_usd: defiHorizon,
+    gap_pct: +(((suppliedTot - defiHorizon) / defiHorizon) * 100).toFixed(2),
+    status: Math.abs((suppliedTot - defiHorizon) / defiHorizon) <= 0.05 ? "verified" : "degraded",
+  } : null;
   return { market_id: "proto_horizon_v3", block: Number(block), fetched_at: now, reserves: out,
     totals: {
       // market size = asset-level AUM (lens: issuer-reported where available, else totalSupply x NAV)
@@ -187,6 +231,7 @@ async function buildSnapshot(env: Env) {
       by_class: groupAum("asset_class"), by_issuer: groupAum("issuer"),
       // venue lens (Horizon-supplied) kept distinct
       horizon_supplied_usd: suppliedTot, horizon_stablecoin_supplied_usd: suppliedStable,
+      reconciliation: recon,
       reserve_count: out.length, rwa_count: out.filter(r => !r.is_stable).length,
       grade, major_issues: major, minor_issues: minor, nav_value_only: minor,
       nav_stale: out.filter(r => r.nav_state === "stale").length, unknown_count: out.filter(r => !r.known).length } };

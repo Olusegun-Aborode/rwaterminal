@@ -63,11 +63,14 @@
             <ul>
               <li><span class="key">Superstate</span> — USTB / USCC NAV, AUM, as-of date.</li>
               <li><span class="key">Hashnote</span> — USYC price, supply, timestamp.</li>
+              <li><span class="key">Centrifuge GraphQL</span> (api.centrifuge.io) — JTRSY / JAAA NAV (<code>tokenPrice</code>) + freshness (<code>tokenPriceComputedAt</code>). Supply still on-chain (their <code>totalIssuance</code> aggregate is broken).</li>
             </ul>
             <h4>Storage &amp; cadence</h4>
             <p>A Cloudflare cron worker reads the above <b>every 5 minutes</b> and appends a snapshot to <span class="key">Neon</span> (Postgres) — the history that future time-series charts draw from.</p>
-            <h4>Planned (not yet wired)</h4>
-            <p>AaveKit GraphQL + DefiLlama (cross-checks); Envio (event history — flows, holders).</p>
+            <h4>Tier-3 reconciliation (wired)</h4>
+            <p><span class="key">DefiLlama</span> (<code>api.llama.fi/protocol/aave-horizon-rwa</code>) — independent Horizon TVL, cross-checked against our on-chain number and shown as a <b>Verified / Degraded</b> badge (±5% tolerance).</p>
+            <h4>Planned</h4>
+            <p>AaveKit GraphQL (Aave-side cross-check); Envio (event history — flows, holders).</p>
           </div></div>
         </div>
       </div>
