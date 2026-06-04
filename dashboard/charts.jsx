@@ -38,7 +38,7 @@ function ChartWatermark({ x, y }) {
 
 // series: [{ name, color, values: number[] }, ...]
 // stacked: boolean
-function AreaChart({ series, stacked = false, width = 800, height = 280, formatter = fmtUSD, valueSuffix = '', overlayCompare = null }) {
+function AreaChart({ series, stacked = false, width = 800, height = 280, formatter = fmtUSD, valueSuffix = '', overlayCompare = null, labels = null }) {
   const padL = 54, padR = 18, padT = 12, padB = 28;
   const w = width, h = height;
   const iw = w - padL - padR, ih = h - padT - padB;
@@ -126,7 +126,7 @@ function AreaChart({ series, stacked = false, width = 800, height = 280, formatt
         {/* x labels */}
         {[0, Math.floor(len/4), Math.floor(len/2), Math.floor(3*len/4), len-1].map(i => (
           <text key={i} x={x(i)} y={h - 8} textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="var(--fg-muted)">
-            {daysAgoLabel(i, len)}
+            {labels ? labels[i] : daysAgoLabel(i, len)}
           </text>
         ))}
         {/* areas and lines */}
@@ -160,8 +160,14 @@ function AreaChart({ series, stacked = false, width = 800, height = 280, formatt
           left: Math.min(hover.x + 12, w - 180),
           top: 10,
         }}>
-          <div className="t-date">{daysAgoLabel(hover.i, len)}</div>
-          {series.map(s => (
+          <div className="t-date">{labels ? labels[hover.i] : daysAgoLabel(hover.i, len)}</div>
+          {stacked && (
+            <div className="t-row" style={{ fontWeight: 700, borderBottom: '1px solid rgba(128,128,128,0.25)', paddingBottom: 5, marginBottom: 5 }}>
+              <span className="t-label">Total</span>
+              <span>{formatter(series.reduce((a, s) => a + (s.values[hover.i] || 0), 0), 2)}{valueSuffix}</span>
+            </div>
+          )}
+          {[...series].sort((a, b) => (b.values[hover.i] || 0) - (a.values[hover.i] || 0)).map(s => (
             <div key={s.name} className="t-row">
               <span className="t-label"><span className="legend-swatch" style={{ background: s.color, marginRight: 6 }} />{s.name}</span>
               <span>{formatter(s.values[hover.i], 2)}{valueSuffix}</span>

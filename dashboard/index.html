@@ -6,7 +6,7 @@
   <title>RWA Terminal — Market Overview</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="dark" data-aesthetic="evolved" data-density="cozy">
+<body data-theme="light" data-aesthetic="evolved" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
   <div id="root" class="shell">
     <div class="boot-splash"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
@@ -105,12 +105,23 @@
       const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
       // Total RWA Value over time, stacked by category (from /api/history)
       const classOf = {}; reserves.forEach(r=>{ if(r.address) classOf[r.address.toLowerCase()]=r.asset_class; });
-      const hours = hist ? [...new Set(hist.map(p=>p.hr))].sort() : [];
       const rwaClassNames = [...new Set(reserves.filter(r=>!r.is_stable).map(r=>r.asset_class))];
-      const areaSeries = (hist && hours.length>1) ? rwaClassNames.map(cls=>({
-        name: cls, color: CLASS_COLORS[cls]||'#9599A1',
-        values: hours.map(h=> hist.filter(p=>p.hr===h && classOf[(p.addr||'').toLowerCase()]===cls).reduce((s,p)=>s+Number(p.aum),0))
+      // one pass over daily history -> day -> class -> AUM, carrying each fund's last value forward over gap days
+      const days = hist ? [...new Set(hist.map(p=>p.hr))].sort() : [];
+      const byDayClass = {};
+      if (hist) {
+        const ptsByDay = {}; hist.forEach(p=>{ (ptsByDay[p.hr]=ptsByDay[p.hr]||[]).push(p); });
+        const lastByAddr = {};
+        days.forEach(d=>{
+          (ptsByDay[d]||[]).forEach(p=>{ lastByAddr[(p.addr||'').toLowerCase()]=Number(p.aum); });
+          const cm={}; Object.entries(lastByAddr).forEach(([addr,aum])=>{ const cls=classOf[addr]; if(cls) cm[cls]=(cm[cls]||0)+aum; });
+          byDayClass[d]=cm;
+        });
+      }
+      const areaSeries = (hist && days.length>1) ? rwaClassNames.map(cls=>({
+        name: cls, color: CLASS_COLORS[cls]||'#9599A1', values: days.map(d=> (byDayClass[d]&&byDayClass[d][cls])||0)
       })).filter(s=>s.values.some(v=>v>0)) : [];
+      const areaLabels = days.map(s=>{ const dt=new Date(s+'T00:00:00Z'); return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
       const METRIC_LABELS = {value:'Total RWA Value', holders:'Asset Holders', active:'Active Addresses', transfer:'Transfer Volume'};
 
       const NAV = [
@@ -205,8 +216,8 @@
                 <div className="panel-body">
                   {metric==='value'
                     ? (areaSeries.length
-                        ? <AreaChart series={areaSeries} stacked width={900} height={280} />
-                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({hours.length} so far).</div></div></div>)
+                        ? <AreaChart series={areaSeries} stacked width={900} height={280} labels={areaLabels} />
+                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
                     : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:13,color:'var(--fg-muted)'}}>{METRIC_LABELS[metric]} — requires the event indexer</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:8,maxWidth:380}}>Holders / active addresses / transfer volume are event-level data. Phase 2 wires an Envio indexer over Horizon's Mint / Burn / BalanceTransfer events.</div></div></div>}
                 </div>
               </div>
@@ -263,5 +274,7 @@
     }
     ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
+  <div id="splash" class="boot-splash" style="z-index:99999"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
+  <script>(function(){var s=document.getElementById('splash');if(!s)return;if(sessionStorage.getItem('rwaSplash')){s.remove();return;}sessionStorage.setItem('rwaSplash','1');setTimeout(function(){s.style.transition='opacity .45s ease';s.style.opacity='0';setTimeout(function(){s.remove();},450);},5000);})();</script>
 </body>
 </html>

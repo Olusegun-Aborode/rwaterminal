@@ -245,11 +245,10 @@ export default {
       // are NOT here — they need the event indexer (Phase 2).
       const rows = await sql`
         SELECT t.contract_address AS addr,
-               to_char(date_trunc('hour', h.ts), 'YYYY-MM-DD"T"HH24:00:00') AS hr,
+               to_char(date_trunc('day', h.ts), 'YYYY-MM-DD') AS hr,
                (array_agg(h.aum ORDER BY h.ts DESC))[1] AS aum
         FROM asset_aum_history h JOIN token t ON t.asset_id = h.asset_id
-        WHERE h.ts > now() - interval '14 days'
-        GROUP BY t.contract_address, date_trunc('hour', h.ts)
+        GROUP BY t.contract_address, date_trunc('day', h.ts)
         ORDER BY hr`;
       return new Response(JSON.stringify({ points: rows }), { headers: cors });
     }

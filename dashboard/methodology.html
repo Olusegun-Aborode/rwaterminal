@@ -6,7 +6,7 @@
   <title>RWA Terminal — Methodology</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="dark" data-aesthetic="evolved" data-density="cozy">
+<body data-theme="light" data-aesthetic="evolved" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
   <div id="root" class="shell">
     <header class="topbar">
@@ -112,5 +112,7 @@
       <div class="right"><span>Phase 1 · Aave Horizon</span><span class="sep">│</span><span>Powered by DatumLabs</span></div>
     </footer>
   </div>
+  <div id="splash" class="boot-splash" style="z-index:99999"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
+  <script>(function(){var s=document.getElementById('splash');if(!s)return;if(sessionStorage.getItem('rwaSplash')){s.remove();return;}sessionStorage.setItem('rwaSplash','1');setTimeout(function(){s.style.transition='opacity .45s ease';s.style.opacity='0';setTimeout(function(){s.remove();},450);},5000);})();</script>
 </body>
 </html>
