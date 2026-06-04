@@ -1,12 +1,14 @@
-# Envio HyperIndex — Aave Horizon event history (flows). This is the EVENT-history
-# half (the Worker handles STATE history). No public Horizon subgraph exists, so we
-# index events ourselves. Self-host (free) or deploy to Envio Cloud.
+# Envio HyperIndex — Aave Horizon event history (flows, active addresses, holders).
+# This is the EVENT-history half (the Worker handles STATE history). No public
+# Horizon subgraph exists, so we index events ourselves.
 #
-# Setup:  cd indexer && npx envio@latest dev   (after filling start_block + RwaAToken addresses)
+# Run:   cd indexer && npx envio@latest dev   (needs Docker)  — or deploy to Envio Cloud.
+# start_block + RwaAToken addresses below are resolved on-chain (do not hardcode a
+# stale set; re-run scripts/enumerate_horizon.py if reserves change).
 name: rwa-terminal-indexer
 networks:
   - id: 1 # Ethereum mainnet
-    start_block: 0 # TODO: set to the Horizon Pool deploy block (find via Etherscan "Contract Creation")
+    start_block: 23125535 # Horizon Pool deploy block (2025-08-12)
     contracts:
       - name: HorizonPool
         address:
@@ -17,12 +19,22 @@ networks:
           - event: "Withdraw(address indexed reserve, address indexed user, address indexed to, uint256 amount)"
           - event: "Borrow(address indexed reserve, address user, address indexed onBehalfOf, uint256 amount, uint8 interestRateMode, uint256 borrowRate, uint16 indexed referralCode)"
           - event: "Repay(address indexed reserve, address indexed user, address indexed repayer, uint256 amount, bool useATokens)"
-      # RwaAToken contracts (Mint/Burn/BalanceTransfer) — populate addresses from
-      # scripts/horizon.reserves.json (the aToken field), then uncomment:
-      # - name: RwaAToken
-      #   address: []
-      #   handler: src/EventHandlers.ts
-      #   events:
-      #     - event: "Mint(address indexed caller, address indexed onBehalfOf, uint256 value, uint256 balanceIncrease, uint256 index)"
-      #     - event: "Burn(address indexed from, address indexed target, uint256 value, uint256 balanceIncrease, uint256 index)"
-      #     - event: "BalanceTransfer(address indexed from, address indexed to, uint256 value, uint256 index)"
+      # RwaAToken receipts — non-transferable, so NO free Transfer events: holders are
+      # reconstructed from Mint/Burn/BalanceTransfer (the latter = issuer authorizedTransfer).
+      - name: RwaAToken
+        address:
+          - "0x946281A2d0DD6e650d08f74833323D66AE4c8b12"  # GHO aToken
+          - "0x68215B6533c47ff9f7125aC95adf00fE4a62f79e"  # USDC aToken
+          - "0xE3190143Eb552456F88464662f0c0C4aC67A77eB"  # RLUSD aToken
+          - "0x4E58a2E433A739726134c83d2f07b2562e8dFdB3"  # USTB aToken
+          - "0x08b798c40b9AB931356d9aB4235F548325C4cb80"  # USCC aToken
+          - "0xc167932AC4EEc2B65844EF00D31b4550250536A5"  # USYC aToken
+          - "0x844f07AB09aa5dBDCE6A9b1206CE150E1eaDacCb"  # JTRSY aToken
+          - "0xB0EC6c4482Ac1Ef77bE239C0AC833CF37A27c876"  # JAAA aToken
+          - "0xE1CfD16b8E4B1C86Bb5b7A104cfEFbc7b09326dD"  # VBILL aToken
+          - "0xc293744fFbcf46696D589f5C415e71BC491519cD"  # ACRED aToken
+        handler: src/EventHandlers.ts
+        events:
+          - event: "Mint(address indexed caller, address indexed onBehalfOf, uint256 value, uint256 balanceIncrease, uint256 index)"
+          - event: "Burn(address indexed from, address indexed target, uint256 value, uint256 balanceIncrease, uint256 index)"
+          - event: "BalanceTransfer(address indexed from, address indexed to, uint256 value, uint256 index)"

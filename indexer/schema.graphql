@@ -1,7 +1,6 @@
-# Envio entities (the event-history projection). One row per on-chain action.
-# These become Postgres tables in the indexer's DB; mirror/forward into the
-# canonical Neon schema's flow tables as needed.
+# Envio entities (the event-history projection → Postgres tables).
 
+# One row per Horizon Pool action (supply/withdraw/borrow/repay) — powers flows + active addresses.
 type ReserveAction {
   id: ID! # txHash-logIndex
   kind: String! # 'supply' | 'withdraw' | 'borrow' | 'repay'
@@ -13,7 +12,7 @@ type ReserveAction {
   txHash: String!
 }
 
-# Running per-reserve flow totals (cheap rollup for the dashboard).
+# Running per-reserve flow totals (cheap rollup for the chart).
 type ReserveFlow {
   id: ID! # reserve address
   reserve: String!
@@ -22,5 +21,24 @@ type ReserveFlow {
   totalBorrowed: BigInt!
   totalRepaid: BigInt!
   actionCount: Int!
+  lastBlock: Int!
+}
+
+# Per-(aToken, holder) balance, reconstructed from Mint/Burn/BalanceTransfer
+# (RwaATokens are non-transferable — no free Transfer events). holder count =
+# rows where balance > 0 grouped by token.
+type Holding {
+  id: ID! # aTokenAddr-holderAddr
+  token: String!
+  account: String!
+  balance: BigInt!
+  updatedBlock: Int!
+}
+
+# Per-aToken holder count rollup (cheap read for the Asset Holders panel).
+type TokenHolders {
+  id: ID! # aToken address
+  token: String!
+  holderCount: Int!
   lastBlock: Int!
 }
