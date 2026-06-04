@@ -66,12 +66,13 @@
           </header>
 
           <aside className="sidebar">
+            <div className="sidebar-section-label">Market</div>
+            <a className="nav-item" href="index.html"><span className="nav-icon">◆</span><span>Overview</span></a>
+            <a className="nav-item" href="index.html"><span className="nav-icon">◷</span><span>By Asset Class</span></a>
+            <a className="nav-item" href="index.html"><span className="nav-icon">§</span><span>By Issuer</span></a>
             <div className="sidebar-section-label">Venues</div>
-            <a className="nav-item active"><span className="nav-icon">◆</span><span>Aave Horizon</span><span className="nav-count">{T.reserve_count}</span></a>
-            <a className="nav-item"><span className="nav-icon">▦</span><span>Morpho</span><span className="nav-count" style={{opacity:.5}}>P2</span></a>
-            <div className="sidebar-section-label">Lenses</div>
-            <a className="nav-item"><span className="nav-icon">◎</span><span>By Asset Class</span></a>
-            <a className="nav-item"><span className="nav-icon">§</span><span>By Issuer</span></a>
+            <a className="nav-item active"><span className="nav-icon">▦</span><span>Aave Horizon</span><span className="nav-count">{T.reserve_count}</span></a>
+            <a className="nav-item" style={{opacity:.5}}><span className="nav-icon">▦</span><span>Morpho</span><span className="nav-count">P2</span></a>
             <div style={{marginTop:'auto',padding:'16px 10px 8px',borderTop:'1px solid var(--border)'}}>
               <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.1em'}}>BUILT WITH</div>
               <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-muted)',marginTop:3}}>@datumlabs/<span style={{color:'var(--orange)'}}>dashboard-kit</span></div>
@@ -82,7 +83,7 @@
             <div className="page-header">
               <div>
                 <h1 className="page-title">Aave Horizon — Live Reserves</h1>
-                <div className="page-subtitle">Lens: <b>asset-level supply × oracle price</b> · stablecoins included (split out) · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
+                <div className="page-subtitle">Venue lens: <b>Horizon-supplied × oracle price</b> (a venue position, <i>not</i> fund AUM — see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
               </div>
             </div>
 
@@ -97,10 +98,10 @@
             </div>
 
             <div className="grid grid-4" style={{marginBottom:16}}>
-              <KPI label="Total Supplied" value={money(T.total_supplied_usd)} sub={`${T.reserve_count} reserves`} />
-              <KPI label="RWA Collateral" value={money(T.rwa_usd)} sub={`${T.rwa_count} assets · non-stablecoin`} />
-              <KPI label="Stablecoin Liquidity" value={money(T.stablecoin_usd)} sub="GHO · USDC · RLUSD" />
-              <KPI label="Headline Split" value={`${Math.round(T.rwa_usd/T.total_supplied_usd*100)}% RWA`} sub={`${Math.round(T.stablecoin_usd/T.total_supplied_usd*100)}% stablecoin`} />
+              <KPI label="Total Supplied" value={money(T.horizon_supplied_usd)} sub={`${T.reserve_count} reserves · venue lens`} />
+              <KPI label="RWA Collateral" value={money(T.horizon_supplied_usd - T.horizon_stablecoin_supplied_usd)} sub={`${T.rwa_count} assets · supplied here`} />
+              <KPI label="Stablecoin Liquidity" value={money(T.horizon_stablecoin_supplied_usd)} sub="GHO · USDC · RLUSD" />
+              <KPI label="Supplied Split" value={`${Math.round((T.horizon_supplied_usd-T.horizon_stablecoin_supplied_usd)/T.horizon_supplied_usd*100)}% RWA`} sub={`${Math.round(T.horizon_stablecoin_supplied_usd/T.horizon_supplied_usd*100)}% stablecoin`} />
             </div>
 
             <div className="panel" style={{marginBottom:16}}>

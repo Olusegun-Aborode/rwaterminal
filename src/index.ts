@@ -39,6 +39,12 @@ const KNOWN: Record<string, [string, string]> = {
   "0x8292bb45bf1ee4d140127049757c2e0ff06317ed": ["RLUSD", "Ripple"],
 };
 const STABLE = new Set(["GHO", "USDC", "RLUSD"]);
+const ASSET_CLASS: Record<string, string> = {
+  USTB: "US Treasuries", JTRSY: "US Treasuries", USYC: "US Treasuries", VBILL: "US Treasuries",
+  USCC: "Crypto Carry", JAAA: "Private Credit (CLO)", ACRED: "Private Credit",
+  GHO: "Stablecoin", USDC: "Stablecoin", RLUSD: "Stablecoin",
+};
+const erc20Abi = [{ name: "totalSupply", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }] as const;
 const ISSUER: Record<string, { kind: "superstate"; fund: number } | { kind: "usyc" }> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": { kind: "superstate", fund: 1 },
   "0x14d60e7fdc0d71d8611742720e4c50e7a974020c": { kind: "superstate", fund: 2 },
@@ -72,7 +78,7 @@ async function fetchIssuer(addr: string, now: number) {
     } else {
       const r: any = await (await fetch("https://usyc.hashnote.com/api/price-reports", { headers: { "User-Agent": "rwa-terminal/1.0" } })).json();
       const rec = Array.isArray(r) ? r[0] : (r.data?.[0] ?? r);
-      return { source: "hashnote_api", nav: Number(rec.price), asof_ts: Number(rec.timestamp), aum: null };
+      return { source: "hashnote_api", nav: Number(rec.price), asof_ts: Number(rec.timestamp), aum: Number(rec.totalSupply) * Number(rec.price) };
     }
   } catch { return null; }
 }
@@ -95,9 +101,10 @@ async function buildSnapshot(env: Env) {
     c1.push({ address: DP, abi: dpAbi, functionName: "getReserveData", args: [a] });
     c1.push({ address: OR, abi: oracleAbi, functionName: "getAssetPrice", args: [a] });
     c1.push({ address: OR, abi: oracleAbi, functionName: "getSourceOfAsset", args: [a] });
+    c1.push({ address: a, abi: erc20Abi, functionName: "totalSupply" });
   }
   const r1: any[] = await client.multicall({ contracts: c1, allowFailure: true });
-  const sources: (string | null)[] = addrs.map((_: any, i: number) => r1[i * 4 + 3]?.status === "success" ? (r1[i * 4 + 3].result as string) : null);
+  const sources: (string | null)[] = addrs.map((_: any, i: number) => r1[i * 5 + 3]?.status === "success" ? (r1[i * 5 + 3].result as string) : null);
 
   const oc: any[] = []; const ocMap: number[] = [];
   sources.forEach((src, i) => {
@@ -125,12 +132,13 @@ async function buildSnapshot(env: Env) {
   for (let i = 0; i < reserves.length; i++) {
     const symbol = reserves[i].symbol; const addr = addrs[i];
     const [label, issuer] = KNOWN[addr.toLowerCase()] ?? [symbol, "? UNKNOWN"];
-    const cfg = r1[i * 4]?.status === "success" ? (r1[i * 4].result as any[]) : [8, 0, 0];
+    const cfg = r1[i * 5]?.status === "success" ? (r1[i * 5].result as any[]) : [8, 0, 0];
     const dec = Number(cfg[0]); const ltv = Number(cfg[1]) / 100; const lqt = Number(cfg[2]) / 100;
-    const rd = r1[i * 4 + 1]?.status === "success" ? (r1[i * 4 + 1].result as any[]) : null;
+    const rd = r1[i * 5 + 1]?.status === "success" ? (r1[i * 5 + 1].result as any[]) : null;
     const supplied = rd ? Number(rd[2]) / 10 ** dec : 0;
     const supplyApy = rd ? Number(rd[5]) / 1e27 * 100 : 0;
-    const price = r1[i * 4 + 2]?.status === "success" ? Number(r1[i * 4 + 2].result) / 1e8 : 0;
+    const price = r1[i * 5 + 2]?.status === "success" ? Number(r1[i * 5 + 2].result) / 1e8 : 0;
+    const totalSupply = r1[i * 5 + 4]?.status === "success" ? Number(r1[i * 5 + 4].result) / 10 ** dec : null;
     const src = sources[i];
     const ob = oracleBy[i];
     let navState: string | null = null, navUpdated: number | null = null, navFreshSrc: string | null = null, navValue: number | null = null;
@@ -146,22 +154,42 @@ async function buildSnapshot(env: Env) {
       if ((navState === "value_only" || navState === null) && (now - iss.asof_ts) <= 259200) { navState = "fresh"; navFreshSrc = iss.source; navUpdated = iss.asof_ts; }
     }
     const suppliedUsd = price * supplied;
-    out.push({ symbol_onchain: symbol, label, issuer, address: addr, decimals: dec, ltv_pct: ltv, liq_threshold_pct: lqt,
+    const navForAum = navValue ?? price;
+    const assetAum = (iss && iss.aum) ? iss.aum : (totalSupply != null ? totalSupply * navForAum : null);
+    const aumSource = (iss && iss.aum) ? iss.source : (totalSupply != null ? "onchain_derived" : null);
+    const assetClass = ASSET_CLASS[label] ?? "Other";
+    out.push({ symbol_onchain: symbol, label, issuer, asset_class: assetClass, address: addr, decimals: dec, ltv_pct: ltv, liq_threshold_pct: lqt,
+      token_total_supply: totalSupply, asset_aum: assetAum, aum_source: aumSource,
       total_supplied: supplied, supplied_usd: suppliedUsd, supply_apy_pct: +supplyApy.toFixed(3), oracle_price_usd: price,
       oracle_source: src, nav_value: navValue, nav_state: navState, nav_freshness_source: navFreshSrc, nav_updated_at: navUpdated,
       offchain_nav: offNav, offchain_nav_asof_ts: offAsofTs, offchain_aum: offAum, offchain_source: offSrc,
       is_stable: STABLE.has(label), known: label !== "?" && !issuer.startsWith("?") });
   }
 
-  const tot = out.reduce((s, r) => s + r.supplied_usd, 0);
-  const stab = out.filter(r => r.is_stable).reduce((s, r) => s + r.supplied_usd, 0);
+  const sum = (arr: any[], f: (r: any) => number) => arr.reduce((s, r) => s + (f(r) || 0), 0);
+  const suppliedTot = sum(out, r => r.supplied_usd);
+  const suppliedStable = sum(out.filter(r => r.is_stable), r => r.supplied_usd);
+  // ASSET-LEVEL AUM (the market-size number; venue-supplied is a separate lens)
+  const rwaAum = sum(out.filter(r => !r.is_stable), r => r.asset_aum);
+  const stableAum = sum(out.filter(r => r.is_stable), r => r.asset_aum);
+  const groupAum = (key: string) => {
+    const g: Record<string, { aum: number; count: number }> = {};
+    for (const r of out) { const k = r[key] || "Other"; (g[k] ||= { aum: 0, count: 0 }); g[k].aum += r.asset_aum || 0; g[k].count++; }
+    return Object.entries(g).map(([name, v]) => ({ name, aum: v.aum, count: v.count })).sort((a, b) => b.aum - a.aum);
+  };
   const major = out.filter(r => !r.is_stable && (!r.known || r.nav_state === "stale" || r.nav_state === "unreadable")).length;
   const minor = out.filter(r => !r.is_stable && r.nav_state === "value_only").length;
   const grade = major === 0 && minor === 0 ? "A" : major === 0 ? "B" : major <= 2 ? "C" : "D";
   return { market_id: "proto_horizon_v3", block: Number(block), fetched_at: now, reserves: out,
-    totals: { total_supplied_usd: tot, stablecoin_usd: stab, rwa_usd: tot - stab, reserve_count: out.length,
-      rwa_count: out.filter(r => !r.is_stable).length, grade, major_issues: major, minor_issues: minor,
-      nav_value_only: minor, nav_stale: out.filter(r => r.nav_state === "stale").length, unknown_count: out.filter(r => !r.known).length } };
+    totals: {
+      // market size = asset-level AUM (lens: issuer-reported where available, else totalSupply x NAV)
+      rwa_aum: rwaAum, stablecoin_aum: stableAum, total_aum: rwaAum + stableAum,
+      by_class: groupAum("asset_class"), by_issuer: groupAum("issuer"),
+      // venue lens (Horizon-supplied) kept distinct
+      horizon_supplied_usd: suppliedTot, horizon_stablecoin_supplied_usd: suppliedStable,
+      reserve_count: out.length, rwa_count: out.filter(r => !r.is_stable).length,
+      grade, major_issues: major, minor_issues: minor, nav_value_only: minor,
+      nav_stale: out.filter(r => r.nav_state === "stale").length, unknown_count: out.filter(r => !r.known).length } };
 }
 
 /** Append the snapshot to Neon as ONE batched transaction (1 subrequest).
@@ -179,9 +207,9 @@ async function persist(env: Env, snap: any) {
         SELECT t.asset_id, ${ts}, ${r.nav_value}, ${r.nav_freshness_source ?? "onchain"},
                ${r.nav_updated_at ? new Date(r.nav_updated_at * 1000).toISOString() : null}, ${r.nav_state === "stale"}
         FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
-    if (r.supplied_usd != null)
+    if (r.asset_aum != null)
       stmts.push(sql`INSERT INTO asset_aum_history (asset_id, ts, aum, source)
-        SELECT t.asset_id, ${ts}, ${r.supplied_usd}, 'onchain_derived'
+        SELECT t.asset_id, ${ts}, ${r.asset_aum}, ${r.aum_source ?? "onchain_derived"}
         FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
     stmts.push(sql`INSERT INTO token_supply_history (token_id, ts, total_supply)
       SELECT t.token_id, ${ts}, ${r.total_supplied}
