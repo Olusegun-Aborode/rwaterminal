@@ -39,15 +39,21 @@ Built on the Datum Labs dashboard kit. **Everything in the stack is free-tier.**
 4. Before the first successful deploy you must create the KV namespace and set secrets (Option B steps 2–4) — the build needs the KV id in `wrangler.toml` and the secrets at runtime.
 
 **Option B — CLI (simplest to get running):**
+Run each command on its own line — do NOT paste the trailing `# ...` notes (zsh
+treats `#` as an argument, not a comment).
 ```bash
 cd worker
 npm install
 npx wrangler login
-npx wrangler kv namespace create HORIZON_KV   # paste the printed id into wrangler.toml
-npx wrangler secret put RPC_URL                # your Alchemy https URL
-npx wrangler secret put DATABASE_URL           # your Neon connection string
+npx wrangler kv namespace create HORIZON_KV
+```
+Copy the `id` it prints into `wrangler.toml` (replace `REPLACE_WITH_KV_NAMESPACE_ID`), then:
+```bash
+npx wrangler secret put RPC_URL
+npx wrangler secret put DATABASE_URL
 npx wrangler deploy
 ```
+`secret put` prompts `Enter a secret value:` — paste your Alchemy URL / Neon string there.
 Test: open `https://<your-worker>.workers.dev/api/refresh` (manual pull), then `/api/snapshot`.
 The cron (`*/5 * * * *`) then keeps KV + Neon updated automatically.
 
