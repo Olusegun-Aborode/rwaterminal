@@ -86,10 +86,14 @@
       const [sel, setSel] = useState(null);
       const [metric, setMetric] = useState('value');
       const [hist, setHist] = useState(null);
+      const [events, setEvents] = useState(null);
       const chartRef = React.useRef(null);
       useEffect(() => {
         if (!WORKER_URL) return; let alive=true; const base = WORKER_URL.replace(/\/$/,'');
-        const load = () => fetch(base+'/api/snapshot').then(r=>r.json()).then(j=>{ if(alive && j && j.totals) setD(j); }).catch(()=>{});
+        const load = () => {
+          fetch(base+'/api/snapshot').then(r=>r.json()).then(j=>{ if(alive && j && j.totals) setD(j); }).catch(()=>{});
+          fetch(base+'/api/events').then(r=>r.json()).then(j=>{ if(alive && j && j.by_asset) setEvents(j); }).catch(()=>{});
+        };
         load(); const id=setInterval(load,60000);
         fetch(base+'/api/history').then(r=>r.json()).then(j=>{ if(alive) setHist(j.points||[]); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
@@ -124,6 +128,16 @@
       })).filter(s=>s.values.some(v=>v>0)) : [];
       const areaLabels = days.map(s=>{ const dt=new Date(s+'T00:00:00Z'); return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
       const METRIC_LABELS = {value:'Total RWA Value', holders:'Asset Holders', active:'Active Addresses', transfer:'Transfer Volume'};
+      // ── Event-indexer metrics (Envio): holders / active addrs / transfer volume ──
+      const evBy = (events && events.by_asset) || {};
+      const evFor = (r) => evBy[(r.address||'').toLowerCase()] || {};
+      const volUsd = (r) => { const e=evFor(r), dec=r.decimals||18; const tok=['supplied','withdrawn','borrowed','repaid'].reduce((s,k)=>s+Number(e[k]||0),0)/Math.pow(10,dec); return tok*(r.oracle_price_usd||1); };
+      const metricVal = (r,m) => m==='holders'?(evFor(r).holders||0) : m==='active'?(evFor(r).active||0) : m==='transfer'?volUsd(r) : 0;
+      const metricRows = (m) => [...reserves].map(r=>({name:r.label, value:metricVal(r,m), dot:CLASS_COLORS[r.asset_class]||'var(--orange)'})).filter(x=>x.value>0).sort((a,b)=>b.value-a.value);
+      const holderRows = metricRows('holders');
+      const cnt = (v)=>window.fmtNum(v,0);
+      const metricFmt = (m)=> m==='transfer'?navUSD:cnt;
+      const metricNote = {holders:'current holders per fund', active:'distinct addresses since genesis', transfer:'cumulative gross flow since genesis'};
 
       const NAV = [
         {sec:'Market', items:[
@@ -208,7 +222,7 @@
             {view==='overview' && <>
               <div className="panel" ref={chartRef} style={{marginBottom:16}}>
                 <div className="panel-header">
-                  <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· by RWA category</span></span>
+                  <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· {metric==='value'?'by RWA category':'by fund'}</span></span>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <div className="time-range">
                       {['value','holders','active','transfer'].map(m=>(
@@ -226,15 +240,24 @@
                     ? (areaSeries.length
                         ? <AreaChart series={areaSeries} stacked width={900} height={280} labels={areaLabels} />
                         : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
-                    : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:13,color:'var(--fg-muted)'}}>{METRIC_LABELS[metric]} — requires the event indexer</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:8,maxWidth:380}}>Holders / active addresses / transfer volume are event-level data. Phase 2 wires an Envio indexer over Horizon's Mint / Burn / BalanceTransfer events.</div></div></div>}
+                    : (events
+                        ? (metricRows(metric).length
+                            ? <div style={{padding:'6px 2px 2px'}}>
+                                <Leaderboard items={metricRows(metric)} format={metricFmt(metric)} />
+                                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:16,letterSpacing:'0.04em'}}>{metricNote[metric]} · via Envio indexer{events.synced_block?` · synced to block ${Number(events.synced_block).toLocaleString()}`:''}</div>
+                              </div>
+                            : <div style={{height:280,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>No {METRIC_LABELS[metric].toLowerCase()} recorded yet</span></div>)
+                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading {METRIC_LABELS[metric].toLowerCase()} from the indexer…</div></div></div>)}
                 </div>
               </div>
 
               <div className="grid grid-2" style={{marginBottom:16}}>
                 <div className="panel">
-                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Holders</span><span className="panel-badge">PER FUND</span></div>
-                  <div className="panel-body" style={{minHeight:236,display:'grid',placeItems:'center',textAlign:'center'}}>
-                    <div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Holder counts require the event indexer</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6,maxWidth:300}}>Phase 2 — Envio over Mint/Burn/BalanceTransfer (RWA aTokens emit no free Transfer events).</div></div>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Holders</span><span className="panel-badge">{events&&events.totals?`${window.fmtNum(events.totals.holders,0)} HOLDERS`:'PER FUND'}</span></div>
+                  <div className="panel-body" style={{minHeight:236}}>
+                    {events&&holderRows.length
+                      ? <Leaderboard items={holderRows} format={cnt} />
+                      : <div style={{minHeight:200,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{events?'No holders recorded yet':'Loading holder counts…'}</div></div>}
                   </div>
                 </div>
                 <div className="panel">

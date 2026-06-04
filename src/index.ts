@@ -101,6 +101,53 @@ async function fetchCentrifuge(): Promise<Record<string, { nav: number; computed
   return out;
 }
 
+// Envio HyperIndex — event-history projection (holders, active addresses, flows).
+// Keyed: TokenHolders by aToken; ReserveFlow/ReserveAction by reserve (= underlying).
+const INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/6990258/v1/graphql";
+const ATOKEN_TO_UNDERLYING: Record<string, string> = {
+  "0x946281a2d0dd6e650d08f74833323d66ae4c8b12": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f", // GHO
+  "0x68215b6533c47ff9f7125ac95adf00fe4a62f79e": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+  "0xe3190143eb552456f88464662f0c0c4ac67a77eb": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed", // RLUSD
+  "0x4e58a2e433a739726134c83d2f07b2562e8dfdb3": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e", // USTB
+  "0x08b798c40b9ab931356d9ab4235f548325c4cb80": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c", // USCC
+  "0xc167932ac4eec2b65844ef00d31b4550250536a5": "0x136471a34f6ef19fe571effc1ca711fdb8e49f2b", // USYC
+  "0x844f07ab09aa5dbdce6a9b1206ce150e1eadaccb": "0x8c213ee79581ff4984583c6a801e5263418c4b86", // JTRSY
+  "0xb0ec6c4482ac1ef77be239c0ac833cf37a27c876": "0x5a0f93d040de44e78f251b03c43be9cf317dcf64", // JAAA
+  "0xe1cfd16b8e4b1c86bb5b7a104cfefbc7b09326dd": "0x2255718832bc9fd3be1caf75084f4803da14ff01", // VBILL
+  "0xc293744ffbcf46696d589f5c415e71bc491519cd": "0x17418038ecf73ba4026c4f428547bf099706f27b", // ACRED
+};
+async function fetchEvents(): Promise<any> {
+  const query = `{
+    TokenHolders { token holderCount lastBlock }
+    ReserveFlow { reserve totalSupplied totalWithdrawn totalBorrowed totalRepaid actionCount }
+    ReserveAction(distinct_on: [reserve, user], order_by: [{reserve: asc}, {user: asc}]) { reserve }
+    chain_metadata { latest_processed_block }
+  }`;
+  const r: any = await (await fetch(INDEXER_GRAPHQL, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }),
+  })).json();
+  const d = r?.data;
+  if (!d) return { ok: false, error: r?.errors ?? "no data", by_asset: {} };
+  const by: Record<string, any> = {};
+  const ensure = (a: string) => (by[a] ||= { holders: 0, active: 0, supplied: "0", withdrawn: "0", borrowed: "0", repaid: "0", action_count: 0 });
+  for (const t of (d.TokenHolders || [])) {
+    const u = ATOKEN_TO_UNDERLYING[(t.token || "").toLowerCase()];
+    if (u) ensure(u).holders = Number(t.holderCount) || 0;
+  }
+  for (const f of (d.ReserveFlow || [])) {
+    const e = ensure((f.reserve || "").toLowerCase());
+    e.supplied = String(f.totalSupplied); e.withdrawn = String(f.totalWithdrawn);
+    e.borrowed = String(f.totalBorrowed); e.repaid = String(f.totalRepaid); e.action_count = Number(f.actionCount) || 0;
+  }
+  for (const a of (d.ReserveAction || [])) ensure((a.reserve || "").toLowerCase()).active += 1;
+  const vals = Object.values(by) as any[];
+  return {
+    ok: true, synced_block: Number(d.chain_metadata?.[0]?.latest_processed_block) || null,
+    by_asset: by,
+    totals: { holders: vals.reduce((s, v) => s + v.holders, 0), active_addresses: vals.reduce((s, v) => s + v.active, 0), actions: vals.reduce((s, v) => s + v.action_count, 0) },
+  };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -278,7 +325,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/events", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -296,6 +343,10 @@ export default {
         GROUP BY t.contract_address, date_trunc('day', h.ts)
         ORDER BY hr`;
       return new Response(JSON.stringify({ points: rows }), { headers: cors });
+    }
+    if (url.pathname === "/api/events") {
+      const ev = await fetchEvents();
+      return new Response(JSON.stringify(ev), { headers: { ...cors, "cache-control": "max-age=60" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
