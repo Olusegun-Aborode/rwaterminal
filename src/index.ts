@@ -78,6 +78,7 @@ async function fetchIssuer(addr: string, now: number) {
 }
 
 async function buildSnapshot(env: Env) {
+  if (!env.RPC_URL) throw new Error("RPC_URL secret is not set on this Worker — add it under Settings > Variables and Secrets (type: Secret).");
   const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
   const DP = getAddress(env.HORIZON_DATA_PROVIDER), OR = getAddress(env.HORIZON_ORACLE);
   const now = Math.floor(Date.now() / 1000);
@@ -171,6 +172,16 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     const cors = { "access-control-allow-origin": "*", "content-type": "application/json" };
+    if (url.pathname === "/" || url.pathname === "/api/health") {
+      return new Response(JSON.stringify({
+        status: "rwa-terminal-worker",
+        secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
+        kv_bound: !!env.HORIZON_KV,
+        rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
+        routes: ["/api/snapshot", "/api/refresh", "/api/health"],
+      }), { headers: cors });
+    }
+    try {
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
       if (latest) return new Response(latest, { headers: cors });
@@ -184,6 +195,9 @@ export default {
       if (env.DATABASE_URL) await persist(env, snap).catch(e => console.error(e));
       return new Response(JSON.stringify({ ok: true, block: snap.block, reserves: snap.reserves.length }), { headers: cors });
     }
-    return new Response(JSON.stringify({ status: "rwa-terminal-worker", routes: ["/api/snapshot", "/api/refresh"] }), { headers: cors });
+    return new Response(JSON.stringify({ error: "unknown route" }), { status: 404, headers: cors });
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: String(e?.message || e) }), { status: 500, headers: cors });
+    }
   },
 };
