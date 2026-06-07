@@ -42,3 +42,13 @@ type TokenHolders {
   holderCount: Int!
   lastBlock: Int!
 }
+
+# Time-stamped holder-count points (one per change) so holder count is queryable
+# over time — powers the Holders trend line + 30d delta (last point per token per day).
+type HolderPoint {
+  id: ID! # token-block-account
+  token: String!
+  holderCount: Int!
+  blockNumber: Int!
+  timestamp: Int!
+}

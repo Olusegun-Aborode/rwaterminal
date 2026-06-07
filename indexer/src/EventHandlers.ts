@@ -45,7 +45,7 @@ indexer.onEvent({ contract: "HorizonPool", event: "Repay" }, async ({ event, con
 });
 
 // ── Holders (RwaAToken Mint/Burn/BalanceTransfer) ─────────────────────────
-async function adjust(context: any, token: string, account: string, delta: bigint, block: number) {
+async function adjust(context: any, token: string, account: string, delta: bigint, block: number, ts: number) {
   if (/^0x0+$/i.test(account)) return; // skip zero address (mint/burn counterparty)
   const tok = token.toLowerCase(), acct = account.toLowerCase(), id = `${tok}-${acct}`;
   const prev = (await context.Holding.get(id)) ?? { id, token: tok, account: acct, balance: 0n, updatedBlock: 0 };
@@ -55,17 +55,20 @@ async function adjust(context: any, token: string, account: string, delta: bigin
   const isHolder = next > 0n;
   if (wasHolder !== isHolder) {
     const tc = (await context.TokenHolders.get(tok)) ?? { id: tok, token: tok, holderCount: 0, lastBlock: 0 };
-    context.TokenHolders.set({ ...tc, holderCount: Math.max(0, tc.holderCount + (isHolder ? 1 : -1)), lastBlock: block });
+    const holderCount = Math.max(0, tc.holderCount + (isHolder ? 1 : -1));
+    context.TokenHolders.set({ ...tc, holderCount, lastBlock: block });
+    // Append a time-stamped point so holder count is queryable over time (trends + 30d deltas)
+    context.HolderPoint.set({ id: `${tok}-${block}-${acct}`, token: tok, holderCount, blockNumber: block, timestamp: ts });
   }
 }
 
 indexer.onEvent({ contract: "RwaAToken", event: "Mint" }, async ({ event, context }) => {
-  await adjust(context, event.srcAddress, event.params.onBehalfOf, event.params.value, event.block.number);
+  await adjust(context, event.srcAddress, event.params.onBehalfOf, event.params.value, event.block.number, event.block.timestamp);
 });
 indexer.onEvent({ contract: "RwaAToken", event: "Burn" }, async ({ event, context }) => {
-  await adjust(context, event.srcAddress, event.params.from, -event.params.value, event.block.number);
+  await adjust(context, event.srcAddress, event.params.from, -event.params.value, event.block.number, event.block.timestamp);
 });
 indexer.onEvent({ contract: "RwaAToken", event: "BalanceTransfer" }, async ({ event, context }) => {
-  await adjust(context, event.srcAddress, event.params.from, -event.params.value, event.block.number);
-  await adjust(context, event.srcAddress, event.params.to, event.params.value, event.block.number);
+  await adjust(context, event.srcAddress, event.params.from, -event.params.value, event.block.number, event.block.timestamp);
+  await adjust(context, event.srcAddress, event.params.to, event.params.value, event.block.number, event.block.timestamp);
 });
