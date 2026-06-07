@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RWA Terminal — Market Overview</title>
+  <title>RWA Terminal: Market Overview</title>
   <link rel="stylesheet" href="styles.css?v=p2-hero" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
@@ -16,14 +16,14 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
   <script src="horizon.data.js"></script>
-  <script type="text/babel" src="charts.jsx?v=p2-events"></script>
-  <script type="text/babel" src="widgets.jsx?v=p2-events"></script>
+  <script type="text/babel" src="charts.jsx?v=p3-tooltips"></script>
+  <script type="text/babel" src="widgets.jsx?v=p3-tooltips"></script>
 
   <script type="text/babel" data-presets="env,react">
     const { useState, useEffect } = React;
     const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
     const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Other':'#9599A1' };
-    const navUSD = (v) => v==null ? '—' : window.fmtUSD(v, v>=1e9?2:1);
+    const navUSD = (v) => v==null ? 'n/a' : window.fmtUSD(v, v>=1e9?2:1);
 
     // Measure a container so charts render at the panel's true pixel width (fills desktop)
     function useElementWidth(initial) {
@@ -71,26 +71,26 @@
       const r = asset;
       const row = (k,v) => <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{color:'var(--fg-muted)',fontSize:12}}>{k}</span><span className="mono" style={{fontSize:12,textAlign:'right'}}>{v}</span></div>;
       return (
-        <ExpandModal open={!!r} title={r ? `${r.label} — ${r.asset_class}` : ''} onClose={onClose}>
+        <ExpandModal open={!!r} title={r ? `${r.label}, ${r.asset_class}` : ''} onClose={onClose}>
           {r && <div style={{padding:'4px 4px 12px'}}>
             <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:14}}>
               <div className="asset-icon" style={{width:38,height:38,background:CLASS_COLORS[r.asset_class]}}>{(r.label||'?').slice(0,2)}</div>
               <div><div style={{fontSize:18,fontWeight:600}}>{r.label}</div><div className="asset-sub">{r.symbol_onchain} · {typeof r.issuer==='string'?r.issuer:''}</div></div>
-              <div style={{marginLeft:'auto'}}>{r.nav_state==='fresh'?<DataQualityBadge level="ok" label="NAV FRESH"/>:r.nav_state==='value_only'?<DataQualityBadge level="degraded" label="VALUE-ONLY"/>:r.nav_state==='stale'?<DataQualityBadge level="broken" label="STALE"/>:<DataQualityBadge level="degraded" label={r.nav_state||'—'}/>}</div>
+              <div style={{marginLeft:'auto'}}>{r.nav_state==='fresh'?<DataQualityBadge level="ok" label="NAV FRESH"/>:r.nav_state==='value_only'?<DataQualityBadge level="degraded" label="VALUE-ONLY"/>:r.nav_state==='stale'?<DataQualityBadge level="broken" label="STALE"/>:<DataQualityBadge level="degraded" label={r.nav_state||'n/a'}/>}</div>
             </div>
             <div className="grid grid-2" style={{gap:24}}>
               <div>
                 {row('Asset class', r.asset_class)}
-                {row('Issuer', typeof r.issuer==='string'?r.issuer:'—')}
+                {row('Issuer', typeof r.issuer==='string'?r.issuer:'n/a')}
                 {row('Fund AUM', navUSD(r.asset_aum))}
-                {row('NAV', r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'—')}
-                {row('Token supply', r.token_total_supply!=null?window.fmtNum(r.token_total_supply,2):'—')}
+                {row('NAV', r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'n/a')}
+                {row('Token supply', r.token_total_supply!=null?window.fmtNum(r.token_total_supply,2):'n/a')}
               </div>
               <div>
-                {row('On Aave Horizon', r.supplied_usd>0?navUSD(r.supplied_usd):'0 — not deposited here')}
-                {row('LTV (Horizon)', r.ltv_pct!=null?r.ltv_pct+'%':'—')}
-                {row('Liq. threshold', r.liq_threshold_pct!=null?r.liq_threshold_pct+'%':'—')}
-                {row('NAV freshness', r.nav_state==='value_only'?'off-chain (issuer)':(r.nav_state||'—'))}
+                {row('On Aave Horizon', r.supplied_usd>0?navUSD(r.supplied_usd):'0, not deposited here')}
+                {row('LTV (Horizon)', r.ltv_pct!=null?r.ltv_pct+'%':'n/a')}
+                {row('Liq. threshold', r.liq_threshold_pct!=null?r.liq_threshold_pct+'%':'n/a')}
+                {row('NAV freshness', r.nav_state==='value_only'?'off-chain (issuer)':(r.nav_state||'n/a'))}
                 {row('Contract', (r.address||'').slice(0,10)+'…')}
               </div>
             </div>
@@ -228,7 +228,7 @@
                 <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{(r.label||'?').slice(0,2)}</div><div><div className="asset-name">{r.label}</div><div className="asset-sub">{r.symbol_onchain}</div></div></div></td>
                 <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[r.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{r.asset_class}</span></td>
                 <td style={{color:'var(--fg-muted)',fontSize:12}}>{typeof r.issuer==='string'?r.issuer:''}</td>
-                <td className="num">{r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'—'}</td>
+                <td className="num">{r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'n/a'}</td>
                 <td className="num" style={{fontWeight:600}}>{navUSD(r.asset_aum)}</td>
                 <td className="num" style={{color:r.supplied_usd>0?'var(--fg)':'var(--fg-dim)'}}>{r.supplied_usd>0?navUSD(r.supplied_usd):'0 on Horizon'}</td>
               </tr>
@@ -275,7 +275,7 @@
             {view==='overview' ? (
               <div className="hero">
                 <h1 className="page-title hero-title">RWA Market Overview</h1>
-                <p className="page-welcome">A live terminal for tokenized real-world assets — tracking fund AUM, issuers, holders and on-chain flows across asset classes, sourced on-chain and reconciled against DefiLlama. Phase 1 covers the funds live on <b>Aave Horizon</b>, with more venues to follow.</p>
+                <p className="page-welcome">A live terminal for tokenized real-world assets, tracking fund AUM, issuers, holders and on-chain flows across asset classes, sourced on-chain and reconciled against DefiLlama. Phase 1 covers the funds live on <b>Aave Horizon</b>, with more venues to follow.</p>
                 <div className="hero-status" style={{marginTop:0,marginBottom:18}}>
                   {Badges}
                   <span className="hero-asof">as of block {D.block.toLocaleString()}</span>
@@ -321,7 +321,7 @@
                   {metric==='value'
                     ? (areaSeries.length
                         ? <AreaChart series={areaSeries} stacked width={CW} height={CH} labels={areaLabels} />
-                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating — a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
+                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating, a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
                     : metric==='transfer'
                       ? (txSeries.length
                           ? <div>

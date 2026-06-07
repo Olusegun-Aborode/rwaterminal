@@ -257,7 +257,9 @@ async function buildSnapshot(env: Env) {
     let offNav = null, offAsofTs = null, offAum = null, offSrc = null;
     if (iss) {
       offNav = iss.nav; offAsofTs = iss.asof_ts; offAum = iss.aum; offSrc = iss.source;
-      if ((navState === "value_only" || navState === null) && (now - iss.asof_ts) <= 259200) { navState = "fresh"; navFreshSrc = iss.source; navUpdated = iss.asof_ts; }
+      // 6-day window: these funds publish NAV on business days only, so a 3-4 day-old
+      // NAV over a weekend/holiday is current — a tight 3-day window caused a daily A/B flicker.
+      if ((navState === "value_only" || navState === null) && (now - iss.asof_ts) <= 518400) { navState = "fresh"; navFreshSrc = iss.source; navUpdated = iss.asof_ts; }
     }
     // Centrifuge GraphQL — authoritative NAV + freshness for JTRSY/JAAA (value-only on-chain)
     const cf = centri[label];

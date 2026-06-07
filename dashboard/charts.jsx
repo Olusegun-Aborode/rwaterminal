@@ -1,4 +1,4 @@
-// Chart primitives — tiny SVG components, no external deps.
+// Chart primitives, tiny SVG components, no external deps.
 // Usage: pass series, width, height. Interactivity via inline handlers.
 
 const { useState, useRef, useMemo, useEffect, useCallback } = React;
@@ -270,6 +270,7 @@ function StackedBarChart({ data, keys, colors, width = 800, height = 220, format
 function Treemap({ items, width = 400, height = 280, onSelect, selectedId }) {
   // items: [{id, name, value, color}]
   const total = items.reduce((a, b) => a + b.value, 0);
+  const [hover, setHover] = useState(null);
 
   function squarify(items, x, y, w, h) {
     if (!items.length) return [];
@@ -322,13 +323,15 @@ function Treemap({ items, width = 400, height = 280, onSelect, selectedId }) {
   const rects = squarify(sorted, 0, 0, width, height);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} style={{ display: 'block' }}>
+    <div style={{ position: 'relative' }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} style={{ display: 'block' }} onMouseLeave={() => setHover(null)}>
       {rects.map(r => {
         const pct = (r.value / total * 100).toFixed(1);
         const big = r.w > 70 && r.h > 40;
         const sel = selectedId === r.id;
         return (
-          <g key={r.id} style={{ cursor: 'pointer' }} onClick={() => onSelect && onSelect(r.id)}>
+          <g key={r.id} style={{ cursor: 'pointer' }} onClick={() => onSelect && onSelect(r.id)}
+            onMouseMove={e => { const b = e.currentTarget.ownerSVGElement.getBoundingClientRect(); setHover({ name: r.name, value: r.value, pct, x: e.clientX - b.left, y: e.clientY - b.top, cw: b.width }); }}>
             <rect x={r.x + 1} y={r.y + 1} width={Math.max(0, r.w - 2)} height={Math.max(0, r.h - 2)}
               fill={r.color} opacity={sel ? 0.95 : 0.82} stroke={sel ? 'var(--fg)' : 'transparent'} strokeWidth={sel ? 2 : 0} rx="3" />
             {big && (
@@ -345,6 +348,14 @@ function Treemap({ items, width = 400, height = 280, onSelect, selectedId }) {
         );
       })}
     </svg>
+    {hover && (
+      <div className="chart-tooltip" style={{ left: Math.min(hover.x + 12, (hover.cw || width) - 150), top: Math.max(4, hover.y - 8) }}>
+        <div className="t-date">{hover.name}</div>
+        <div className="t-row"><span className="t-label">Value</span><span>{fmtUSD(hover.value * 1e6, 1)}</span></div>
+        <div className="t-row"><span className="t-label">Share</span><span>{hover.pct}%</span></div>
+      </div>
+    )}
+    </div>
   );
 }
 
@@ -406,7 +417,7 @@ function Heatmap({ data }) {
           <React.Fragment key={d}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-muted)' }}>{days[d]}</div>
             {row.map((v, h) => (
-              <div key={h} title={`${days[d]} ${h}:00 — ${Math.round(v*100)}% activity`}
+              <div key={h} title={`${days[d]} ${h}:00, ${Math.round(v*100)}% activity`}
                 style={{
                   aspectRatio: '1 / 1',
                   background: `rgba(255,107,53,${0.08 + v * 0.9})`,

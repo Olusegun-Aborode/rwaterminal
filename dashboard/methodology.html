@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RWA Terminal — Methodology</title>
+  <title>RWA Terminal: Methodology</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
@@ -41,11 +41,11 @@
       <div class="grid grid-2" style="align-items:start">
         <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> Scope &amp; the governing lens</span></div>
           <div class="panel-body"><div class="methodology">
-            <p><span class="key">Scope.</span> Phase 1 ingests <b>Aave Horizon only</b>. Every figure is the <b>Horizon-sourced subset</b> — the assets currently listed as Horizon reserves — <b>not the whole tokenized-RWA market</b> (which is multiples larger). "RWA AUM" here = the AUM of the funds that appear on Horizon.</p>
+            <p><span class="key">Scope.</span> Phase 1 ingests <b>Aave Horizon only</b>. Every figure is the <b>Horizon-sourced subset</b>, the assets currently listed as Horizon reserves, <b>not the whole tokenized-RWA market</b> (which is multiples larger). "RWA AUM" here = the AUM of the funds that appear on Horizon.</p>
             <h4>The two numbers that are easy to confuse</h4>
             <ul>
-              <li><span class="key">Asset AUM</span> — the size of the <i>fund</i> (issuer-reported or supply×NAV). This is the market-size number and the headline.</li>
-              <li><span class="key">Venue-supplied</span> — how much of that asset is deposited <i>into Horizon</i>. A venue position, not fund size. USYC has $2.85B AUM but $0 on Horizon — both true, different lenses.</li>
+              <li><span class="key">Asset AUM</span>, the size of the <i>fund</i> (issuer-reported or supply×NAV). This is the market-size number and the headline.</li>
+              <li><span class="key">Venue-supplied</span>, how much of that asset is deposited <i>into Horizon</i>. A venue position, not fund size. USYC has $2.85B AUM but $0 on Horizon, both true, different lenses.</li>
             </ul>
             <p>Every figure travels with its lens (asset-level vs venue; stablecoins in/out; NAV vs price; as-of block).</p>
           </div></div>
@@ -53,24 +53,24 @@
 
         <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> Where the data comes from</span></div>
           <div class="panel-body"><div class="methodology">
-            <h4>On-chain — your Alchemy RPC (batched via Multicall3)</h4>
+            <h4>On-chain, your Alchemy RPC (batched via Multicall3)</h4>
             <ul>
-              <li>Reserve set, LTV, liquidation threshold, supplied, supply APY → <span class="key">AaveProtocolDataProvider</span> (<code>getAllReservesTokens</code>, <code>getReserveData</code>). Enumerated dynamically — never hardcoded.</li>
+              <li>Reserve set, LTV, liquidation threshold, supplied, supply APY → <span class="key">AaveProtocolDataProvider</span> (<code>getAllReservesTokens</code>, <code>getReserveData</code>). Enumerated dynamically, never hardcoded.</li>
               <li>Price + NAV → <span class="key">AaveOracle</span> (<code>getAssetPrice</code>, <code>getSourceOfAsset</code>) → the LlamaGuard / Chainlink / RedStone feeds (<code>latestRoundData</code> / <code>latestAnswer</code>).</li>
               <li>Each token's <code>totalSupply</code> (ERC-20).</li>
             </ul>
             <h4>Off-chain issuer APIs (timestamped NAV)</h4>
             <ul>
-              <li><span class="key">Superstate</span> — USTB / USCC NAV, AUM, as-of date.</li>
-              <li><span class="key">Hashnote</span> — USYC price, supply, timestamp.</li>
-              <li><span class="key">Centrifuge GraphQL</span> (api.centrifuge.io) — JTRSY / JAAA NAV (<code>tokenPrice</code>) + freshness (<code>tokenPriceComputedAt</code>). Supply still on-chain (their <code>totalIssuance</code> aggregate is broken).</li>
+              <li><span class="key">Superstate</span>, USTB / USCC NAV, AUM, as-of date.</li>
+              <li><span class="key">Hashnote</span>, USYC price, supply, timestamp.</li>
+              <li><span class="key">Centrifuge GraphQL</span> (api.centrifuge.io), JTRSY / JAAA NAV (<code>tokenPrice</code>) + freshness (<code>tokenPriceComputedAt</code>). Supply still on-chain (their <code>totalIssuance</code> aggregate is broken).</li>
             </ul>
             <h4>Storage &amp; cadence</h4>
-            <p>A Cloudflare cron worker reads the above <b>every 5 minutes</b> and appends a snapshot to <span class="key">Neon</span> (Postgres) — the history that future time-series charts draw from.</p>
+            <p>A Cloudflare cron worker reads the above <b>every 5 minutes</b> and appends a snapshot to <span class="key">Neon</span> (Postgres), the history that future time-series charts draw from.</p>
             <h4>Tier-3 reconciliation (wired)</h4>
-            <p><span class="key">DefiLlama</span> (<code>api.llama.fi/protocol/aave-horizon-rwa</code>) — independent Horizon TVL, cross-checked against our on-chain number and shown as a <b>Verified / Degraded</b> badge (±5% tolerance).</p>
+            <p><span class="key">DefiLlama</span> (<code>api.llama.fi/protocol/aave-horizon-rwa</code>), independent Horizon TVL, cross-checked against our on-chain number and shown as a <b>Verified / Degraded</b> badge (±5% tolerance).</p>
             <h4>Planned</h4>
-            <p>AaveKit GraphQL (Aave-side cross-check); Envio (event history — flows, holders).</p>
+            <p>AaveKit GraphQL (Aave-side cross-check); Envio (event history, flows, holders).</p>
           </div></div>
         </div>
       </div>
@@ -80,7 +80,7 @@
           <ul>
             <li><span class="key">Asset AUM</span> = issuer-reported AUM where an API exists (Superstate, Hashnote), else <code>tokenTotalSupply × NAV</code>.</li>
             <li><span class="key">NAV</span> = on-chain oracle (<code>latestRoundData.answer</code>), with the issuer API as the value + freshness source for value-only feeds.</li>
-            <li><span class="key">NAV freshness</span> = age of the on-chain <code>updatedAt</code>, or the issuer API's timestamp. Three states: <b>fresh</b>, <b>stale</b> (&gt;48h), <b>value-only</b> (a price reads but the on-chain adapter exposes no timestamp — e.g. the LlamaGuard "USD Scaled" feeds; freshness must come from the issuer).</li>
+            <li><span class="key">NAV freshness</span> = age of the on-chain <code>updatedAt</code>, or the issuer API's timestamp. Three states: <b>fresh</b>, <b>stale</b> (&gt;48h), <b>value-only</b> (a price reads but the on-chain adapter exposes no timestamp, e.g. the LlamaGuard "USD Scaled" feeds; freshness must come from the issuer).</li>
             <li><span class="key">Venue-supplied</span> = Horizon aToken balance × oracle price. Kept distinct from AUM.</li>
             <li><span class="key">Composition</span> = Σ asset AUM grouped by asset class / issuer.</li>
             <li><span class="key">Data-quality grade</span> (A–D) = deductions for unmapped assets, stale/unreadable NAV (major) and value-only feeds (minor).</li>
@@ -91,7 +91,7 @@
       <div class="grid grid-2" style="margin-top:16px;align-items:start">
         <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> Data-quality rules (the lint)</span></div>
           <div class="panel-body"><div class="methodology"><ul>
-            <li><span class="key">Dynamic enumeration.</span> The reserve set comes from <code>getReservesList()</code> live — never a static list. (This is how we caught ACRED, a reserve the spec didn't list.)</li>
+            <li><span class="key">Dynamic enumeration.</span> The reserve set comes from <code>getReservesList()</code> live, never a static list. (This is how we caught ACRED, a reserve the spec didn't list.)</li>
             <li><span class="key">Identity by address.</span> Joins are on the contract address, never the ticker.</li>
             <li><span class="key">Anti-double-count.</span> Market size is asset-level AUM, not Σ(supply×price) across venues; venue-supplied is reported separately.</li>
             <li><span class="key">NAV staleness / value-only.</span> Freshness is flagged, never shown as fresh when it isn't.</li>
@@ -100,11 +100,11 @@
         </div>
         <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> Known limitations</span></div>
           <div class="panel-body"><div class="methodology"><ul>
-            <li><span class="key">Horizon-only.</span> Not the full RWA market — Phase 2 adds Morpho and direct issuer tokens.</li>
+            <li><span class="key">Horizon-only.</span> Not the full RWA market, Phase 2 adds Morpho and direct issuer tokens.</li>
             <li><span class="key">Stablecoins = full supply.</span> The $53B stablecoin figure is total circulating supply (USDC-dominated), not a Horizon number.</li>
             <li><span class="key">No Distributed/Represented yet.</span> No authoritative public source wired.</li>
             <li><span class="key">No value-weighted yield yet.</span> Needs issuer <code>/yield</code> endpoints.</li>
-            <li><span class="key">JTRSY / JAAA freshness.</span> Centrifuge publishes no timestamped feed and the on-chain adapter is value-only — so their NAV age is honestly "off-chain," not missing.</li>
+            <li><span class="key">JTRSY / JAAA freshness.</span> Centrifuge publishes no timestamped feed and the on-chain adapter is value-only, so their NAV age is honestly "off-chain," not missing.</li>
           </ul></div></div>
         </div>
       </div>

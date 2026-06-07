@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RWA Terminal — Aave Horizon (live)</title>
+  <title>RWA Terminal: Aave Horizon (live)</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
@@ -20,9 +20,9 @@
   <script src="horizon.data.js"></script>
 
   <script type="text/babel" data-presets="env,react">
-    const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev"; // live worker — dashboard auto-refreshes from /api/snapshot
-    const money = (n) => n==null ? '—' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(2)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Number(n).toFixed(2));
-    const num = (n,d=2) => n==null ? '—' : Number(n).toLocaleString(undefined,{maximumFractionDigits:d});
+    const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev"; // live worker, dashboard auto-refreshes from /api/snapshot
+    const money = (n) => n==null ? 'n/a' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(2)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Number(n).toFixed(2));
+    const num = (n,d=2) => n==null ? 'n/a' : Number(n).toLocaleString(undefined,{maximumFractionDigits:d});
 
     function KPI({label, value, sub, subColor}) {
       return (
@@ -84,8 +84,8 @@
           <main className="main">
             <div className="page-header">
               <div>
-                <h1 className="page-title">Aave Horizon — Live Reserves</h1>
-                <div className="page-subtitle">Venue lens: <b>Horizon-supplied × oracle price</b> (a venue position, <i>not</i> fund AUM — see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
+                <h1 className="page-title">Aave Horizon: Live Reserves</h1>
+                <div className="page-subtitle">Venue lens: <b>Horizon-supplied × oracle price</b> (a venue position, <i>not</i> fund AUM, see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
               </div>
               <span className="risk-pill" title={`Data quality ${grade}: ${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV · ${T.nav_stale} stale. Details on the Methodology page.`} style={{background:'var(--bg-2)',color:gradeColor,cursor:'help',whiteSpace:'nowrap'}}>● GRADE {grade}</span>
             </div>
@@ -113,7 +113,7 @@
                         <td className="num">{money(r.supplied_usd)}</td>
                         <td className="num">{r.ltv_pct}%</td>
                         <td className="num">{r.liq_threshold_pct}%</td>
-                        <td className="num">{r.nav_state==='value_only'?'off-chain':(r.nav_age_hours==null?'—':r.nav_age_hours+'h')}</td>
+                        <td className="num">{r.nav_state==='value_only'?'off-chain':(r.nav_age_hours==null?'n/a':r.nav_age_hours+'h')}</td>
                         <td>{!r.known? <Flag tone="red">UNMAPPED</Flag> : r.frozen? <Flag tone="muted">FROZEN</Flag> : ns==='stale'? <Flag tone="yellow">NAV STALE</Flag> : ns==='value_only'? <Flag tone="muted">VALUE-ONLY</Flag> : ns==='unreadable'? <Flag tone="red">NAV UNREAD</Flag> : <Flag tone="green">OK</Flag>}</td>
                       </tr>);
                     })}
