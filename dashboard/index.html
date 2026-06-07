@@ -108,6 +108,7 @@
       const [hist, setHist] = useState(null);
       const [events, setEvents] = useState(null);
       const [flows, setFlows] = useState(null);
+      const [mkt, setMkt] = useState(null);
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
@@ -120,6 +121,7 @@
         load(); const id=setInterval(load,60000);
         fetch(base+'/api/history').then(r=>r.json()).then(j=>{ if(alive) setHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/flows').then(r=>r.json()).then(j=>{ if(alive && j && j.daily) setFlows(j); }).catch(()=>{});
+        fetch(base+'/api/market-history').then(r=>r.json()).then(j=>{ if(alive && j) setMkt(j.points||[]); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -164,6 +166,17 @@
       };
       const rwaDelta = delta30(rwaClassNames);
       const stableDelta = delta30(['Stablecoin']);
+      // 30d deltas for market totals only the indexer/snapshot tracks (accrue from /api/market-history)
+      const mkt30 = (field) => {
+        if(!mkt || mkt.length<2) return null;
+        const last=mkt[mkt.length-1];
+        const target=new Date(new Date(last.d+'T00:00:00Z').getTime()-30*864e5).toISOString().slice(0,10);
+        let prev=null; for(const p of mkt){ if(p.d<=target) prev=p; else break; }
+        if(!prev) return null;
+        const cur=Number(last[field]), old=Number(prev[field]);
+        return (old>0 && isFinite(cur)) ? (cur-old)/old*100 : null;
+      };
+      const horizonDelta = mkt30('horizon_supplied_usd');
       const Badges = (
         <>
           <DataQualityBadge level={qLevel} label={`Grade ${grade}`} tooltip={`${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV`} />
@@ -268,10 +281,10 @@
                   <span className="hero-asof">as of block {D.block.toLocaleString()}</span>
                 </div>
                 <div className="grid grid-4">
-                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} sub={`${T.rwa_count} funds · not the full market`} />
-                  <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} sub="full circulating supply" />
+                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} delta={rwaDelta} sub={`${T.rwa_count} funds · not the full market`} />
+                  <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} delta={stableDelta} sub="full circulating supply" />
                   <Metric label="Issuers" value={issuerCount} sub="across the RWA funds" />
-                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} sub="venue lens · supplied" />
+                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} delta={horizonDelta} sub="venue lens · supplied" />
                 </div>
               </div>
             ) : (

@@ -465,3 +465,19 @@ CREATE INDEX ON token_holder_history  (token_id, ts DESC);
 CREATE INDEX ON token_price_history   (token_id, ts DESC);
 CREATE INDEX ON token_transfer_history(token_id, ts DESC);
 CREATE INDEX ON venue_reserve_history (venue_reserve_id, ts DESC);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- market_history: one row per snapshot of market-level totals (cron, every 5 min).
+-- Powers the hero 30d deltas (▲/▼) and holder/active trend lines. Self-created by
+-- the worker's persist() with CREATE TABLE IF NOT EXISTS, documented here too.
+CREATE TABLE IF NOT EXISTS market_history (
+  ts                   timestamptz PRIMARY KEY,
+  rwa_aum              double precision,
+  stablecoin_aum       double precision,
+  total_aum            double precision,
+  horizon_supplied_usd double precision,
+  holders              integer,
+  active_addresses     integer,
+  actions              integer,
+  issuers              integer
+);

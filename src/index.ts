@@ -313,11 +313,16 @@ async function buildSnapshot(env: Env) {
 /** Append the snapshot to Neon as ONE batched transaction (1 subrequest).
  *  Assumes the issuer/asset/token spine is seeded (history rows look up ids by
  *  contract address); a reserve with no seeded token is simply skipped. */
-async function persist(env: Env, snap: any) {
+async function persist(env: Env, snap: any, ev?: any) {
   if (!env.DATABASE_URL) return;
   const sql = neon(env.DATABASE_URL);
   const ts = new Date(snap.fetched_at * 1000).toISOString();
   const stmts: any[] = [];
+  // Self-migrating market-totals history — powers 30d deltas + holder/active trends.
+  stmts.push(sql`CREATE TABLE IF NOT EXISTS market_history (
+    ts timestamptz PRIMARY KEY, rwa_aum double precision, stablecoin_aum double precision,
+    total_aum double precision, horizon_supplied_usd double precision,
+    holders integer, active_addresses integer, actions integer, issuers integer)`);
   for (const r of snap.reserves) {
     const addr = r.address.toLowerCase();
     if (r.nav_value != null)
@@ -333,6 +338,12 @@ async function persist(env: Env, snap: any) {
       SELECT t.token_id, ${ts}, ${r.total_supplied}
       FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
   }
+  const t = snap.totals, e = ev?.totals || {};
+  stmts.push(sql`INSERT INTO market_history
+      (ts, rwa_aum, stablecoin_aum, total_aum, horizon_supplied_usd, holders, active_addresses, actions, issuers)
+    VALUES (${ts}, ${t.rwa_aum}, ${t.stablecoin_aum}, ${t.total_aum}, ${t.horizon_supplied_usd},
+            ${e.holders ?? null}, ${e.active_addresses ?? null}, ${e.actions ?? null}, ${t.by_issuer?.length ?? null})
+    ON CONFLICT (ts) DO NOTHING`);
   if (stmts.length) await sql.transaction(stmts);
 }
 
@@ -340,7 +351,10 @@ export default {
   async scheduled(_e: ScheduledController, env: Env, ctx: ExecutionContext) {
     const snap = await buildSnapshot(env);
     if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-    if (env.DATABASE_URL) ctx.waitUntil(persist(env, snap).catch(err => console.error("persist failed:", err)));
+    if (env.DATABASE_URL) {
+      const ev = await fetchEvents().catch(() => null);
+      ctx.waitUntil(persist(env, snap, ev).catch(err => console.error("persist failed:", err)));
+    }
   },
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -351,7 +365,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/history", "/api/events", "/api/flows", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -369,6 +383,21 @@ export default {
         GROUP BY t.contract_address, date_trunc('day', h.ts)
         ORDER BY hr`;
       return new Response(JSON.stringify({ points: rows }), { headers: cors });
+    }
+    if (url.pathname === "/api/market-history") {
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [] }), { headers: cors });
+      const sql = neon(env.DATABASE_URL);
+      try {
+        const rows = await sql`
+          SELECT to_char(date_trunc('day', ts), 'YYYY-MM-DD') AS d,
+                 (array_agg(rwa_aum ORDER BY ts DESC))[1] AS rwa_aum,
+                 (array_agg(stablecoin_aum ORDER BY ts DESC))[1] AS stablecoin_aum,
+                 (array_agg(horizon_supplied_usd ORDER BY ts DESC))[1] AS horizon_supplied_usd,
+                 (array_agg(holders ORDER BY ts DESC))[1] AS holders,
+                 (array_agg(active_addresses ORDER BY ts DESC))[1] AS active_addresses
+          FROM market_history GROUP BY date_trunc('day', ts) ORDER BY d`;
+        return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
+      } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); } // table not seeded yet
     }
     if (url.pathname === "/api/events") {
       const ev = await fetchEvents();
@@ -388,8 +417,9 @@ export default {
     if (url.pathname === "/api/refresh") { // manual trigger for testing
       const snap = await buildSnapshot(env);
       if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-      if (env.DATABASE_URL) await persist(env, snap).catch(e => console.error(e));
-      return new Response(JSON.stringify({ ok: true, block: snap.block, reserves: snap.reserves.length }), { headers: cors });
+      const ev = await fetchEvents().catch(() => null);
+      if (env.DATABASE_URL) await persist(env, snap, ev).catch(e => console.error(e));
+      return new Response(JSON.stringify({ ok: true, block: snap.block, reserves: snap.reserves.length, events: !!ev }), { headers: cors });
     }
     return new Response(JSON.stringify({ error: "unknown route" }), { status: 404, headers: cors });
     } catch (e: any) {
