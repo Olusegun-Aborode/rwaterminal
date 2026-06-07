@@ -174,6 +174,65 @@ async function fetchFlows(): Promise<any> {
   return { ok: true, actions: total, days: Object.keys(daily).length, daily };
 }
 
+// Asset-class lookup for the event-history aggregations.
+function classOfUnderlying(addr: string): string {
+  const [label] = KNOWN[addr.toLowerCase()] ?? ["?", ""];
+  return ASSET_CLASS[label] ?? "Other";
+}
+function classOfAToken(aTok: string): string {
+  const u = ATOKEN_TO_UNDERLYING[aTok.toLowerCase()];
+  return u ? classOfUnderlying(u) : "Other";
+}
+
+// Holder count per asset class over time — last HolderPoint per token per day, carried
+// forward. Powers the Holders trend line + real 30d delta (backfilled from genesis).
+async function fetchHoldersHistory(): Promise<any> {
+  const PAGE = 1000, MAX = 20;
+  const pages = await Promise.all(Array.from({ length: MAX }, (_, p) =>
+    fetch(INDEXER_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: `{ HolderPoint(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { token holderCount timestamp } }` }) }).then(r => r.json()).catch(() => null)));
+  const pts: any[] = [];
+  for (const pg of pages) for (const r of ((pg as any)?.data?.HolderPoint || [])) pts.push(r);
+  pts.sort((a, b) => a.timestamp - b.timestamp);
+  const ptsByDay: Record<string, any[]> = {};
+  for (const p of pts) { const d = new Date(p.timestamp * 1000).toISOString().slice(0, 10); (ptsByDay[d] ||= []).push(p); }
+  const days = Object.keys(ptsByDay).sort();
+  const lastByTok: Record<string, number> = {};
+  const out: any[] = [];
+  for (const d of days) {
+    for (const p of ptsByDay[d]) lastByTok[(p.token || "").toLowerCase()] = Number(p.holderCount);
+    const byClass: Record<string, number> = {};
+    for (const [tok, c] of Object.entries(lastByTok)) { const cls = classOfAToken(tok); byClass[cls] = (byClass[cls] || 0) + c; }
+    out.push({ d, byClass, total: Object.values(byClass).reduce((s, v) => s + v, 0) });
+  }
+  return { ok: true, points: out };
+}
+
+// Cumulative distinct active addresses per asset class over time (from ReserveAction).
+async function fetchActiveHistory(): Promise<any> {
+  const PAGE = 1000, MAX = 12;
+  const pages = await Promise.all(Array.from({ length: MAX }, (_, p) =>
+    fetch(INDEXER_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: `{ ReserveAction(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { timestamp reserve user } }` }) }).then(r => r.json()).catch(() => null)));
+  const acts: any[] = [];
+  for (const pg of pages) for (const r of ((pg as any)?.data?.ReserveAction || [])) acts.push(r);
+  acts.sort((a, b) => a.timestamp - b.timestamp);
+  const ptsByDay: Record<string, any[]> = {};
+  for (const a of acts) { const d = new Date(a.timestamp * 1000).toISOString().slice(0, 10); (ptsByDay[d] ||= []).push(a); }
+  const days = Object.keys(ptsByDay).sort();
+  const seen = new Set<string>();
+  const cum: Record<string, number> = {};
+  const out: any[] = [];
+  for (const d of days) {
+    for (const a of ptsByDay[d]) {
+      const key = `${a.reserve}-${a.user}`.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); const cls = classOfUnderlying(a.reserve); cum[cls] = (cum[cls] || 0) + 1; }
+    }
+    out.push({ d, byClass: { ...cum }, total: Object.values(cum).reduce((s, v) => s + v, 0) });
+  }
+  return { ok: true, points: out };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -367,7 +426,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/holders-history", "/api/active-history", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -408,6 +467,12 @@ export default {
     if (url.pathname === "/api/flows") {
       const fl = await fetchFlows();
       return new Response(JSON.stringify(fl), { headers: { ...cors, "cache-control": "max-age=300" } });
+    }
+    if (url.pathname === "/api/holders-history") {
+      return new Response(JSON.stringify(await fetchHoldersHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
+    }
+    if (url.pathname === "/api/active-history") {
+      return new Response(JSON.stringify(await fetchActiveHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;

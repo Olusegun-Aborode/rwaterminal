@@ -109,6 +109,8 @@
       const [events, setEvents] = useState(null);
       const [flows, setFlows] = useState(null);
       const [mkt, setMkt] = useState(null);
+      const [holdersHist, setHoldersHist] = useState(null);
+      const [activeHist, setActiveHist] = useState(null);
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
@@ -122,6 +124,8 @@
         fetch(base+'/api/history').then(r=>r.json()).then(j=>{ if(alive) setHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/flows').then(r=>r.json()).then(j=>{ if(alive && j && j.daily) setFlows(j); }).catch(()=>{});
         fetch(base+'/api/market-history').then(r=>r.json()).then(j=>{ if(alive && j) setMkt(j.points||[]); }).catch(()=>{});
+        fetch(base+'/api/holders-history').then(r=>r.json()).then(j=>{ if(alive && j) setHoldersHist(j.points||[]); }).catch(()=>{});
+        fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -210,6 +214,36 @@
       txDays.forEach(d=>{ const cm={}; Object.entries(flows.daily[d]).forEach(([res,tok])=>{ const cls=classOf[res]; if(!cls)return; const usd=(Number(tok)/Math.pow(10,decOf[res]||18))*(priceOf[res]||1); cm[cls]=(cm[cls]||0)+usd; }); txByDayClass[d]=cm; });
       const txSeries = txDays.length>1 ? allClassNames.map(cls=>({ name:cls, color:CLASS_COLORS[cls]||'#9599A1', values: txDays.map(d=>txByDayClass[d]?.[cls]||0) })).filter(s=>s.values.some(v=>v>0)) : [];
       const txLabels = txDays.map(s=>{ const dt=new Date(s+'T00:00:00Z'); return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
+      // Holders / Active Addresses trend lines (stacked area by class, backfilled from genesis)
+      const trendFrom = (pts) => {
+        if(!pts || pts.length<2) return { series:[], labels:[] };
+        const classes=[...new Set(pts.flatMap(p=>Object.keys(p.byClass||{})))];
+        const series=classes.map(cls=>({ name:cls, color:CLASS_COLORS[cls]||'#9599A1', values:pts.map(p=>(p.byClass&&p.byClass[cls])||0) })).filter(s=>s.values.some(v=>v>0));
+        const labels=pts.map(p=>{ const dt=new Date(p.d+'T00:00:00Z'); return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
+        return { series, labels };
+      };
+      const holdersTrend = trendFrom(holdersHist);
+      const activeTrend = trendFrom(activeHist);
+      // 30d delta from a history points array ([{d,total}])
+      const hist30 = (pts) => {
+        if(!pts || pts.length<2) return null;
+        const last=pts[pts.length-1];
+        const target=new Date(new Date(last.d+'T00:00:00Z').getTime()-30*864e5).toISOString().slice(0,10);
+        let prev=null; for(const p of pts){ if(p.d<=target) prev=p; else break; }
+        if(!prev) return null;
+        const cur=Number(last.total), old=Number(prev.total);
+        return (old>0&&isFinite(cur))?(cur-old)/old*100:null;
+      };
+      const holdersDelta = hist30(holdersHist);
+      const activeDelta = hist30(activeHist);
+      const cntFmt = (v)=>window.fmtNum(v,0);
+      // per-metric headline (current total + 30d delta) shown above the chart
+      const headline = {
+        value:   { val: navUSD(T.rwa_aum), delta: rwaDelta, sub: 'RWA AUM' },
+        holders: { val: holdersHist&&holdersHist.length?cntFmt(holdersHist[holdersHist.length-1].total):(events&&events.totals?cntFmt(events.totals.holders):'—'), delta: holdersDelta, sub: 'holders' },
+        active:  { val: activeHist&&activeHist.length?cntFmt(activeHist[activeHist.length-1].total):(events&&events.totals?cntFmt(events.totals.active_addresses):'—'), delta: activeDelta, sub: 'active addresses' },
+        transfer:{ val: navUSD(txSeries.reduce((s,sr)=>s+sr.values.reduce((a,b)=>a+b,0),0)), delta: null, sub: 'cumulative flow' },
+      };
 
       const NAV = [
         {sec:'Market', items:[
@@ -300,7 +334,7 @@
             {view==='overview' && <>
               <div className="panel" ref={chartRef} style={{marginBottom:16}}>
                 <div className="panel-header">
-                  <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· {metric==='value'?'by RWA category':metric==='transfer'?'daily · by category':'by fund'}</span></span>
+                  <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· {metric==='value'?'by RWA category':metric==='transfer'?'daily · by category':'over time · by category'}</span></span>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <div className="time-range">
                       {['value','holders','active','transfer'].map(m=>(
@@ -309,37 +343,39 @@
                     </div>
                     <div className="chart-tools">
                       <button className="icon-btn" title="Download CSV" onClick={()=>{
-                        if(metric==='value'||metric==='transfer'){ const S=metric==='value'?areaSeries:txSeries, L=metric==='value'?areaLabels:txLabels; if(!S.length)return; const rows=[['date',...S.map(s=>s.name)],...L.map((d,i)=>[d,...S.map(s=>Math.round(s.values[i]))])]; window.exportCSV&&window.exportCSV(rows,`rwa-${metric}.csv`); }
-                        else { const b=barData(metric); if(!b.data.length)return; const rows=[['fund',...b.keys],...b.labels.map((lab,i)=>[lab,...b.keys.map(k=>Math.round(b.data[i][k]))])]; window.exportCSV&&window.exportCSV(rows,`rwa-${metric}.csv`); }
+                        const m={value:[areaSeries,areaLabels],transfer:[txSeries,txLabels],holders:[holdersTrend.series,holdersTrend.labels],active:[activeTrend.series,activeTrend.labels]};
+                        const [S,L]=m[metric]||[[],[]]; if(!S.length)return;
+                        const rows=[['date',...S.map(s=>s.name)],...L.map((d,i)=>[d,...S.map(s=>Math.round(s.values[i]))])];
+                        window.exportCSV&&window.exportCSV(rows,`rwa-${metric}.csv`);
                       }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
                       <button className="icon-btn" title="Snapshot PNG" onClick={()=>window.snapshotPanel&&window.snapshotPanel(chartRef.current,'rwa-value.png')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></button>
                     </div>
                   </div>
                 </div>
                 <div className="panel-body">
+                  <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:14,flexWrap:'wrap'}}>
+                    <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{headline[metric].val}</span>
+                    <Delta pct={headline[metric].delta} />
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{headline[metric].sub}</span>
+                  </div>
                   <div ref={chartWrapRef} style={{width:'100%'}}>
                   {metric==='value'
                     ? (areaSeries.length
                         ? <AreaChart series={areaSeries} stacked width={CW} height={CH} labels={areaLabels} />
-                        : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating, a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
+                        : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating, a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
                     : metric==='transfer'
                       ? (txSeries.length
-                          ? <div>
-                              <AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} />
-                              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>daily gross flow (supply + withdraw + borrow + repay) · via Envio indexer{flows&&flows.actions?` · ${Number(flows.actions).toLocaleString()} actions`:''}</div>
-                            </div>
-                          : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{flows?'No transfer volume yet':'Loading transfer volume…'}</div></div>)
-                      : (events
-                          ? (metricRows(metric).length
-                              ? <div style={{paddingTop:4}}>
-                                  <StackedBarChart {...barData(metric)} width={CW} height={CH} formatter={cnt} />
-                                  <div style={{display:'flex',gap:14,flexWrap:'wrap',alignItems:'center',marginTop:10}}>
-                                    {barLegend(metric).map(c=>(<span key={c} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11,color:'var(--fg-muted)'}}><span className="legend-swatch" style={{background:CLASS_COLORS[c]||'#9599A1'}} />{c}</span>))}
-                                    <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginLeft:'auto',letterSpacing:'0.04em'}}>{metricNote[metric]} · via Envio indexer{events.synced_block?` · block ${Number(events.synced_block).toLocaleString()}`:''}</span>
-                                  </div>
-                                </div>
-                              : <div style={{height:280,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>No {METRIC_LABELS[metric].toLowerCase()} recorded yet</span></div>)
-                          : <div style={{height:280,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading {METRIC_LABELS[metric].toLowerCase()} from the indexer…</div></div></div>)}
+                          ? <div><AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>daily gross flow (supply + withdraw + borrow + repay) · via Envio indexer{flows&&flows.actions?` · ${Number(flows.actions).toLocaleString()} actions`:''}</div></div>
+                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{flows?'No transfer volume yet':'Loading transfer volume…'}</div></div>)
+                    : metric==='holders'
+                      ? (holdersTrend.series.length
+                          ? <div><AreaChart series={holdersTrend.series} stacked width={CW} height={CH} labels={holdersTrend.labels} formatter={cntFmt} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>holders over time, by asset class · via Envio indexer</div></div>
+                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{holdersHist?'Holder history syncing…':'Loading holders…'}</div></div>)
+                    : metric==='active'
+                      ? (activeTrend.series.length
+                          ? <div><AreaChart series={activeTrend.series} stacked width={CW} height={CH} labels={activeTrend.labels} formatter={cntFmt} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>cumulative distinct addresses, by asset class · via Envio indexer</div></div>
+                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{activeHist?'No active addresses yet':'Loading active addresses…'}</div></div>)
+                    : null}
                   </div>
                 </div>
               </div>
