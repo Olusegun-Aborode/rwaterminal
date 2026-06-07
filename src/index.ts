@@ -103,7 +103,7 @@ async function fetchCentrifuge(): Promise<Record<string, { nav: number; computed
 
 // Envio HyperIndex — event-history projection (holders, active addresses, flows).
 // Keyed: TokenHolders by aToken; ReserveFlow/ReserveAction by reserve (= underlying).
-const INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/6990258/v1/graphql";
+const INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/3609531/v1/graphql";
 const ATOKEN_TO_UNDERLYING: Record<string, string> = {
   "0x946281a2d0dd6e650d08f74833323d66ae4c8b12": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f", // GHO
   "0x68215b6533c47ff9f7125ac95adf00fe4a62f79e": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
