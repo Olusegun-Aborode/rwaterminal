@@ -4,3 +4,9 @@
   Cache-Control: public, max-age=0, must-revalidate
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Embedding: only the DatumLabs site (www.datumlab.xyz) + its Vercel preview deploys
+# may iframe this terminal. 'self' lets it open standalone too. frame-ancestors is the
+# modern replacement for X-Frame-Options and supports multiple origins.
+/*
+  Content-Security-Policy: frame-ancestors 'self' https://www.datumlab.xyz https://datumlab.xyz https://*.vercel.app
