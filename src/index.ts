@@ -238,15 +238,16 @@ async function fetchActiveHistory(): Promise<any> {
 // real tokenized-RWA / RWA-backed collateral on Morpho (the `rwa` API tag is noisy,
 // so we don't use it). Each asset is labelled with what it is + class + issuer.
 const MORPHO_GRAPHQL = "https://blue-api.morpho.org/graphql";
-const MORPHO_RWA: Record<string, { label: string; asset_class: string; issuer: string; what: string }> = {
-  "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b": { label: "syrupUSDC", asset_class: "Private Credit", issuer: "Maple Finance", what: "Institutional private-credit pool token" },
-  "0xc139190f447e929f090edeb554d95abb8b18ac1c": { label: "USDtb", asset_class: "US Treasuries", issuer: "Ethena", what: "T-bill-backed dollar (holds BlackRock BUIDL)" },
-  "0x238a700ed6165261cf8b2e544ba797bc11e466ba": { label: "mF-ONE", asset_class: "Private Credit", issuer: "Midas / Fasanara", what: "Tokenized private-credit certificate" },
-  "0x09ad9c6dcadcc3ab0b3e107e8e7da69c2eea8599": { label: "muBOND", asset_class: "Bonds", issuer: "Midas", what: "Tokenized bond product" },
-  "0x86b495e4cb00ab18ad94bfd7920479cc79e8ebfe": { label: "wJAAA", asset_class: "Private Credit (CLO)", issuer: "Janus Henderson / Centrifuge", what: "Wrapped JAAA (AAA CLO fund)" },
-  "0xa0769f7a8fc65e47de93797b4e21c073c117fc80": { label: "EUTBL", asset_class: "Govt Bonds (EU)", issuer: "Spiko", what: "EU T-bill money-market fund (EUR)" },
-  "0x68749665ff8d2d112fa859aa293f07a622782f38": { label: "XAUt", asset_class: "Commodities (Gold)", issuer: "Tether", what: "Tokenized gold (1 oz = 1 XAUt)" },
-  "0x45804880de22913dafe09f4980848ece6ecbaf78": { label: "PAXG", asset_class: "Commodities (Gold)", issuer: "Paxos", what: "Tokenized gold (1 oz = 1 PAXG)" },
+// tier: "fund" = discrete tokenized fund (Horizon-parity); "backed" = RWA-backed dollar / commodity (broader).
+const MORPHO_RWA: Record<string, { label: string; asset_class: string; issuer: string; what: string; tier: "fund" | "backed" }> = {
+  "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b": { label: "syrupUSDC", asset_class: "Private Credit", issuer: "Maple Finance", what: "Institutional private-credit pool token", tier: "backed" },
+  "0xc139190f447e929f090edeb554d95abb8b18ac1c": { label: "USDtb", asset_class: "US Treasuries", issuer: "Ethena", what: "T-bill-backed dollar (holds BlackRock BUIDL)", tier: "backed" },
+  "0x238a700ed6165261cf8b2e544ba797bc11e466ba": { label: "mF-ONE", asset_class: "Private Credit", issuer: "Midas / Fasanara", what: "Tokenized private-credit certificate", tier: "fund" },
+  "0x09ad9c6dcadcc3ab0b3e107e8e7da69c2eea8599": { label: "muBOND", asset_class: "Bonds", issuer: "Midas", what: "Tokenized bond product", tier: "fund" },
+  "0x86b495e4cb00ab18ad94bfd7920479cc79e8ebfe": { label: "wJAAA", asset_class: "Private Credit (CLO)", issuer: "Janus Henderson / Centrifuge", what: "Wrapped JAAA (AAA CLO fund)", tier: "fund" },
+  "0xa0769f7a8fc65e47de93797b4e21c073c117fc80": { label: "EUTBL", asset_class: "Govt Bonds (EU)", issuer: "Spiko", what: "EU T-bill money-market fund (EUR)", tier: "fund" },
+  "0x68749665ff8d2d112fa859aa293f07a622782f38": { label: "XAUt", asset_class: "Commodities (Gold)", issuer: "Tether", what: "Tokenized gold (1 oz = 1 XAUt)", tier: "backed" },
+  "0x45804880de22913dafe09f4980848ece6ecbaf78": { label: "PAXG", asset_class: "Commodities (Gold)", issuer: "Paxos", what: "Tokenized gold (1 oz = 1 PAXG)", tier: "backed" },
 };
 async function fetchMorpho(): Promise<any> {
   const query = `{ markets(first: 1000, where: {chainId_in: [1]}) { items { loanAsset { address } collateralAsset { address } state { supplyAssetsUsd collateralAssetsUsd } } } }`;

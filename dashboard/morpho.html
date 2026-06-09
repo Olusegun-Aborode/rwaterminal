@@ -39,8 +39,11 @@
         load(); const id = setInterval(load, 120000);
         return () => { alive = false; clearInterval(id); };
       }, []);
-      const assets = M ? M.assets : [];
-      const byClass = M ? M.by_class : [];
+      const [tier, setTier] = React.useState('all');
+      const allAssets = M ? M.assets : [];
+      const assets = tier==='all' ? allAssets : allAssets.filter(a=>a.tier==='fund');
+      const total = assets.reduce((s,a)=>s+(a.morpho_usd||0),0);
+      const byClass = (()=>{ const bc={}; assets.forEach(a=>{bc[a.asset_class]=(bc[a.asset_class]||0)+a.morpho_usd}); return Object.entries(bc).map(([name,usd])=>({name,usd})).sort((a,b)=>b.usd-a.usd); })();
       const top = byClass[0];
       const asOf = M ? new Date(M.fetched_at*1000) : null;
 
@@ -82,7 +85,13 @@
                 <h1 className="page-title">Morpho: RWA on Morpho</h1>
                 <div className="page-subtitle">Curated tokenized-RWA and RWA-backed collateral on <b>Morpho</b> (Ethereum). Lens: token value locked in Morpho markets (collateral or supplied). Source: Morpho GraphQL API.{asOf?` · ${asOf.toUTCString()}`:''}</div>
               </div>
-              <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',whiteSpace:'nowrap'}}>Scope · Morpho · Phase 2</span>
+              <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                <div className="time-range">
+                  <button className={tier==='all'?'active':''} onClick={()=>setTier('all')} title="All curated RWA on Morpho: tokenized funds + RWA-backed dollars (Maple, Ethena, gold)">All RWA</button>
+                  <button className={tier==='fund'?'active':''} onClick={()=>setTier('fund')} title="Discrete tokenized funds only (Horizon-parity): Midas, Centrifuge, Spiko">Tokenized funds</button>
+                </div>
+                <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',whiteSpace:'nowrap'}}>Scope · Morpho · Phase 2</span>
+              </div>
             </div>
 
             {!M ? (
@@ -90,7 +99,7 @@
             ) : (
             <>
             <div className="grid grid-4" style={{marginBottom:16}}>
-              <KPI label="RWA on Morpho" value={money(M.total_usd)} sub={`${M.asset_count} assets · curated`} />
+              <KPI label="RWA on Morpho" value={money(total)} sub={`${assets.length} assets · ${tier==='all'?'all RWA':'tokenized funds'}`} />
               <KPI label="Largest Class" value={top?money(top.usd):'n/a'} sub={top?top.name:''} />
               <KPI label="Asset Classes" value={byClass.length} sub="across the RWA assets" />
               <KPI label="Lens" value="Collateral + Supplied" sub="token value in Morpho markets" />
