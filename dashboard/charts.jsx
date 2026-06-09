@@ -695,4 +695,46 @@ function HealthFactorHistogram({
   );
 }
 
-Object.assign(window, { AreaChart, StackedBarChart, Treemap, Sparkline, Leaderboard, Heatmap, Candlestick, Histogram, HealthFactorHistogram });
+// ── Donut / Pie ──────────────────────────────────────────
+// items: [{ name, value, color }]
+function Donut({ items, size = 200, thickness = 30, formatter = fmtUSD, centerLabel }) {
+  const [hover, setHover] = useState(null);
+  const data = (items || []).filter(d => d.value > 0);
+  const total = data.reduce((a, b) => a + b.value, 0) || 1;
+  const r = size / 2, ir = r - thickness, cx = r, cy = r;
+  let acc = 0;
+  const seg = data.map((it) => {
+    const s = acc / total; acc += it.value; const e = acc / total;
+    const a0 = s * 2 * Math.PI - Math.PI / 2, a1 = e * 2 * Math.PI - Math.PI / 2;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const xi1 = cx + ir * Math.cos(a1), yi1 = cy + ir * Math.sin(a1), xi0 = cx + ir * Math.cos(a0), yi0 = cy + ir * Math.sin(a0);
+    const large = (e - s) > 0.5 ? 1 : 0;
+    const d = `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi1} ${yi1} A ${ir} ${ir} 0 ${large} 0 ${xi0} ${yi0} Z`;
+    return { ...it, d, pct: (e - s) * 100 };
+  });
+  const focus = hover ? seg.find(s => s.name === hover) : null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+        {seg.map((s, i) => (
+          <path key={i} d={s.d} fill={s.color} opacity={hover && hover !== s.name ? 0.35 : 0.92}
+            onMouseEnter={() => setHover(s.name)} onMouseLeave={() => setHover(null)} style={{ transition: 'opacity .15s', cursor: 'default' }} />
+        ))}
+        <text x={cx} y={cy - 3} textAnchor="middle" fontSize="17" fontWeight="600" fontFamily="var(--font-sans)" fill="var(--fg)">{focus ? formatter(focus.value) : (centerLabel || formatter(total))}</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="var(--fg-muted)">{focus ? `${focus.pct.toFixed(0)}%` : 'total'}</text>
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, minWidth: 150, flex: 1 }}>
+        {seg.map((s, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, opacity: hover && hover !== s.name ? 0.45 : 1, transition: 'opacity .15s' }}
+            onMouseEnter={() => setHover(s.name)} onMouseLeave={() => setHover(null)}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}>{formatter(s.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { AreaChart, StackedBarChart, Treemap, Sparkline, Leaderboard, Heatmap, Candlestick, Histogram, HealthFactorHistogram, Donut });

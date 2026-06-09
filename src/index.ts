@@ -44,7 +44,10 @@ const ASSET_CLASS: Record<string, string> = {
   USCC: "Crypto Carry", JAAA: "Private Credit (CLO)", ACRED: "Private Credit",
   GHO: "Stablecoin", USDC: "Stablecoin", RLUSD: "Stablecoin",
 };
-const erc20Abi = [{ name: "totalSupply", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }] as const;
+const erc20Abi = [
+  { name: "totalSupply", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { name: "decimals", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+] as const;
 const ISSUER: Record<string, { kind: "superstate"; fund: number } | { kind: "usyc" }> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": { kind: "superstate", fund: 1 },
   "0x14d60e7fdc0d71d8611742720e4c50e7a974020c": { kind: "superstate", fund: 2 },
@@ -249,12 +252,37 @@ const MORPHO_RWA: Record<string, { label: string; asset_class: string; issuer: s
   "0x68749665ff8d2d112fa859aa293f07a622782f38": { label: "XAUt", asset_class: "Commodities (Gold)", issuer: "Tether", what: "Tokenized gold (1 oz = 1 XAUt)", tier: "backed" },
   "0x45804880de22913dafe09f4980848ece6ecbaf78": { label: "PAXG", asset_class: "Commodities (Gold)", issuer: "Paxos", what: "Tokenized gold (1 oz = 1 PAXG)", tier: "backed" },
 };
-async function fetchMorpho(): Promise<any> {
+async function fetchMorpho(env: Env): Promise<any> {
+  const addrs = Object.keys(MORPHO_RWA);
   const query = `{ markets(first: 1000, where: {chainId_in: [1]}) { items { loanAsset { address } collateralAsset { address } state { supplyAssetsUsd collateralAssetsUsd } } } }`;
-  const r: any = await (await fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }) })).json();
-  const items = r?.data?.markets?.items || [];
+  // In parallel: Morpho markets (on-venue value) + DefiLlama prices (for full AUM = supply × price).
+  const [mr, llama] = await Promise.all([
+    fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }) }).then(r => r.json()).catch(() => null),
+    fetch(`https://coins.llama.fi/prices/current/${addrs.map(a => "ethereum:" + a).join(",")}`).then(r => r.json()).then((j: any) => j?.coins || {}).catch(() => ({})),
+  ]);
+  const priceOf: Record<string, number> = {};
+  for (const [k, v] of Object.entries(llama as Record<string, any>)) priceOf[k.toLowerCase().replace("ethereum:", "")] = v?.price;
+  // On-chain totalSupply + decimals (one multicall) → full AUM = supply/10^dec × price.
+  const aumByAddr: Record<string, number> = {};
+  if (env.RPC_URL) {
+    try {
+      const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
+      const calls = addrs.flatMap((a) => [
+        { address: getAddress(a), abi: erc20Abi, functionName: "totalSupply" },
+        { address: getAddress(a), abi: erc20Abi, functionName: "decimals" },
+      ]);
+      const res: any[] = await client.multicall({ contracts: calls, allowFailure: true });
+      addrs.forEach((a, i) => {
+        const ts = res[i * 2]?.status === "success" ? res[i * 2].result : null;
+        const dec = res[i * 2 + 1]?.status === "success" ? Number(res[i * 2 + 1].result) : 18;
+        const price = priceOf[a];
+        if (ts != null && price != null) aumByAddr[a] = (Number(ts) / 10 ** dec) * price;
+      });
+    } catch {}
+  }
+  const items = (mr as any)?.data?.markets?.items || [];
   const by: Record<string, any> = {};
-  for (const [addr, meta] of Object.entries(MORPHO_RWA)) by[addr] = { ...meta, address: addr, collateral_usd: 0, supplied_usd: 0, markets: 0 };
+  for (const [addr, meta] of Object.entries(MORPHO_RWA)) by[addr] = { ...meta, address: addr, collateral_usd: 0, supplied_usd: 0, markets: 0, price: priceOf[addr] ?? null, aum: aumByAddr[addr] ?? null };
   for (const m of items) {
     const ca = (m.collateralAsset?.address || "").toLowerCase(), la = (m.loanAsset?.address || "").toLowerCase();
     if (by[ca]) { by[ca].collateral_usd += m.state?.collateralAssetsUsd || 0; by[ca].markets++; }
@@ -267,7 +295,8 @@ async function fetchMorpho(): Promise<any> {
   for (const a of assets) byClass[a.asset_class] = (byClass[a.asset_class] || 0) + a.morpho_usd;
   return {
     ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets,
-    total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0), asset_count: assets.length,
+    total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0),
+    total_aum: assets.reduce((s, a) => s + (a.aum || 0), 0), asset_count: assets.length,
     by_class: Object.entries(byClass).map(([name, usd]) => ({ name, usd })).sort((a, b) => b.usd - a.usd),
   };
 }
@@ -514,7 +543,7 @@ export default {
       return new Response(JSON.stringify(await fetchActiveHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
     }
     if (url.pathname === "/api/morpho") {
-      return new Response(JSON.stringify(await fetchMorpho()), { headers: { ...cors, "cache-control": "max-age=120" } });
+      return new Response(JSON.stringify(await fetchMorpho(env)), { headers: { ...cors, "cache-control": "max-age=120" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;

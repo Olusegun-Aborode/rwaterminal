@@ -16,8 +16,8 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
   <script src="horizon.data.js"></script>
-  <script type="text/babel" src="charts.jsx?v=p3-tooltips"></script>
-  <script type="text/babel" src="widgets.jsx?v=p3-tooltips"></script>
+  <script type="text/babel" src="charts.jsx?v=p4-donut"></script>
+  <script type="text/babel" src="widgets.jsx?v=p4-donut"></script>
 
   <script type="text/babel" data-presets="env,react">
     const { useState, useEffect } = React;
@@ -112,6 +112,9 @@
       const [holdersHist, setHoldersHist] = useState(null);
       const [activeHist, setActiveHist] = useState(null);
       const [morpho, setMorpho] = useState(null);
+      const [includeStables, setIncludeStables] = useState(false);
+      const [sortKey, setSortKey] = useState('total_value');
+      const [sortDir, setSortDir] = useState('desc');
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
@@ -152,6 +155,19 @@
       const deployedTotal = positions.reduce((s,p)=>s+(p.usd||0),0);
       const morphoTotal = morpho ? (morpho.total_usd||0) : 0;
       const treeItemsDep = byClassDep.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
+      // ── All Assets master table (asset universe by full AUM = Total Value) ──
+      const allAssetsRaw = [
+        ...reserves.map(r=>({ name:r.label, symbol:r.symbol_onchain, issuer:typeof r.issuer==='string'?r.issuer:'?', platform:'Aave Horizon', asset_class:r.asset_class, total_value:r.asset_aum||0, chains:'Ethereum', asset_type:'Distributed', is_stable:r.is_stable })),
+        ...morphoAssets.map(a=>({ name:a.label, symbol:a.label, issuer:a.issuer, platform:'Morpho', asset_class:a.asset_class, total_value:(a.aum||a.morpho_usd||0), chains:'Ethereum', asset_type:'Distributed', is_stable:false })),
+      ];
+      const allAssetsSorted = allAssetsRaw.filter(a=>includeStables || !a.is_stable).sort((a,b)=>{
+        const av=a[sortKey], bv=b[sortKey];
+        if(typeof av==='string') return sortDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+        return sortDir==='asc'?(av-bv):(bv-av);
+      });
+      const setSort = (k) => { if(sortKey===k){ setSortDir(d=>d==='asc'?'desc':'asc'); } else { setSortKey(k); setSortDir(['total_value'].includes(k)?'desc':'asc'); } };
+      const sortArrow = (k) => sortKey===k ? (sortDir==='asc'?' ▲':' ▼') : '';
+      const allAssetsTotal = allAssetsSorted.reduce((s,a)=>s+a.total_value,0);
       const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
       // Total RWA Value over time, stacked by category (from /api/history)
       const classOf = {}; reserves.forEach(r=>{ if(r.address) classOf[r.address.toLowerCase()]=r.asset_class; });
@@ -366,7 +382,8 @@
             )}
 
             {view==='overview' && <>
-              <div className="panel" ref={chartRef} style={{marginBottom:16}}>
+              <div className="grid grid-2" style={{marginBottom:16,alignItems:'stretch'}}>
+              <div className="panel" ref={chartRef}>
                 <div className="panel-header">
                   <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· {metric==='value'?'by RWA category':metric==='transfer'?'daily · by category':'over time · by category'}</span></span>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -413,13 +430,55 @@
                   </div>
                 </div>
               </div>
+              <div className="panel">
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Class</span><span className="panel-badge">cross-venue</span></div>
+                <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={byClassDep.map(c=>({name:c.name,value:c.value,color:CLASS_COLORS[c.name]||'#9599A1'}))} size={190} formatter={navUSD} /></div>
+              </div>
+              </div>
 
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header">
+                  <span className="panel-title"><span className="bullet">●</span> All Assets</span>
+                  <div style={{display:'flex',alignItems:'center',gap:16}}>
+                    <span className="panel-badge">{allAssetsSorted.length} ASSETS · {navUSD(allAssetsTotal)}</span>
+                    <label style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'var(--fg-muted)',cursor:'pointer',userSelect:'none'}}>
+                      <input type="checkbox" checked={includeStables} onChange={e=>setIncludeStables(e.target.checked)} style={{cursor:'pointer'}} /> Include stablecoins
+                    </label>
+                  </div>
+                </div>
+                <div className="panel-body flush">
+                  <table className="datatable">
+                    <thead><tr>
+                      <th style={{cursor:'pointer'}} onClick={()=>setSort('name')}>Asset{sortArrow('name')}</th>
+                      <th style={{cursor:'pointer'}} onClick={()=>setSort('issuer')}>Issuer{sortArrow('issuer')}</th>
+                      <th style={{cursor:'pointer'}} onClick={()=>setSort('platform')}>Platform{sortArrow('platform')}</th>
+                      <th style={{cursor:'pointer'}} onClick={()=>setSort('asset_class')}>Asset Class{sortArrow('asset_class')}</th>
+                      <th className="num" style={{cursor:'pointer'}} onClick={()=>setSort('total_value')}>Total Value{sortArrow('total_value')}</th>
+                      <th>Chains</th>
+                      <th>Asset Type</th>
+                    </tr></thead>
+                    <tbody>
+                      {allAssetsSorted.map((a,i)=>(
+                        <tr key={i}>
+                          <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[a.asset_class]||'var(--fg-muted)'}}>{(a.name||'?').slice(0,2)}</div><div><div className="asset-name">{a.name}</div><div className="asset-sub">{a.symbol}</div></div></div></td>
+                          <td style={{color:'var(--fg-muted)',fontSize:12}}>{a.issuer}</td>
+                          <td><VenuePill v={a.platform} /></td>
+                          <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[a.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{a.asset_class}</span></td>
+                          <td className="num" style={{fontWeight:600}}>{navUSD(a.total_value)}</td>
+                          <td style={{fontSize:12,color:'var(--fg-muted)'}}>{a.chains}</td>
+                          <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',fontSize:11}}>{a.asset_type}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </>}
 
             {view==='by-venue' && <>
               <div className="panel" style={{marginBottom:16}}>
                 <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Venue</span><span className="panel-badge">{byVenue.length} {byVenue.length===1?'VENUE':'VENUES'} · {navUSD(deployedTotal)}</span></div>
-                <div className="panel-body"><Leaderboard items={byVenue.map(v=>({name:v.name+'  ('+v.count+')',value:v.value,dot:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}))} /></div>
+                <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={byVenue.map(v=>({name:v.name,value:v.value,color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}))} size={210} formatter={navUSD} /></div>
               </div>
               {byVenue.map(v=>(
                 <div className="panel" key={v.name} style={{marginBottom:16}}>
