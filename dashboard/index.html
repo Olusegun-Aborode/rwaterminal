@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RWA Terminal: Market Overview</title>
   <link rel="stylesheet" href="styles.css?v=p2-hero" />
+  <style>
+    /* Mobile chart/table optimisation */
+    @media (max-width: 760px) {
+      .col-hide-sm { display: none !important; }          /* drop constant Chains/Asset-Type cols on mobile */
+      .datatable th, .datatable td { padding-left: 10px; padding-right: 10px; }
+      .panel-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
+  </style>
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
@@ -454,8 +462,8 @@
                       <th style={{cursor:'pointer'}} onClick={()=>setSort('platform')}>Platform{sortArrow('platform')}</th>
                       <th style={{cursor:'pointer'}} onClick={()=>setSort('asset_class')}>Asset Class{sortArrow('asset_class')}</th>
                       <th className="num" style={{cursor:'pointer'}} onClick={()=>setSort('total_value')}>Total Value{sortArrow('total_value')}</th>
-                      <th>Chains</th>
-                      <th>Asset Type</th>
+                      <th className="col-hide-sm">Chains</th>
+                      <th className="col-hide-sm">Asset Type</th>
                     </tr></thead>
                     <tbody>
                       {allAssetsSorted.map((a,i)=>(
@@ -465,8 +473,8 @@
                           <td><VenuePill v={a.platform} /></td>
                           <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[a.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{a.asset_class}</span></td>
                           <td className="num" style={{fontWeight:600}}>{navUSD(a.total_value)}</td>
-                          <td style={{fontSize:12,color:'var(--fg-muted)'}}>{a.chains}</td>
-                          <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',fontSize:11}}>{a.asset_type}</span></td>
+                          <td className="col-hide-sm" style={{fontSize:12,color:'var(--fg-muted)'}}>{a.chains}</td>
+                          <td className="col-hide-sm"><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',fontSize:11}}>{a.asset_type}</span></td>
                         </tr>
                       ))}
                     </tbody>
