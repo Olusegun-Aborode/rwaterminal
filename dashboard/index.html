@@ -22,7 +22,7 @@
   <script type="text/babel" data-presets="env,react">
     const { useState, useEffect } = React;
     const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
-    const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Other':'#9599A1' };
+    const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Bonds':'#00A3A3', 'Govt Bonds (EU)':'#5B8DEF', 'Commodities (Gold)':'#D4A017', 'Other':'#9599A1' };
     const navUSD = (v) => v==null ? 'n/a' : window.fmtUSD(v, v>=1e9?2:1);
 
     // Measure a container so charts render at the panel's true pixel width (fills desktop)
@@ -111,6 +111,7 @@
       const [mkt, setMkt] = useState(null);
       const [holdersHist, setHoldersHist] = useState(null);
       const [activeHist, setActiveHist] = useState(null);
+      const [morpho, setMorpho] = useState(null);
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
@@ -126,6 +127,7 @@
         fetch(base+'/api/market-history').then(r=>r.json()).then(j=>{ if(alive && j) setMkt(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/holders-history').then(r=>r.json()).then(j=>{ if(alive && j) setHoldersHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
+        fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setMorpho(j); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -137,6 +139,19 @@
       const byIssuer = groupBy('issuer', r=>!r.is_stable);
       const issuerCount = byIssuer.length;
       const treeItems = byClass.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
+      // ── Cross-venue DEPLOYMENT lens (Way 1): value locked per venue, additive across venues ──
+      const morphoAssets = (morpho && morpho.assets) ? morpho.assets : [];
+      const positions = [
+        ...reserves.filter(r=>!r.is_stable && (r.supplied_usd||0)>0).map(r=>({venue:'Aave Horizon', label:r.label, asset_class:r.asset_class, issuer:typeof r.issuer==='string'?r.issuer:'?', usd:r.supplied_usd})),
+        ...morphoAssets.map(a=>({venue:'Morpho', label:a.label, asset_class:a.asset_class, issuer:a.issuer, usd:a.morpho_usd})),
+      ];
+      const groupPos = (key) => { const g={}; positions.forEach(p=>{const k=p[key]||'Other';(g[k]=g[k]||{name:k,value:0,count:0});g[k].value+=p.usd||0;g[k].count++;}); return Object.values(g).sort((a,b)=>b.value-a.value); };
+      const byClassDep = groupPos('asset_class');
+      const byIssuerDep = groupPos('issuer');
+      const byVenue = groupPos('venue');
+      const deployedTotal = positions.reduce((s,p)=>s+(p.usd||0),0);
+      const morphoTotal = morpho ? (morpho.total_usd||0) : 0;
+      const treeItemsDep = byClassDep.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
       const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
       // Total RWA Value over time, stacked by category (from /api/history)
       const classOf = {}; reserves.forEach(r=>{ if(r.address) classOf[r.address.toLowerCase()]=r.asset_class; });
@@ -248,8 +263,9 @@
       const NAV = [
         {sec:'Market', items:[
           {id:'overview', icon:'◆', name:'Overview'},
-          {id:'by-class', icon:'◷', name:'By Asset Class', count:byClass.length},
-          {id:'by-issuer', icon:'§', name:'By Issuer', count:issuerCount},
+          {id:'by-venue', icon:'▦', name:'By Venue', count:byVenue.length},
+          {id:'by-class', icon:'◷', name:'By Asset Class', count:byClassDep.length},
+          {id:'by-issuer', icon:'§', name:'By Issuer', count:byIssuerDep.length},
         ]},
       ];
 
@@ -265,6 +281,24 @@
                 <td className="num">{r.nav_value!=null?'$'+Number(r.nav_value).toLocaleString(undefined,{maximumFractionDigits:r.nav_value>100?2:4}):'n/a'}</td>
                 <td className="num" style={{fontWeight:600}}>{navUSD(r.asset_aum)}</td>
                 <td className="num" style={{color:r.supplied_usd>0?'var(--fg)':'var(--fg-dim)'}}>{r.supplied_usd>0?navUSD(r.supplied_usd):'0 on Horizon'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+
+      const VenuePill = ({v}) => <span className="risk-pill" style={{background:'var(--bg-2)',color:v==='Morpho'?'#9B4AE0':'#3B5FE0',fontSize:11}}>{v}</span>;
+      const PositionsTable = ({rows}) => (
+        <table className="datatable">
+          <thead><tr><th>Asset</th><th>Venue</th><th>Class</th><th>Issuer</th><th className="num">Deployed</th></tr></thead>
+          <tbody>
+            {rows.map((p,i)=>(
+              <tr key={i}>
+                <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[p.asset_class]||'var(--fg-muted)'}}>{(p.label||'?').slice(0,2)}</div><div className="asset-name">{p.label}</div></div></td>
+                <td><VenuePill v={p.venue} /></td>
+                <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[p.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{p.asset_class}</span></td>
+                <td style={{color:'var(--fg-muted)',fontSize:12}}>{p.issuer}</td>
+                <td className="num" style={{fontWeight:600}}>{navUSD(p.usd)}</td>
               </tr>
             ))}
           </tbody>
@@ -309,23 +343,23 @@
             {view==='overview' ? (
               <div className="hero">
                 <h1 className="page-title hero-title">RWA Market Overview</h1>
-                <p className="page-welcome">A live terminal for tokenized real-world assets, tracking fund AUM, issuers, holders and on-chain flows across asset classes, sourced on-chain and reconciled against DefiLlama. Phase 1 covers the funds live on <b>Aave Horizon</b>, with more venues to follow.</p>
+                <p className="page-welcome">A live terminal for tokenized real-world assets, tracking fund AUM, issuers, holders and on-chain flows across asset classes, sourced on-chain and reconciled against DefiLlama. Now spanning <b>Aave Horizon</b> and <b>Morpho</b> deployment, with more venues to follow.</p>
                 <div className="hero-status" style={{marginTop:0,marginBottom:18}}>
                   {Badges}
                   <span className="hero-asof">as of block {D.block.toLocaleString()}</span>
                 </div>
                 <div className="grid grid-4">
-                  <Metric label="RWA AUM · Horizon-sourced" value={navUSD(T.rwa_aum)} delta={rwaDelta} sub={`${T.rwa_count} funds · not the full market`} />
+                  <Metric label="RWA AUM · asset universe" value={navUSD(T.rwa_aum)} delta={rwaDelta} sub={`${T.rwa_count} Horizon funds · fund AUM`} />
+                  <Metric label="Deployed across venues" value={navUSD(deployedTotal)} sub={`Horizon ${navUSD(deployedTotal-morphoTotal)} · Morpho ${navUSD(morphoTotal)}`} />
+                  <Metric label="Venues" value={byVenue.length||1} sub={byVenue.length?byVenue.map(v=>v.name.replace('Aave ','')).join(' · '):'Aave Horizon'} />
                   <Metric label="Stablecoins" value={navUSD(T.stablecoin_aum)} delta={stableDelta} sub="full circulating supply" />
-                  <Metric label="Issuers" value={issuerCount} sub="across the RWA funds" />
-                  <Metric label="On Aave Horizon" value={navUSD(T.horizon_supplied_usd)} delta={horizonDelta} sub="venue lens · supplied" />
                 </div>
               </div>
             ) : (
               <div className="page-header">
                 <div>
-                  <h1 className="page-title">{view==='by-class'?'By Asset Class':'By Issuer'}</h1>
-                  <div className="page-subtitle">Lens: <b>asset-level AUM</b> (issuer-reported / supply × NAV) · stablecoins split out · <b>Horizon-sourced</b> (not the full market) · as of block {D.block.toLocaleString()}</div>
+                  <h1 className="page-title">{view==='by-class'?'By Asset Class':view==='by-issuer'?'By Issuer':'By Venue'}</h1>
+                  <div className="page-subtitle">Lens: <b>value deployed across venues</b> (Aave Horizon supplied + Morpho locked) · multi-venue RWA · as of block {D.block.toLocaleString()}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>{Badges}</div>
               </div>
@@ -382,28 +416,41 @@
 
             </>}
 
+            {view==='by-venue' && <>
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Venue</span><span className="panel-badge">{byVenue.length} {byVenue.length===1?'VENUE':'VENUES'} · {navUSD(deployedTotal)}</span></div>
+                <div className="panel-body"><Leaderboard items={byVenue.map(v=>({name:v.name+'  ('+v.count+')',value:v.value,dot:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}))} /></div>
+              </div>
+              {byVenue.map(v=>(
+                <div className="panel" key={v.name} style={{marginBottom:16}}>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}}>●</span> {v.name}</span><span className="panel-badge">{navUSD(v.value)} · {v.count} positions · <a href={v.name==='Morpho'?'morpho.html':'horizon.html'} style={{color:'var(--orange)'}}>venue page →</a></span></div>
+                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.venue===v.name).sort((a,b)=>b.usd-a.usd)} /></div>
+                </div>
+              ))}
+            </>}
+
             {view==='by-class' && <>
               <div className="panel" style={{marginBottom:16}}>
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Classes</span><span className="panel-badge">{byClass.length} CLASSES · RWA AUM</span></div>
-                <div className="panel-body"><Treemap items={treeItems} width={900} height={300} /></div>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Classes</span><span className="panel-badge">{byClassDep.length} CLASSES · DEPLOYED {navUSD(deployedTotal)}</span></div>
+                <div className="panel-body"><Treemap items={treeItemsDep} width={900} height={300} /></div>
               </div>
-              {byClass.map(c=>(
+              {byClassDep.map(c=>(
                 <div className="panel" key={c.name} style={{marginBottom:16}}>
-                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:CLASS_COLORS[c.name]}}>●</span> {c.name}</span><span className="panel-badge">{navUSD(c.value)} · {c.count} {c.count>1?'funds':'fund'}</span></div>
-                  <div className="panel-body flush"><AssetTable rows={assetsSorted.filter(r=>r.asset_class===c.name)} /></div>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:CLASS_COLORS[c.name]}}>●</span> {c.name}</span><span className="panel-badge">{navUSD(c.value)} · {c.count} {c.count>1?'positions':'position'}</span></div>
+                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.asset_class===c.name).sort((a,b)=>b.usd-a.usd)} /></div>
                 </div>
               ))}
             </>}
 
             {view==='by-issuer' && <>
               <div className="panel" style={{marginBottom:16}}>
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Issuers by RWA AUM</span><span className="panel-badge">{issuerCount} ISSUERS</span></div>
-                <div className="panel-body"><Leaderboard items={byIssuer.map(i=>({name:i.name+'  ('+i.count+')',value:i.value,dot:'var(--orange)'}))} /></div>
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Issuers by Deployment</span><span className="panel-badge">{byIssuerDep.length} ISSUERS · across venues</span></div>
+                <div className="panel-body"><Leaderboard items={byIssuerDep.map(i=>({name:i.name+'  ('+i.count+')',value:i.value,dot:'var(--orange)'}))} /></div>
               </div>
-              {byIssuer.map(iss=>(
+              {byIssuerDep.map(iss=>(
                 <div className="panel" key={iss.name} style={{marginBottom:16}}>
-                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> {iss.name}</span><span className="panel-badge">{navUSD(iss.value)} · {iss.count} {iss.count>1?'funds':'fund'}</span></div>
-                  <div className="panel-body flush"><AssetTable rows={assetsSorted.filter(r=>r.issuer===iss.name)} /></div>
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> {iss.name}</span><span className="panel-badge">{navUSD(iss.value)} · {iss.count} {iss.count>1?'positions':'position'}</span></div>
+                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.issuer===iss.name).sort((a,b)=>b.usd-a.usd)} /></div>
                 </div>
               ))}
             </>}
