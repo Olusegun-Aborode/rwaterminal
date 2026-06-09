@@ -233,6 +233,44 @@ async function fetchActiveHistory(): Promise<any> {
   return { ok: true, points: out };
 }
 
+// ── Morpho venue (Phase 2) ────────────────────────────────────────────────
+// Morpho is a singleton-market protocol; "RWA" here is a CURATED allowlist of the
+// real tokenized-RWA / RWA-backed collateral on Morpho (the `rwa` API tag is noisy,
+// so we don't use it). Each asset is labelled with what it is + class + issuer.
+const MORPHO_GRAPHQL = "https://blue-api.morpho.org/graphql";
+const MORPHO_RWA: Record<string, { label: string; asset_class: string; issuer: string; what: string }> = {
+  "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b": { label: "syrupUSDC", asset_class: "Private Credit", issuer: "Maple Finance", what: "Institutional private-credit pool token" },
+  "0xc139190f447e929f090edeb554d95abb8b18ac1c": { label: "USDtb", asset_class: "US Treasuries", issuer: "Ethena", what: "T-bill-backed dollar (holds BlackRock BUIDL)" },
+  "0x238a700ed6165261cf8b2e544ba797bc11e466ba": { label: "mF-ONE", asset_class: "Private Credit", issuer: "Midas / Fasanara", what: "Tokenized private-credit certificate" },
+  "0x09ad9c6dcadcc3ab0b3e107e8e7da69c2eea8599": { label: "muBOND", asset_class: "Bonds", issuer: "Midas", what: "Tokenized bond product" },
+  "0x86b495e4cb00ab18ad94bfd7920479cc79e8ebfe": { label: "wJAAA", asset_class: "Private Credit (CLO)", issuer: "Janus Henderson / Centrifuge", what: "Wrapped JAAA (AAA CLO fund)" },
+  "0xa0769f7a8fc65e47de93797b4e21c073c117fc80": { label: "EUTBL", asset_class: "Govt Bonds (EU)", issuer: "Spiko", what: "EU T-bill money-market fund (EUR)" },
+  "0x68749665ff8d2d112fa859aa293f07a622782f38": { label: "XAUt", asset_class: "Commodities (Gold)", issuer: "Tether", what: "Tokenized gold (1 oz = 1 XAUt)" },
+  "0x45804880de22913dafe09f4980848ece6ecbaf78": { label: "PAXG", asset_class: "Commodities (Gold)", issuer: "Paxos", what: "Tokenized gold (1 oz = 1 PAXG)" },
+};
+async function fetchMorpho(): Promise<any> {
+  const query = `{ markets(first: 1000, where: {chainId_in: [1]}) { items { loanAsset { address } collateralAsset { address } state { supplyAssetsUsd collateralAssetsUsd } } } }`;
+  const r: any = await (await fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }) })).json();
+  const items = r?.data?.markets?.items || [];
+  const by: Record<string, any> = {};
+  for (const [addr, meta] of Object.entries(MORPHO_RWA)) by[addr] = { ...meta, address: addr, collateral_usd: 0, supplied_usd: 0, markets: 0 };
+  for (const m of items) {
+    const ca = (m.collateralAsset?.address || "").toLowerCase(), la = (m.loanAsset?.address || "").toLowerCase();
+    if (by[ca]) { by[ca].collateral_usd += m.state?.collateralAssetsUsd || 0; by[ca].markets++; }
+    if (by[la]) { by[la].supplied_usd += m.state?.supplyAssetsUsd || 0; by[la].markets++; }
+  }
+  const assets = (Object.values(by) as any[])
+    .map((a) => ({ ...a, morpho_usd: a.collateral_usd + a.supplied_usd, role: a.collateral_usd >= a.supplied_usd ? "collateral" : "supplied" }))
+    .filter((a) => a.morpho_usd > 1000).sort((a, b) => b.morpho_usd - a.morpho_usd);
+  const byClass: Record<string, number> = {};
+  for (const a of assets) byClass[a.asset_class] = (byClass[a.asset_class] || 0) + a.morpho_usd;
+  return {
+    ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets,
+    total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0), asset_count: assets.length,
+    by_class: Object.entries(byClass).map(([name, usd]) => ({ name, usd })).sort((a, b) => b.usd - a.usd),
+  };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -426,7 +464,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/holders-history", "/api/active-history", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/holders-history", "/api/active-history", "/api/morpho", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -473,6 +511,9 @@ export default {
     }
     if (url.pathname === "/api/active-history") {
       return new Response(JSON.stringify(await fetchActiveHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
+    }
+    if (url.pathname === "/api/morpho") {
+      return new Response(JSON.stringify(await fetchMorpho()), { headers: { ...cors, "cache-control": "max-age=120" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;

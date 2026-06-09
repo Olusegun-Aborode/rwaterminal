@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RWA Terminal: Morpho (live)</title>
+  <link rel="stylesheet" href="styles.css?v=p2-hero" />
+</head>
+<body data-theme="light" data-aesthetic="institutional" data-density="cozy">
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <div id="root" class="shell">
+    <div class="boot-splash"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
+    const CLASS_COLORS = { 'Private Credit':'#FF6B35', 'Private Credit (CLO)':'#9B4AE0', 'US Treasuries':'#3B5FE0', 'Bonds':'#0090B2', 'Govt Bonds (EU)':'#5B8DEF', 'Commodities (Gold)':'#D4A017', 'Other':'#9599A1' };
+    const money = (n) => n==null ? 'n/a' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(2)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Number(n).toFixed(2));
+
+    function KPI({label, value, sub}) {
+      return (
+        <div className="panel" style={{padding:'18px 20px'}}>
+          <div className="metric-label">{label}</div>
+          <div className="metric-value" style={{fontSize:28,marginTop:6}}>{value}</div>
+          {sub && <div className="metric-footer" style={{marginTop:6}}>{sub}</div>}
+        </div>
+      );
+    }
+
+    function App() {
+      const [M, setM] = React.useState(null);
+      React.useEffect(() => {
+        let alive = true; const base = WORKER_URL.replace(/\/$/,'');
+        const load = () => fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setM(j); }).catch(()=>{});
+        load(); const id = setInterval(load, 120000);
+        return () => { alive = false; clearInterval(id); };
+      }, []);
+      const assets = M ? M.assets : [];
+      const byClass = M ? M.by_class : [];
+      const top = byClass[0];
+      const asOf = M ? new Date(M.fetched_at*1000) : null;
+
+      const Side = (
+        <aside className="sidebar">
+          <div className="sidebar-section-label">Market</div>
+          <a className="nav-item" href="index.html"><span className="nav-icon">◆</span><span>Overview</span></a>
+          <a className="nav-item" href="index.html"><span className="nav-icon">◷</span><span>By Asset Class</span></a>
+          <a className="nav-item" href="index.html"><span className="nav-icon">§</span><span>By Issuer</span></a>
+          <div className="sidebar-section-label">Venues</div>
+          <a className="nav-item" href="horizon.html"><span className="nav-icon">▦</span><span>Aave Horizon</span></a>
+          <a className="nav-item active"><span className="nav-icon">▦</span><span>Morpho</span><span className="nav-count">{M?M.asset_count:''}</span></a>
+          <div className="sidebar-section-label">Workspace</div>
+          <a className="nav-item" href="methodology.html"><span className="nav-icon">𝑓</span><span>Methodology</span></a>
+          <div style={{marginTop:'auto',padding:'16px 10px 8px',borderTop:'1px solid var(--border)'}}>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.1em'}}>BUILT WITH</div>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-muted)',marginTop:3}}>@datumlabs/<span style={{color:'var(--orange)'}}>dashboard-kit</span></div>
+          </div>
+        </aside>
+      );
+
+      return (
+        <>
+          <header className="topbar">
+            <div className="topbar-left">
+              <div className="topbar-brand"><img src="assets/brand/datum-loop.webp" style={{width:22,height:22,borderRadius:4,objectFit:'cover'}}/><span className="topbar-brand-name">datum<span style={{color:'var(--orange)'}}>labs</span></span></div>
+              <span className="topbar-terminal"><span className="prompt">❯</span><span>rwa-terminal · venue: morpho</span></span>
+            </div>
+            <div className="topbar-right">
+              <span className="live-pill"><span className="dot"/>LIVE{asOf?` · ${asOf.toUTCString().slice(17,25)} UTC`:''}</span>
+            </div>
+          </header>
+
+          {Side}
+
+          <main className="main">
+            <div className="page-header">
+              <div>
+                <h1 className="page-title">Morpho: RWA on Morpho</h1>
+                <div className="page-subtitle">Curated tokenized-RWA and RWA-backed collateral on <b>Morpho</b> (Ethereum). Lens: token value locked in Morpho markets (collateral or supplied). Source: Morpho GraphQL API.{asOf?` · ${asOf.toUTCString()}`:''}</div>
+              </div>
+              <span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',whiteSpace:'nowrap'}}>Scope · Morpho · Phase 2</span>
+            </div>
+
+            {!M ? (
+              <div className="panel" style={{padding:48,textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:13,color:'var(--fg-muted)'}}>Loading Morpho RWA…</div></div>
+            ) : (
+            <>
+            <div className="grid grid-4" style={{marginBottom:16}}>
+              <KPI label="RWA on Morpho" value={money(M.total_usd)} sub={`${M.asset_count} assets · curated`} />
+              <KPI label="Largest Class" value={top?money(top.usd):'n/a'} sub={top?top.name:''} />
+              <KPI label="Asset Classes" value={byClass.length} sub="across the RWA assets" />
+              <KPI label="Lens" value="Collateral + Supplied" sub="token value in Morpho markets" />
+            </div>
+
+            <div className="panel" style={{marginBottom:16}}>
+              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> RWA Assets on Morpho</span><span className="panel-badge">{assets.length} ASSETS · LIVE</span></div>
+              <div className="panel-body flush">
+                <table className="datatable">
+                  <thead><tr><th>Asset</th><th>What it is</th><th>Class</th><th>Issuer</th><th className="num">On Morpho</th><th>Lens</th><th className="num">Markets</th></tr></thead>
+                  <tbody>
+                    {assets.map((a,i)=>(
+                      <tr key={i}>
+                        <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[a.asset_class]||'var(--fg-muted)'}}>{a.label.slice(0,2)}</div><div><div className="asset-name">{a.label}</div><div className="asset-sub">{(a.address||'').slice(0,8)}…</div></div></div></td>
+                        <td style={{color:'var(--fg-muted)',fontSize:12,maxWidth:240}}>{a.what}</td>
+                        <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[a.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{a.asset_class}</span></td>
+                        <td style={{color:'var(--fg-muted)',fontSize:12}}>{a.issuer}</td>
+                        <td className="num" style={{fontWeight:600}}>{money(a.morpho_usd)}</td>
+                        <td style={{fontSize:12,color:'var(--fg-muted)'}}>{a.role==='collateral'?'as collateral':'supplied (lent)'}</td>
+                        <td className="num" style={{color:'var(--fg-muted)'}}>{a.markets}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> By Asset Class</span><span className="panel-badge">{byClass.length} CLASSES</span></div>
+              <div className="panel-body">
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {byClass.map((c,i)=>{const max=byClass[0].usd;return(
+                    <div key={i}>
+                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:12}}>
+                        <span style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:8,height:8,borderRadius:'50%',background:CLASS_COLORS[c.name]||'var(--fg-dim)',display:'inline-block'}}/><span style={{fontWeight:500}}>{c.name}</span></span>
+                        <span style={{fontFamily:'var(--font-mono)',color:'var(--fg-muted)'}}>{money(c.usd)}</span>
+                      </div>
+                      <div style={{height:6,background:'var(--bg-2)',borderRadius:3,overflow:'hidden'}}><div style={{height:'100%',width:`${c.usd/max*100}%`,background:CLASS_COLORS[c.name]||'var(--fg-muted)',borderRadius:3}}/></div>
+                    </div>
+                  );})}
+                </div>
+              </div>
+            </div>
+            </>
+            )}
+          </main>
+
+          <footer className="statusbar">
+            <div className="left"><span style={{color:'var(--orange)'}}>❯</span><span>rwa-terminal</span><span className="sep">│</span><span>source: <span style={{color:'var(--green)'}}>Morpho API (live)</span></span><span className="sep">│</span><span>Phase 2 · Morpho</span></div>
+            <div className="right"><span>Powered by DatumLabs</span></div>
+          </footer>
+        </>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+  <div id="splash" class="boot-splash" style="z-index:99999"><img class="boot-splash-mark" src="assets/brand/datum-loop.webp" alt="Datum Labs" /></div>
+  <script>(function(){var s=document.getElementById('splash');if(!s)return;if(sessionStorage.getItem('rwaSplash')){s.remove();return;}sessionStorage.setItem('rwaSplash','1');setTimeout(function(){s.style.transition='opacity .45s ease';s.style.opacity='0';setTimeout(function(){s.remove();},450);},5000);})();</script>
+</body>
+</html>
