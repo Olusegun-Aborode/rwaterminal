@@ -123,6 +123,8 @@
       const [includeStables, setIncludeStables] = useState(false);
       const [sortKey, setSortKey] = useState('total_value');
       const [sortDir, setSortDir] = useState('desc');
+      const [filterClass, setFilterClass] = useState(null);
+      const [filterVenue, setFilterVenue] = useState(null);
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
@@ -175,7 +177,14 @@
       });
       const setSort = (k) => { if(sortKey===k){ setSortDir(d=>d==='asc'?'desc':'asc'); } else { setSortKey(k); setSortDir(['total_value'].includes(k)?'desc':'asc'); } };
       const sortArrow = (k) => sortKey===k ? (sortDir==='asc'?' ▲':' ▼') : '';
-      const allAssetsTotal = allAssetsSorted.reduce((s,a)=>s+a.total_value,0);
+      const allAssetsFiltered = allAssetsSorted.filter(a=>(!filterClass||a.asset_class===filterClass) && (!filterVenue||a.platform===filterVenue));
+      const allAssetsTotal = allAssetsFiltered.reduce((s,a)=>s+a.total_value,0);
+      const classChips = [...new Set(allAssetsRaw.filter(a=>includeStables||!a.is_stable).map(a=>a.asset_class))];
+      // composition pies (deployment lens)
+      const pieByClass = byClassDep.map(c=>({name:c.name,value:c.value,color:CLASS_COLORS[c.name]||'#9599A1'}));
+      const pieByVenue = byVenue.map(v=>({name:v.name,value:v.value,color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}));
+      const ASSET_PALETTE = ['#3B5FE0','#FF6B35','#0090B2','#9B4AE0','#0F9D58','#D4A017','#00A3A3','#5B8DEF','#E0518A','#7A5CFF','#FF9F1C','#2EC4B6','#9599A1'];
+      const pieByAsset = [...positions].sort((a,b)=>b.usd-a.usd).slice(0,9).map((p,i)=>({name:`${p.label} · ${p.venue.replace('Aave ','')}`,value:p.usd,color:ASSET_PALETTE[i%ASSET_PALETTE.length]}));
       const assetsSorted = [...reserves].sort((a,b)=>(b.asset_aum||0)-(a.asset_aum||0));
       // Total RWA Value over time, stacked by category (from /api/history)
       const classOf = {}; reserves.forEach(r=>{ if(r.address) classOf[r.address.toLowerCase()]=r.asset_class; });
@@ -287,9 +296,10 @@
       const NAV = [
         {sec:'Market', items:[
           {id:'overview', icon:'◆', name:'Overview'},
-          {id:'by-venue', icon:'▦', name:'By Venue', count:byVenue.length},
-          {id:'by-class', icon:'◷', name:'By Asset Class', count:byClassDep.length},
-          {id:'by-issuer', icon:'§', name:'By Issuer', count:byIssuerDep.length},
+        ]},
+        {sec:'Analytics', items:[
+          {id:'risk', icon:'◈', name:'Risk & Quality'},
+          {id:'activity', icon:'❑', name:'Activity'},
         ]},
       ];
 
@@ -382,8 +392,8 @@
             ) : (
               <div className="page-header">
                 <div>
-                  <h1 className="page-title">{view==='by-class'?'By Asset Class':view==='by-issuer'?'By Issuer':'By Venue'}</h1>
-                  <div className="page-subtitle">Lens: <b>value deployed across venues</b> (Aave Horizon supplied + Morpho locked) · multi-venue RWA · as of block {D.block.toLocaleString()}</div>
+                  <h1 className="page-title">{view==='risk'?'Risk & Data Quality':'Activity'}</h1>
+                  <div className="page-subtitle">{view==='risk'?<span>Lens: <b>collateral risk & data quality</b> — NAV freshness, grades, LTV / liquidation, reconciliation</span>:<span>Lens: <b>on-chain activity</b> — holders, active addresses & flows (Envio indexer)</span>} · as of block {D.block.toLocaleString()}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>{Badges}</div>
               </div>
@@ -393,66 +403,58 @@
               <div className="grid grid-2" style={{marginBottom:16,alignItems:'stretch'}}>
               <div className="panel" ref={chartRef}>
                 <div className="panel-header">
-                  <span className="panel-title">{METRIC_LABELS[metric]}<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· {metric==='value'?'by RWA category':metric==='transfer'?'daily · by category':'over time · by category'}</span></span>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <div className="time-range">
-                      {['value','holders','active','transfer'].map(m=>(
-                        <button key={m} className={metric===m?'active':''} onClick={()=>setMetric(m)}>{ {value:'Value',holders:'Holders',active:'Active Addrs',transfer:'Transfer Vol'}[m] }</button>
-                      ))}
-                    </div>
-                    <div className="chart-tools">
-                      <button className="icon-btn" title="Download CSV" onClick={()=>{
-                        const m={value:[areaSeries,areaLabels],transfer:[txSeries,txLabels],holders:[holdersTrend.series,holdersTrend.labels],active:[activeTrend.series,activeTrend.labels]};
-                        const [S,L]=m[metric]||[[],[]]; if(!S.length)return;
-                        const rows=[['date',...S.map(s=>s.name)],...L.map((d,i)=>[d,...S.map(s=>Math.round(s.values[i]))])];
-                        window.exportCSV&&window.exportCSV(rows,`rwa-${metric}.csv`);
-                      }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
-                      <button className="icon-btn" title="Snapshot PNG" onClick={()=>window.snapshotPanel&&window.snapshotPanel(chartRef.current,'rwa-value.png')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></button>
-                    </div>
+                  <span className="panel-title"><span className="bullet">●</span> Total RWA Value<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· by category, over time</span></span>
+                  <div className="chart-tools">
+                    <button className="icon-btn" title="Download CSV" onClick={()=>{ if(!areaSeries.length)return; const rows=[['date',...areaSeries.map(s=>s.name)],...areaLabels.map((d,i)=>[d,...areaSeries.map(s=>Math.round(s.values[i]))])]; window.exportCSV&&window.exportCSV(rows,'rwa-value.csv'); }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                    <button className="icon-btn" title="Snapshot PNG" onClick={()=>window.snapshotPanel&&window.snapshotPanel(chartRef.current,'rwa-value.png')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></button>
                   </div>
                 </div>
                 <div className="panel-body">
                   <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:14,flexWrap:'wrap'}}>
-                    <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{headline[metric].val}</span>
-                    <Delta pct={headline[metric].delta} />
-                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{headline[metric].sub}</span>
+                    <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(T.rwa_aum)}</span>
+                    <Delta pct={rwaDelta} />
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>RWA AUM · asset universe</span>
                   </div>
                   <div ref={chartWrapRef} style={{width:'100%'}}>
-                  {metric==='value'
-                    ? (areaSeries.length
-                        ? <AreaChart series={areaSeries} stacked width={CW} height={CH} labels={areaLabels} />
-                        : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating, a snapshot lands every 5 min</div><div style={{fontSize:11,color:'var(--fg-dim)',marginTop:6}}>The stacked-area trend fills in as points arrive ({days.length} so far).</div></div></div>)
-                    : metric==='transfer'
-                      ? (txSeries.length
-                          ? <div><AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>daily gross flow (supply + withdraw + borrow + repay) · via Envio indexer{flows&&flows.actions?` · ${Number(flows.actions).toLocaleString()} actions`:''}</div></div>
-                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{flows?'No transfer volume yet':'Loading transfer volume…'}</div></div>)
-                    : metric==='holders'
-                      ? (holdersTrend.series.length
-                          ? <div><AreaChart series={holdersTrend.series} stacked width={CW} height={CH} labels={holdersTrend.labels} formatter={cntFmt} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>holders over time, by asset class · via Envio indexer</div></div>
-                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{holdersHist?'Holder history syncing…':'Loading holders…'}</div></div>)
-                    : metric==='active'
-                      ? (activeTrend.series.length
-                          ? <div><AreaChart series={activeTrend.series} stacked width={CW} height={CH} labels={activeTrend.labels} formatter={cntFmt} /><div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',marginTop:12,letterSpacing:'0.04em'}}>cumulative distinct addresses, by asset class · via Envio indexer</div></div>
-                          : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>{activeHist?'No active addresses yet':'Loading active addresses…'}</div></div>)
-                    : null}
+                    {areaSeries.length
+                      ? <AreaChart series={areaSeries} stacked width={CW} height={CH} labels={areaLabels} />
+                      : <div style={{height:CH,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>History accumulating, a snapshot lands every 5 min ({days.length} days so far)</div></div>}
                   </div>
                 </div>
               </div>
               <div className="panel">
                 <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Class</span><span className="panel-badge">cross-venue</span></div>
-                <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={byClassDep.map(c=>({name:c.name,value:c.value,color:CLASS_COLORS[c.name]||'#9599A1'}))} size={190} formatter={navUSD} /></div>
+                <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={pieByClass} size={185} formatter={navUSD} /></div>
               </div>
+              </div>
+
+              <div className="grid grid-2" style={{marginBottom:16,alignItems:'stretch'}}>
+                <div className="panel">
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Venue</span><span className="panel-badge">{navUSD(deployedTotal)} deployed</span></div>
+                  <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={pieByVenue} size={185} formatter={navUSD} /></div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Asset</span><span className="panel-badge">top {pieByAsset.length} positions</span></div>
+                  <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={pieByAsset} size={185} formatter={navUSD} /></div>
+                </div>
               </div>
 
               <div className="panel" style={{marginBottom:16}}>
                 <div className="panel-header">
                   <span className="panel-title"><span className="bullet">●</span> All Assets</span>
-                  <div style={{display:'flex',alignItems:'center',gap:16}}>
-                    <span className="panel-badge">{allAssetsSorted.length} ASSETS · {navUSD(allAssetsTotal)}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+                    <span className="panel-badge">{allAssetsFiltered.length} · {navUSD(allAssetsTotal)}</span>
                     <label style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'var(--fg-muted)',cursor:'pointer',userSelect:'none'}}>
                       <input type="checkbox" checked={includeStables} onChange={e=>setIncludeStables(e.target.checked)} style={{cursor:'pointer'}} /> Include stablecoins
                     </label>
                   </div>
+                </div>
+                <div style={{display:'flex',gap:7,flexWrap:'wrap',padding:'10px 16px',borderBottom:'1px solid var(--border)',alignItems:'center'}}>
+                  <span style={{fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em'}}>VENUE</span>
+                  {['Aave Horizon','Morpho'].map(v=>(<button key={v} onClick={()=>setFilterVenue(filterVenue===v?null:v)} className="risk-pill" style={{cursor:'pointer',border:'none',background:filterVenue===v?'var(--orange-soft)':'var(--bg-2)',color:filterVenue===v?'var(--orange)':'var(--fg-muted)'}}>{v}</button>))}
+                  <span style={{fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em',marginLeft:8}}>CLASS</span>
+                  {classChips.map(c=>(<button key={c} onClick={()=>setFilterClass(filterClass===c?null:c)} className="risk-pill" style={{cursor:'pointer',border:'none',background:filterClass===c?'var(--orange-soft)':'var(--bg-2)',color:filterClass===c?'var(--orange)':'var(--fg-muted)'}}>{c}</button>))}
+                  {(filterClass||filterVenue)&&<button onClick={()=>{setFilterClass(null);setFilterVenue(null);}} style={{fontSize:11,color:'var(--orange)',background:'none',border:'none',cursor:'pointer',marginLeft:'auto'}}>clear ✕</button>}
                 </div>
                 <div className="panel-body flush">
                   <table className="datatable">
@@ -466,7 +468,7 @@
                       <th className="col-hide-sm">Asset Type</th>
                     </tr></thead>
                     <tbody>
-                      {allAssetsSorted.map((a,i)=>(
+                      {allAssetsFiltered.map((a,i)=>(
                         <tr key={i}>
                           <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[a.asset_class]||'var(--fg-muted)'}}>{(a.name||'?').slice(0,2)}</div><div><div className="asset-name">{a.name}</div><div className="asset-sub">{a.symbol}</div></div></div></td>
                           <td style={{color:'var(--fg-muted)',fontSize:12}}>{a.issuer}</td>
@@ -483,44 +485,67 @@
               </div>
             </>}
 
-            {view==='by-venue' && <>
-              <div className="panel" style={{marginBottom:16}}>
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Deployment by Venue</span><span className="panel-badge">{byVenue.length} {byVenue.length===1?'VENUE':'VENUES'} · {navUSD(deployedTotal)}</span></div>
-                <div className="panel-body" style={{display:'flex',alignItems:'center'}}><Donut items={byVenue.map(v=>({name:v.name,value:v.value,color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}))} size={210} formatter={navUSD} /></div>
+            {view==='risk' && <>
+              <div className="grid grid-4" style={{marginBottom:16}}>
+                <div className="panel" style={{padding:'18px 20px'}}><div className="metric-label">Data Quality Grade</div><div className="metric-value" style={{fontSize:28,marginTop:6,color:({A:'var(--green)',B:'var(--green)',C:'var(--orange)',D:'var(--red)'}[T.grade])||'var(--fg)'}}>{T.grade}</div><div className="metric-footer">{T.unknown_count} unmapped · {T.nav_value_only} value-only</div></div>
+                <div className="panel" style={{padding:'18px 20px'}}><div className="metric-label">NAV Fresh</div><div className="metric-value" style={{fontSize:28,marginTop:6}}>{reserves.filter(r=>!r.is_stable&&r.nav_state==='fresh').length}/{reserves.filter(r=>!r.is_stable).length}</div><div className="metric-footer">on-chain or issuer-confirmed</div></div>
+                <div className="panel" style={{padding:'18px 20px'}}><div className="metric-label">Stale / Value-only</div><div className="metric-value" style={{fontSize:28,marginTop:6}}>{T.nav_stale + T.nav_value_only}</div><div className="metric-footer">{T.nav_stale} stale · {T.nav_value_only} value-only</div></div>
+                <div className="panel" style={{padding:'18px 20px'}}><div className="metric-label">DefiLlama Reconciliation</div><div className="metric-value" style={{fontSize:22,marginTop:9,color:T.reconciliation&&T.reconciliation.status==='verified'?'var(--green)':'var(--orange)'}}>{T.reconciliation?(T.reconciliation.status==='verified'?'✓ Verified':'⚠ Degraded'):'n/a'}</div><div className="metric-footer">{T.reconciliation?`${T.reconciliation.gap_pct>0?'+':''}${T.reconciliation.gap_pct}% vs ${navUSD(T.reconciliation.defillama_supplied_usd)}`:''}</div></div>
               </div>
-              {byVenue.map(v=>(
-                <div className="panel" key={v.name} style={{marginBottom:16}}>
-                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}}>●</span> {v.name}</span><span className="panel-badge">{navUSD(v.value)} · {v.count} positions · <a href={v.name==='Morpho'?'morpho.html':'horizon.html'} style={{color:'var(--orange)'}}>venue page →</a></span></div>
-                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.venue===v.name).sort((a,b)=>b.usd-a.usd)} /></div>
+              <div className="panel">
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Collateral Risk — Aave Horizon</span><span className="panel-badge">{reserves.filter(r=>!r.is_stable).length} RWA reserves · NAV / LTV / liquidation</span></div>
+                <div className="panel-body flush">
+                  <table className="datatable">
+                    <thead><tr><th>Asset</th><th>Class</th><th>NAV State</th><th className="col-hide-sm">NAV Source</th><th className="num">NAV Age</th><th className="num">LTV</th><th className="num col-hide-sm">Liq. Threshold</th><th className="num">Supplied</th></tr></thead>
+                    <tbody>
+                      {reserves.filter(r=>!r.is_stable).sort((a,b)=>(b.supplied_usd||0)-(a.supplied_usd||0)).map((r,i)=>{
+                        const ns=r.nav_state; const tone=ns==='fresh'?['var(--green-soft)','var(--green)']:ns==='value_only'?['var(--bg-2)','var(--fg-muted)']:ns==='stale'?['var(--orange-soft)','var(--orange)']:['var(--red-soft)','var(--red)'];
+                        const ageH=r.nav_updated_at?Math.round((D.fetched_at-r.nav_updated_at)/3600):null;
+                        return (<tr key={i}>
+                          <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[r.asset_class]||'var(--fg-muted)'}}>{(r.label||'?').slice(0,2)}</div><div><div className="asset-name">{r.label}</div><div className="asset-sub">{typeof r.issuer==='string'?r.issuer:''}</div></div></div></td>
+                          <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[r.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{r.asset_class}</span></td>
+                          <td><span className="risk-pill" style={{background:tone[0],color:tone[1]}}>{ns==='value_only'?'value-only':(ns||'n/a')}</span></td>
+                          <td className="col-hide-sm" style={{fontSize:12,color:'var(--fg-muted)'}}>{(r.nav_freshness_source||'n/a').replace(/_/g,' ')}</td>
+                          <td className="num" style={{color:'var(--fg-muted)'}}>{ns==='value_only'?'off-chain':(ageH==null?'n/a':ageH+'h')}</td>
+                          <td className="num">{r.ltv_pct!=null?r.ltv_pct+'%':'n/a'}</td>
+                          <td className="num col-hide-sm">{r.liq_threshold_pct!=null?r.liq_threshold_pct+'%':'n/a'}</td>
+                          <td className="num" style={{fontWeight:600}}>{r.supplied_usd>0?navUSD(r.supplied_usd):'—'}</td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
+              </div>
             </>}
 
-            {view==='by-class' && <>
-              <div className="panel" style={{marginBottom:16}}>
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Asset Classes</span><span className="panel-badge">{byClassDep.length} CLASSES · DEPLOYED {navUSD(deployedTotal)}</span></div>
-                <div className="panel-body"><Treemap items={treeItemsDep} width={900} height={300} /></div>
+            {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders'; return (<>
+              <div className="grid grid-4" style={{marginBottom:16}}>
+                <Metric label="Asset Holders" value={events&&events.totals?window.fmtNum(events.totals.holders,0):'n/a'} delta={holdersDelta} sub="across funds" />
+                <Metric label="Active Addresses" value={events&&events.totals?window.fmtNum(events.totals.active_addresses,0):'n/a'} delta={activeDelta} sub="distinct since genesis" />
+                <Metric label="Actions" value={events&&events.totals?window.fmtNum(events.totals.actions,0):'n/a'} sub="supply / withdraw / borrow / repay" />
+                <Metric label="Indexer" value="Live" sub={events&&events.synced_block?`synced #${Number(events.synced_block).toLocaleString()}`:'Envio HyperIndex'} />
               </div>
-              {byClassDep.map(c=>(
-                <div className="panel" key={c.name} style={{marginBottom:16}}>
-                  <div className="panel-header"><span className="panel-title"><span className="bullet" style={{color:CLASS_COLORS[c.name]}}>●</span> {c.name}</span><span className="panel-badge">{navUSD(c.value)} · {c.count} {c.count>1?'positions':'position'}</span></div>
-                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.asset_class===c.name).sort((a,b)=>b.usd-a.usd)} /></div>
+              <div className="panel" ref={chartRef}>
+                <div className="panel-header">
+                  <span className="panel-title">{ {holders:'Asset Holders',active:'Active Addresses',transfer:'Transfer Volume'}[am] }<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· over time, by category · Aave Horizon</span></span>
+                  <div className="time-range">{['holders','active','transfer'].map(m=>(<button key={m} className={am===m?'active':''} onClick={()=>setMetric(m)}>{ {holders:'Holders',active:'Active Addrs',transfer:'Transfer Vol'}[m] }</button>))}</div>
                 </div>
-              ))}
-            </>}
-
-            {view==='by-issuer' && <>
-              <div className="panel" style={{marginBottom:16}}>
-                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Issuers by Deployment</span><span className="panel-badge">{byIssuerDep.length} ISSUERS · across venues</span></div>
-                <div className="panel-body"><Leaderboard items={byIssuerDep.map(i=>({name:i.name+'  ('+i.count+')',value:i.value,dot:'var(--orange)'}))} /></div>
+                <div className="panel-body">
+                  <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:14,flexWrap:'wrap'}}>
+                    <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{headline[am].val}</span>
+                    <Delta pct={headline[am].delta} />
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{headline[am].sub}</span>
+                  </div>
+                  <div ref={chartWrapRef} style={{width:'100%'}}>
+                    {am==='transfer'
+                      ? (txSeries.length ? <AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading transfer volume…</span></div>)
+                      : am==='holders'
+                        ? (holdersTrend.series.length ? <AreaChart series={holdersTrend.series} stacked width={CW} height={CH} labels={holdersTrend.labels} formatter={cntFmt} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Holder history syncing…</span></div>)
+                        : (activeTrend.series.length ? <AreaChart series={activeTrend.series} stacked width={CW} height={CH} labels={activeTrend.labels} formatter={cntFmt} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading…</span></div>)}
+                  </div>
+                </div>
               </div>
-              {byIssuerDep.map(iss=>(
-                <div className="panel" key={iss.name} style={{marginBottom:16}}>
-                  <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> {iss.name}</span><span className="panel-badge">{navUSD(iss.value)} · {iss.count} {iss.count>1?'positions':'position'}</span></div>
-                  <div className="panel-body flush"><PositionsTable rows={positions.filter(p=>p.issuer===iss.name).sort((a,b)=>b.usd-a.usd)} /></div>
-                </div>
-              ))}
-            </>}
+            </>);})()}
           </main>
 
           <footer className="statusbar">
