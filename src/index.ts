@@ -337,6 +337,59 @@ async function fetchMorpho(env: Env): Promise<any> {
   };
 }
 
+// Per-asset 7D/30D change in Total Value (AUM). Total Value = on-chain totalSupply × price,
+// so we read totalSupply at the current block and at ~7d / ~30d-ago blocks (archive eth_call)
+// and pair each with that date's DefiLlama price. Captures BOTH issuance growth and price drift
+// (issuance is the dominant signal for NAV-stable RWA; price matters for gold). Robust fallbacks:
+// missing archive supply → hold supply constant (price-only delta); brand-new token → null delta.
+async function fetchDeltas(env: Env): Promise<any> {
+  if (!env.RPC_URL) return { ok: false, deltas: {} };
+  const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
+  let horizonAddrs: string[] = [];
+  try {
+    const dp = getAddress(env.HORIZON_DATA_PROVIDER);
+    const toks = (await client.readContract({ address: dp, abi: dpAbi, functionName: "getAllReservesTokens" })) as any[];
+    horizonAddrs = toks.map((t) => String(t.tokenAddress).toLowerCase());
+  } catch {}
+  const addrs = Array.from(new Set([...horizonAddrs, ...Object.keys(MORPHO_RWA)]));
+  if (!addrs.length) return { ok: false, deltas: {} };
+  let blockNow = 0n, tsNow = Math.floor(Date.now() / 1000);
+  try { const blk = await client.getBlock(); blockNow = blk.number; tsNow = Number(blk.timestamp); } catch {}
+  const B7 = blockNow > 0n ? blockNow - 7n * 7200n : undefined;
+  const B30 = blockNow > 0n ? blockNow - 30n * 7200n : undefined;
+  const TS7 = tsNow - 7 * 86400, TS30 = tsNow - 30 * 86400;
+  const supplyCalls = addrs.map((a) => ({ address: getAddress(a), abi: erc20Abi, functionName: "totalSupply" }));
+  const decCalls = addrs.map((a) => ({ address: getAddress(a), abi: erc20Abi, functionName: "decimals" }));
+  const coinKeys = addrs.map((a) => "ethereum:" + a).join(",");
+  const pmap = (obj: any) => { const m: Record<string, number> = {}; for (const [k, v] of Object.entries(obj || {})) m[k.toLowerCase().replace("ethereum:", "")] = (v as any)?.price; return m; };
+  const [sNow, dRes, s7, s30, pNow, p7, p30] = await Promise.all([
+    client.multicall({ contracts: supplyCalls, allowFailure: true }).catch(() => []),
+    client.multicall({ contracts: decCalls, allowFailure: true }).catch(() => []),
+    B7 ? client.multicall({ contracts: supplyCalls, allowFailure: true, blockNumber: B7 }).catch(() => []) : Promise.resolve([]),
+    B30 ? client.multicall({ contracts: supplyCalls, allowFailure: true, blockNumber: B30 }).catch(() => []) : Promise.resolve([]),
+    fetch(`https://coins.llama.fi/prices/current/${coinKeys}`).then((r) => r.json()).then((j: any) => pmap(j?.coins)).catch(() => ({})),
+    fetch(`https://coins.llama.fi/prices/historical/${TS7}/${coinKeys}`).then((r) => r.json()).then((j: any) => pmap(j?.coins)).catch(() => ({})),
+    fetch(`https://coins.llama.fi/prices/historical/${TS30}/${coinKeys}`).then((r) => r.json()).then((j: any) => pmap(j?.coins)).catch(() => ({})),
+  ]);
+  const supAt = (res: any[], i: number, dec: number) => (res[i]?.status === "success" ? Number(res[i].result) / 10 ** dec : null);
+  const deltas: Record<string, any> = {};
+  addrs.forEach((a, i) => {
+    const dec = (dRes as any[])[i]?.status === "success" ? Number((dRes as any[])[i].result) : 18;
+    const supN = supAt(sNow as any[], i, dec), sup7 = supAt(s7 as any[], i, dec), sup30 = supAt(s30 as any[], i, dec);
+    const prN = (pNow as any)[a], pr7 = (p7 as any)[a] ?? prN, pr30 = (p30 as any)[a] ?? prN;
+    const vN = supN != null && prN != null ? supN * prN : null;
+    // Fall back to current supply when archive read missing, so we still surface a price-only delta.
+    const v7 = (sup7 ?? supN) != null && pr7 != null ? (sup7 ?? supN!) * pr7 : null;
+    const v30 = (sup30 ?? supN) != null && pr30 != null ? (sup30 ?? supN!) * pr30 : null;
+    deltas[a] = {
+      val_now: vN,
+      chg7d: vN != null && v7 != null && v7 > 0 ? (vN - v7) / v7 : null,
+      chg30d: vN != null && v30 != null && v30 > 0 ? (vN - v30) / v30 : null,
+    };
+  });
+  return { ok: true, fetched_at: tsNow, block: Number(blockNow), deltas };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -580,6 +633,10 @@ export default {
     }
     if (url.pathname === "/api/morpho") {
       return new Response(JSON.stringify(await fetchMorpho(env)), { headers: { ...cors, "cache-control": "max-age=120" } });
+    }
+    if (url.pathname === "/api/deltas") {
+      // 7D/30D Total-Value change per asset; archive reads are slow + slow-moving, so cache 1h.
+      return new Response(JSON.stringify(await fetchDeltas(env)), { headers: { ...cors, "cache-control": "max-age=3600" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;

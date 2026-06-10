@@ -122,6 +122,7 @@
       const [holdersHist, setHoldersHist] = useState(null);
       const [activeHist, setActiveHist] = useState(null);
       const [morpho, setMorpho] = useState(null);
+      const [deltas, setDeltas] = useState(null);
       const [includeStables, setIncludeStables] = useState(false);
       const [sortKey, setSortKey] = useState('total_value');
       const [sortDir, setSortDir] = useState('desc');
@@ -143,6 +144,7 @@
         fetch(base+'/api/holders-history').then(r=>r.json()).then(j=>{ if(alive && j) setHoldersHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setMorpho(j); }).catch(()=>{});
+        fetch(base+'/api/deltas').then(r=>r.json()).then(j=>{ if(alive && j && j.deltas) setDeltas(j.deltas); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -168,9 +170,10 @@
       const morphoTotal = morpho ? (morpho.total_usd||0) : 0;
       const treeItemsDep = byClassDep.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
       // ── All Assets master table (asset universe by full AUM = Total Value) ──
+      const dAt = (addr) => (deltas && addr && deltas[String(addr).toLowerCase()]) || null;
       const allAssetsRaw = [
-        ...reserves.map(r=>({ name:r.label, symbol:r.symbol_onchain, issuer:typeof r.issuer==='string'?r.issuer:'?', platform:'Aave Horizon', asset_class:r.asset_class, total_value:r.asset_aum||0, chains:'Ethereum', asset_type:'Distributed', is_stable:r.is_stable })),
-        ...morphoAssets.map(a=>({ name:a.label, symbol:a.label, issuer:a.issuer, platform:'Morpho', asset_class:a.asset_class, total_value:(a.aum||a.morpho_usd||0), chains:'Ethereum', asset_type:'Distributed', is_stable:false })),
+        ...reserves.map(r=>{const dl=dAt(r.address); return { name:r.label, symbol:r.symbol_onchain, issuer:typeof r.issuer==='string'?r.issuer:'?', platform:'Aave Horizon', asset_class:r.asset_class, total_value:r.asset_aum||0, chg7d:dl?dl.chg7d:null, chg30d:dl?dl.chg30d:null, chains:'Ethereum', asset_type:'Distributed', is_stable:r.is_stable };}),
+        ...morphoAssets.map(a=>{const dl=dAt(a.address); return { name:a.label, symbol:a.label, issuer:a.issuer, platform:'Morpho', asset_class:a.asset_class, total_value:(a.aum||a.morpho_usd||0), chg7d:dl?dl.chg7d:null, chg30d:dl?dl.chg30d:null, chains:'Ethereum', asset_type:'Distributed', is_stable:false };}),
       ];
       const allAssetsSorted = allAssetsRaw.filter(a=>includeStables || !a.is_stable).sort((a,b)=>{
         const av=a[sortKey], bv=b[sortKey];
@@ -182,6 +185,9 @@
       const allAssetsFiltered = allAssetsSorted.filter(a=>(!filterClass||a.asset_class===filterClass) && (!filterVenue||a.platform===filterVenue));
       const allAssetsTotal = allAssetsFiltered.reduce((s,a)=>s+a.total_value,0);
       const classChips = [...new Set(allAssetsRaw.filter(a=>includeStables||!a.is_stable).map(a=>a.asset_class))];
+      const deltaCell = (v) => v==null
+        ? <span style={{color:'var(--fg-dim)'}}>—</span>
+        : <span style={{color:v>=0?'var(--green)':'var(--red)',fontFamily:'var(--font-mono)',fontSize:12}}>{(v>=0?'+':'')+(v*100).toFixed(1)+'%'}</span>;
       // composition pies (deployment lens)
       const pieByClass = byClassDep.map(c=>({name:c.name,value:c.value,color:CLASS_COLORS[c.name]||'#9599A1'}));
       const pieByVenue = byVenue.map(v=>({name:v.name,value:v.value,color:v.name==='Morpho'?'#9B4AE0':'#3B5FE0'}));
@@ -476,6 +482,8 @@
                       <th style={{cursor:'pointer'}} onClick={()=>setSort('platform')}>Platform{sortArrow('platform')}</th>
                       <th style={{cursor:'pointer'}} onClick={()=>setSort('asset_class')}>Asset Class{sortArrow('asset_class')}</th>
                       <th className="num" style={{cursor:'pointer'}} onClick={()=>setSort('total_value')}>Total Value{sortArrow('total_value')}</th>
+                      <th className="num col-hide-sm" style={{cursor:'pointer'}} onClick={()=>setSort('chg7d')} title="Change in Total Value (AUM) vs 7 days ago">7D{sortArrow('chg7d')}</th>
+                      <th className="num" style={{cursor:'pointer'}} onClick={()=>setSort('chg30d')} title="Change in Total Value (AUM) vs 30 days ago">30D{sortArrow('chg30d')}</th>
                       <th className="col-hide-sm">Chains</th>
                       <th className="col-hide-sm">Asset Type</th>
                     </tr></thead>
@@ -487,6 +495,8 @@
                           <td><VenuePill v={a.platform} /></td>
                           <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:CLASS_COLORS[a.asset_class]||'var(--fg-dim)',marginRight:6,verticalAlign:'middle'}}/>{a.asset_class}</span></td>
                           <td className="num" style={{fontWeight:600}}>{navUSD(a.total_value)}</td>
+                          <td className="num col-hide-sm">{deltaCell(a.chg7d)}</td>
+                          <td className="num">{deltaCell(a.chg30d)}</td>
                           <td className="col-hide-sm" style={{fontSize:12,color:'var(--fg-muted)'}}>{a.chains}</td>
                           <td className="col-hide-sm"><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)',fontSize:11}}>{a.asset_type}</span></td>
                         </tr>
