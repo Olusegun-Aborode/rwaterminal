@@ -466,10 +466,30 @@ async function fetchUsage(env: Env): Promise<any> {
     client.multicall({ contracts: calls, allowFailure: true }).catch(() => []),
     fetch(`https://coins.llama.fi/prices/current/${coinKeys}`).then((r) => r.json()).then((j: any) => pmap(j?.coins)).catch(() => ({})),
   ]);
+  // DEX pools holding our tokens, via Dexscreener (free, no key, cross-DEX + cross-chain). The batch
+  // /tokens endpoint caps results, so we query PER TOKEN in parallel to capture every pool.
+  const dexLabel = (id: string) => {
+    if (!id || /^0x/i.test(id) || id.length > 16) return "Other DEX";
+    return (({ uniswap: "Uniswap", "uniswap-v3": "Uniswap", curve: "Curve", balancer: "Balancer", sushiswap: "Sushiswap", pancakeswap: "PancakeSwap", aerodrome: "Aerodrome", fluid: "Fluid", maverick: "Maverick" } as any)[id] || (id.charAt(0).toUpperCase() + id.slice(1)));
+  };
+  const dsResults = await Promise.all(addrs.map((a) => fetch(`https://api.dexscreener.com/latest/dex/tokens/${a}`).then((r) => r.json()).catch(() => null)));
+  const dexByToken: Record<string, Record<string, number>> = {};
+  dsResults.forEach((ds: any, idx) => {
+    const a = addrs[idx];
+    for (const p of (ds?.pairs || [])) {
+      // Same address exists on EVM forks (PulseChain etc.) with worthless copies — count only the real token.
+      if (p.chainId !== "ethereum") continue;
+      const bt = (p.baseToken?.address || "").toLowerCase();
+      const liqUsd = Number(p.liquidity?.usd) || 0, baseAmt = Number(p.liquidity?.base) || 0, price = Number(p.priceUsd) || 0;
+      const usd = bt === a ? baseAmt * price : Math.max(0, liqUsd - baseAmt * price); // token-side liquidity
+      if (usd > 25000) { const lbl = dexLabel(p.dexId); (dexByToken[a] ||= {}); dexByToken[a][lbl] = (dexByToken[a][lbl] || 0) + usd; } // drop sub-$25k dust
+    }
+  });
   const R = USAGE_REGISTRY.length, stride = 2 + R;
   const tokens: any[] = [];
-  const agg: Record<string, number> = {};
-  let totalUsd = 0, elsewhereUsd = 0;
+  const agg: Record<string, { usd: number; kind: string }> = {};
+  const kindAgg: Record<string, number> = { lending: 0, dex: 0, elsewhere: 0 };
+  let totalUsd = 0;
   addrs.forEach((a, i) => {
     const base = i * stride;
     const ts = (res as any[])[base]?.status === "success" ? Number((res as any[])[base].result) : null;
@@ -477,28 +497,43 @@ async function fetchUsage(env: Env): Promise<any> {
     const price = (prices as any)[a];
     if (ts == null || price == null) return;
     const totalTok = ts / 10 ** dec, total = totalTok * price;
+    // Lending venues via on-chain balanceOf.
     const byProto: Record<string, number> = {};
-    let labeledTok = 0;
     USAGE_REGISTRY.forEach((r, k) => {
       const cell = (res as any[])[base + 2 + k];
       const bal = cell?.status === "success" ? Number(cell.result) / 10 ** dec : 0;
-      if (bal > 0) { byProto[r.protocol] = (byProto[r.protocol] || 0) + bal * price; labeledTok += bal; }
+      if (bal > 0) byProto[r.protocol] = (byProto[r.protocol] || 0) + bal * price;
     });
-    const elsewhere = Math.max(0, (totalTok - labeledTok)) * price;
-    const composition = { ...byProto, "Held elsewhere": elsewhere };
-    const deployed = Object.entries(byProto).reduce((s, [, v]) => s + v, 0);
+    const lendingUsd = Object.values(byProto).reduce((s, v) => s + v, 0);
+    // DEX venues via Dexscreener, scaled so lending + dex can't exceed total supply value.
+    const dexRaw = dexByToken[a] || {};
+    const dexTotalRaw = Object.values(dexRaw).reduce((s, v) => s + v, 0);
+    const avail = Math.max(0, total - lendingUsd);
+    const dexScale = dexTotalRaw > avail && dexTotalRaw > 0 ? avail / dexTotalRaw : 1;
+    const dexByLbl: Record<string, number> = {}; let dexUsd = 0;
+    for (const [lbl, v] of Object.entries(dexRaw)) { const sv = v * dexScale; if (sv > 1) { dexByLbl[lbl] = sv; dexUsd += sv; } }
+    const elsewhere = Math.max(0, total - lendingUsd - dexUsd);
+    const comp: { protocol: string; usd: number; kind: string }[] = [];
+    for (const [p, v] of Object.entries(byProto)) comp.push({ protocol: p, usd: v, kind: "lending" });
+    for (const [p, v] of Object.entries(dexByLbl)) comp.push({ protocol: p, usd: v, kind: "dex" });
+    comp.push({ protocol: "Held elsewhere", usd: elsewhere, kind: "elsewhere" });
+    comp.sort((x, y) => y.usd - x.usd);
+    const deployed = lendingUsd + dexUsd;
     tokens.push({
       address: a, symbol: symBy[a] || a.slice(0, 6), asset_class: classBy[a] || (KNOWN[a] ? ASSET_CLASS[KNOWN[a][0]] : null) || "Other",
-      total_usd: total, composition, deployed_usd: deployed, deployed_pct: total > 0 ? deployed / total : 0,
+      total_usd: total, composition: comp, deployed_usd: deployed, deployed_pct: total > 0 ? deployed / total : 0,
+      by_kind: { lending: lendingUsd, dex: dexUsd, elsewhere },
     });
-    totalUsd += total; elsewhereUsd += elsewhere;
-    for (const [p, v] of Object.entries(composition)) agg[p] = (agg[p] || 0) + v;
+    totalUsd += total;
+    kindAgg.lending += lendingUsd; kindAgg.dex += dexUsd; kindAgg.elsewhere += elsewhere;
+    for (const c of comp) { (agg[c.protocol] ||= { usd: 0, kind: c.kind }); agg[c.protocol].usd += c.usd; }
   });
   tokens.sort((a, b) => b.total_usd - a.total_usd);
   return {
     ok: true, fetched_at: Math.floor(Date.now() / 1000), tokens,
-    by_protocol: Object.entries(agg).map(([protocol, usd]) => ({ protocol, usd })).sort((a, b) => b.usd - a.usd),
-    total_usd: totalUsd, deployed_usd: totalUsd - elsewhereUsd, elsewhere_usd: elsewhereUsd,
+    by_protocol: Object.entries(agg).map(([protocol, o]) => ({ protocol, usd: o.usd, kind: o.kind })).sort((a, b) => b.usd - a.usd),
+    by_kind: kindAgg,
+    total_usd: totalUsd, deployed_usd: kindAgg.lending + kindAgg.dex, elsewhere_usd: kindAgg.elsewhere,
     registry_count: USAGE_REGISTRY.length,
   };
 }

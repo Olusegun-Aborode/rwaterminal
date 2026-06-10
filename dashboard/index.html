@@ -33,6 +33,11 @@
     const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Bonds':'#00A3A3', 'Govt Bonds (EU)':'#5B8DEF', 'Commodities (Gold)':'#D4A017', 'Other':'#9599A1' };
     const navUSD = (v) => v==null ? 'n/a' : window.fmtUSD(v, v>=1e9?2:1);
     const pct = (n,d=1) => n==null ? 'n/a' : (n*100).toFixed(d)+'%';
+    // Utilisation venue colors (shared by the Where-it's-used panel and the per-asset drawer)
+    const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Uniswap':'#FF007A','Curve':'#0E76FD','Balancer':'#394150','Sushiswap':'#FA52A0','Aerodrome':'#1F7AE0','PancakeSwap':'#1FC7D4','Maverick':'#7B3FE4','Fluid':'#2EC4B6','Supernova':'#E8A13A','Other DEX':'#7C8698','Held elsewhere':'#C2C7D0'};
+    const KIND_COLORS={lending:'#2C6BED',dex:'#16A34A',elsewhere:'#C2C7D0'};
+    const KIND_LABEL={lending:'Lending (collateral)',dex:'DEX liquidity',elsewhere:'Held elsewhere'};
+    const protoColorOf=(p,kind)=>PROTO_COLORS[p]||KIND_COLORS[kind]||'#9599A1';
     const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
     // Measure a container so charts render at the panel's true pixel width (fills desktop)
@@ -110,6 +115,44 @@
       );
     }
 
+    function UsageDrawer({token, onClose}) {
+      const t = token;
+      const kindName = {lending:'Lending',dex:'DEX',elsewhere:'Wallets / other'};
+      return (
+        <ExpandModal open={!!t} title={t ? `${t.symbol} · where it's used` : ''} onClose={onClose}>
+          {t && <div style={{padding:'4px 4px 12px'}}>
+            <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:16}}>
+              <div className="asset-icon" style={{width:38,height:38,background:CLASS_COLORS[t.asset_class]||'var(--fg-muted)'}}>{(t.symbol||'?').slice(0,2)}</div>
+              <div><div style={{fontSize:18,fontWeight:600}}>{t.symbol}</div><div className="asset-sub">{t.asset_class}</div></div>
+              <div style={{marginLeft:'auto',textAlign:'right'}}><div style={{fontSize:20,fontWeight:600}}>{navUSD(t.total_usd)}</div><div className="asset-sub">total on-chain value</div></div>
+            </div>
+            <div className="grid grid-3" style={{gap:12,marginBottom:16}}>
+              <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">Deployed in venues</div><div style={{fontSize:18,fontWeight:600,marginTop:4,color:(t.deployed_pct||0)>=0.5?'var(--green)':'var(--fg)'}}>{Math.round((t.deployed_pct||0)*100)}%</div><div className="asset-sub">{navUSD(t.deployed_usd)}</div></div>
+              <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">Lending (collateral)</div><div style={{fontSize:18,fontWeight:600,marginTop:4}}>{navUSD((t.by_kind||{}).lending)}</div></div>
+              <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">DEX liquidity</div><div style={{fontSize:18,fontWeight:600,marginTop:4}}>{navUSD((t.by_kind||{}).dex)}</div></div>
+            </div>
+            <div style={{display:'flex',height:11,borderRadius:6,overflow:'hidden',background:'var(--bg-2)',marginBottom:16}}>
+              {(t.composition||[]).filter(c=>c.usd>0).map((c,i)=>{const w=t.total_usd>0?c.usd/t.total_usd*100:0;return w>0.2?<span key={i} title={c.protocol+': '+navUSD(c.usd)} style={{width:w+'%',background:protoColorOf(c.protocol,c.kind)}}/>:null;})}
+            </div>
+            <table className="datatable">
+              <thead><tr><th>Venue</th><th>Type</th><th className="num">Value</th><th className="num">Share</th></tr></thead>
+              <tbody>
+                {(t.composition||[]).filter(c=>c.usd>0).sort((a,b)=>b.usd-a.usd).map((c,i)=>(
+                  <tr key={i}>
+                    <td><span style={{display:'inline-flex',alignItems:'center',gap:8}}><span style={{width:9,height:9,borderRadius:'50%',background:protoColorOf(c.protocol,c.kind),display:'inline-block'}}/>{c.protocol}</span></td>
+                    <td style={{color:'var(--fg-muted)',fontSize:12}}>{kindName[c.kind]||c.kind}</td>
+                    <td className="num" style={{fontWeight:600}}>{navUSD(c.usd)}</td>
+                    <td className="num" style={{color:'var(--fg-muted)'}}>{t.total_usd>0?(c.usd/t.total_usd*100).toFixed(1)+'%':'n/a'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{marginTop:12,fontSize:11.5,color:'var(--fg-muted)',lineHeight:1.5}}>Lending balances are read on-chain (balanceOf the protocol contract). DEX liquidity is the token-side value of each pool (Dexscreener). "Held elsewhere" = wallets, CEX/custody, bridges, or venues not yet in the registry.</div>
+          </div>}
+        </ExpandModal>
+      );
+    }
+
     function App() {
       const [D, setD] = useState(window.HORIZON_DATA);
       const [view, setViewRaw] = useState(()=>{ try{ const h=(location.hash||'').replace('#',''); return ['overview','risk','activity'].includes(h)?h:'overview'; }catch(e){ return 'overview'; } });
@@ -120,6 +163,8 @@
       const [hist, setHist] = useState(null);
       const [events, setEvents] = useState(null);
       const [usage, setUsage] = useState(null);
+      const [usageCat, setUsageCat] = useState('all');
+      const [usageSel, setUsageSel] = useState(null);
       const [flows, setFlows] = useState(null);
       const [mkt, setMkt] = useState(null);
       const [holdersHist, setHoldersHist] = useState(null);
@@ -134,6 +179,10 @@
       const chartRef = React.useRef(null);
       const [chartWrapRef, CW] = useElementWidth(900);
       const CH = CW>=1100 ? 360 : CW>=760 ? 320 : 280;
+      // Separate measurement for the RWA Utilisation trend chart: the Overview chart lives in a
+      // half-width grid-2, so sharing one ref leaked its narrow width into this full-width chart.
+      const [chartWrapRef2, CW2] = useElementWidth(900);
+      const CH2 = CW2>=1100 ? 360 : CW2>=760 ? 320 : 280;
       useEffect(() => {
         if (!WORKER_URL) return; let alive=true; const base = WORKER_URL.replace(/\/$/,'');
         const load = () => {
@@ -148,7 +197,11 @@
         fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setMorpho(j); }).catch(()=>{});
         fetch(base+'/api/deltas').then(r=>r.json()).then(j=>{ if(alive && j && j.deltas) setDeltas(j.deltas); }).catch(()=>{});
-        fetch(base+'/api/usage').then(r=>r.json()).then(j=>{ if(alive && j && j.tokens) setUsage(j); }).catch(()=>{});
+        fetch(base+'/api/usage').then(r=>r.json()).then(j=>{ if(alive && j && j.tokens){
+          // Tolerate the older object-shaped composition from a stale cache: normalise to a kind-tagged array.
+          j.tokens.forEach(t=>{ if(t.composition && !Array.isArray(t.composition)){ t.composition=Object.entries(t.composition).map(([protocol,usd])=>({protocol,usd,kind:protocol==='Held elsewhere'?'elsewhere':'lending'})); } if(!t.by_kind){ const bk={lending:0,dex:0,elsewhere:0}; (t.composition||[]).forEach(c=>{bk[c.kind]=(bk[c.kind]||0)+c.usd;}); t.by_kind=bk; } });
+          setUsage(j);
+        } }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -588,11 +641,15 @@
             {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders';
               const stableAddrs=new Set(reserves.filter(r=>r.is_stable).map(r=>(r.address||'').toLowerCase()));
               const uTokens=usage?usage.tokens.filter(t=>!stableAddrs.has((t.address||'').toLowerCase())):[];
-              const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Held elsewhere':'#C2C7D0'};
-              const uAgg={}; uTokens.forEach(t=>{for(const [p,v] of Object.entries(t.composition||{})) uAgg[p]=(uAgg[p]||0)+v;});
-              const uPie=Object.entries(uAgg).map(([name,value])=>({name,value,color:PROTO_COLORS[name]||'#9599A1'})).sort((a,b)=>b.value-a.value);
+              const uKind={lending:0,dex:0,elsewhere:0}; const uProto={};
+              uTokens.forEach(t=>{(t.composition||[]).forEach(c=>{uKind[c.kind]=(uKind[c.kind]||0)+c.usd; (uProto[c.protocol]=uProto[c.protocol]||{usd:0,kind:c.kind}).usd+=c.usd;});});
               const uTotal=uTokens.reduce((s,t)=>s+(t.total_usd||0),0);
-              const uDeployed=uTokens.reduce((s,t)=>s+(t.deployed_usd||0),0);
+              const uDeployed=(uKind.lending||0)+(uKind.dex||0);
+              const protoColor=(p)=>protoColorOf(p,uProto[p]?.kind);
+              const uPie = usageCat==='all'
+                ? [{name:'Lending (collateral)',value:uKind.lending,color:KIND_COLORS.lending},{name:'DEX liquidity',value:uKind.dex,color:KIND_COLORS.dex},{name:'Held elsewhere',value:uKind.elsewhere,color:KIND_COLORS.elsewhere}].filter(x=>x.value>0)
+                : Object.entries(uProto).filter(([p,o])=>o.kind===usageCat).map(([p,o])=>({name:p,value:o.usd,color:protoColor(p)})).sort((a,b)=>b.value-a.value);
+              const compSegs=(t)=>(t.composition||[]).filter(c=>c.usd>0).map(c=>({...c,w:t.total_usd>0?c.usd/t.total_usd*100:0}));
               const hT=(events&&events.totals)?events.totals:{};
               const fmtN=(n)=>window.fmtNum(n||0,0);
               const hH=hT.holders||0, hA=hT.active_addresses||0, hAct=hT.actions||0;
@@ -611,19 +668,19 @@
                   <span className="panel-title">{ {holders:'Asset Holders',active:'Active Addresses',transfer:'Transfer Volume'}[am] }<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· over time, by category · Aave Horizon</span></span>
                   <div className="time-range">{['holders','active','transfer'].map(m=>(<button key={m} className={am===m?'active':''} onClick={()=>setMetric(m)}>{ {holders:'Holders',active:'Active Addrs',transfer:'Transfer Vol'}[m] }</button>))}</div>
                 </div>
-                <div className="panel-caption">Is this RWA actually <b>used</b>, or just parked? Holders, active addresses and transfer flows are the <b>usage</b> half of the collateral story; a thin, inactive holder base is itself a risk signal. <i>The headline counts above are cross-venue (Horizon + Morpho); this trend chart is Aave Horizon history via the Envio indexer — Morpho positions are current-only (no time series yet).</i></div>
+                <div className="panel-caption">Is this RWA actually <b>used</b>, or just parked? Holders, active addresses and transfer flows are the <b>usage</b> half of the collateral story; a thin, inactive holder base is itself a risk signal. <i>The headline counts above are cross-venue (Horizon + Morpho); this trend chart is Aave Horizon history via the Envio indexer. Morpho positions are current-only (no time series yet).</i></div>
                 <div className="panel-body">
                   <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:14,flexWrap:'wrap'}}>
                     <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{headline[am].val}</span>
                     <Delta pct={headline[am].delta} />
                     <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{headline[am].sub}</span>
                   </div>
-                  <div ref={chartWrapRef} style={{width:'100%'}}>
+                  <div ref={chartWrapRef2} style={{width:'100%'}}>
                     {am==='transfer'
-                      ? (txSeries.length ? <AreaChart series={txSeries} stacked width={CW} height={CH} labels={txLabels} formatter={window.fmtUSD} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading transfer volume…</span></div>)
+                      ? (txSeries.length ? <AreaChart series={txSeries} stacked width={CW2} height={CH2} labels={txLabels} formatter={window.fmtUSD} /> : <div style={{height:CH2,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading transfer volume…</span></div>)
                       : am==='holders'
-                        ? (holdersTrend.series.length ? <AreaChart series={holdersTrend.series} stacked width={CW} height={CH} labels={holdersTrend.labels} formatter={cntFmt} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Holder history syncing…</span></div>)
-                        : (activeTrend.series.length ? <AreaChart series={activeTrend.series} stacked width={CW} height={CH} labels={activeTrend.labels} formatter={cntFmt} /> : <div style={{height:CH,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading…</span></div>)}
+                        ? (holdersTrend.series.length ? <AreaChart series={holdersTrend.series} stacked width={CW2} height={CH2} labels={holdersTrend.labels} formatter={cntFmt} /> : <div style={{height:CH2,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Holder history syncing…</span></div>)
+                        : (activeTrend.series.length ? <AreaChart series={activeTrend.series} stacked width={CW2} height={CH2} labels={activeTrend.labels} formatter={cntFmt} /> : <div style={{height:CH2,display:'grid',placeItems:'center'}}><span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading…</span></div>)}
                   </div>
                 </div>
               </div>
@@ -632,9 +689,16 @@
               <div className="panel" style={{marginBottom:16}}>
                 <div className="panel-header">
                   <span className="panel-title"><span className="bullet">●</span> Where it's used<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· utilisation across DeFi</span></span>
-                  <span className="panel-badge">{uTokens.length} assets · {usage?usage.registry_count:0} labeled venues</span>
+                  <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+                    <div className="time-range">
+                      <button className={usageCat==='all'?'active':''} onClick={()=>setUsageCat('all')}>All</button>
+                      <button className={usageCat==='lending'?'active':''} onClick={()=>setUsageCat('lending')}>Lending</button>
+                      <button className={usageCat==='dex'?'active':''} onClick={()=>setUsageCat('dex')}>DEX</button>
+                    </div>
+                    <span className="panel-badge">{uTokens.length} assets · {Object.keys(uProto).filter(p=>uProto[p].kind!=='elsewhere').length} venues</span>
+                  </div>
                 </div>
-                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read the token's on-chain balance held by labeled protocol contracts (lending, DEX, perps, vaults) and treat the rest as held elsewhere. This is utilisation: how much of a token is truly deployed as collateral vs parked in wallets. <i>Coverage grows as venues are labeled; "held elsewhere" = wallets plus venues not yet in the registry.</i></div>
+                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read on-chain balances in labeled <b>lending</b> venues (Aave Horizon, Morpho) and <b>DEX</b>-pool liquidity (Uniswap, Curve, and more, via Dexscreener); the rest is <b>held elsewhere</b> (wallets, CEX/custody, or venues not yet labeled). Switch the lens with the buttons; click any asset for its full breakdown.</div>
                 <div className="panel-body">
                   {!usage ? (
                     <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'12px 0'}}>Loading usage…</div>
@@ -642,8 +706,13 @@
                   <div className="grid grid-2" style={{alignItems:'center',gap:20}}>
                     <div style={{display:'flex',alignItems:'center'}}><Donut items={uPie} size={185} formatter={navUSD} /></div>
                     <div>
-                      <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{uTotal>0?Math.round(uDeployed/uTotal*100):0}%</div>
-                      <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> ({navUSD(uDeployed)} of {navUSD(uTotal)}). The rest is held in wallets or venues not yet in the registry.</div>
+                      {usageCat==='all' ? (<>
+                        <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{uTotal>0?Math.round(uDeployed/uTotal*100):0}%</div>
+                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> (lending or DEX): {navUSD(uDeployed)} of {navUSD(uTotal)}. The rest is held elsewhere (wallets, CEX/custody, or unlabeled venues).</div>
+                      </>) : (<>
+                        <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(usageCat==='lending'?uKind.lending:uKind.dex)}</div>
+                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>{usageCat==='lending'?<span>of RWA is <b style={{color:'var(--fg)'}}>used as collateral</b> across lending venues.</span>:<span>of RWA sits in <b style={{color:'var(--fg)'}}>DEX liquidity</b> pools (swap / LP). These are the venues where these assets are actually traded.</span>}</div>
+                      </>)}
                     </div>
                   </div>
                   )}
@@ -653,11 +722,11 @@
                     <thead><tr><th>Asset</th><th className="num">Total Value</th><th className="num">Deployed</th><th>Composition</th><th className="num col-hide-sm">In venues</th></tr></thead>
                     <tbody>
                       {uTokens.map((t,i)=>(
-                        <tr key={i}>
+                        <tr key={i} onClick={()=>setUsageSel(t)} style={{cursor:'pointer'}} title="Click for full breakdown">
                           <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[t.asset_class]||'var(--fg-muted)'}}>{(t.symbol||'?').slice(0,2)}</div><div><div className="asset-name">{t.symbol}</div><div className="asset-sub">{t.asset_class}</div></div></div></td>
                           <td className="num" style={{fontWeight:600}}>{navUSD(t.total_usd)}</td>
                           <td className="num"><span style={{fontWeight:600,color:t.deployed_pct>=0.5?'var(--green)':'var(--fg)'}}>{Math.round(t.deployed_pct*100)}%</span></td>
-                          <td><div style={{display:'flex',height:8,borderRadius:4,overflow:'hidden',background:'var(--bg-2)',minWidth:110,maxWidth:240}}>{['Aave Horizon','Morpho','Held elsewhere'].map(p=>{const v=t.composition[p]||0;const w=t.total_usd>0?v/t.total_usd*100:0;return w>0.3?<span key={p} title={p+': '+navUSD(v)} style={{width:w+'%',background:PROTO_COLORS[p]||'#9599A1'}}/>:null;})}</div></td>
+                          <td><div style={{display:'flex',height:8,borderRadius:4,overflow:'hidden',background:'var(--bg-2)',minWidth:110,maxWidth:260}}>{compSegs(t).filter(c=>c.w>0.3).map((c,j)=>(<span key={j} title={c.protocol+': '+navUSD(c.usd)} style={{width:c.w+'%',background:protoColor(c.protocol)}}/>))}</div></td>
                           <td className="num col-hide-sm" style={{color:'var(--fg-muted)'}}>{navUSD(t.deployed_usd)}</td>
                         </tr>
                       ))}
@@ -674,6 +743,7 @@
           </footer>
 
           <AssetDrawer asset={sel} onClose={()=>setSel(null)} />
+          <UsageDrawer token={usageSel} onClose={()=>setUsageSel(null)} />
         </>
       );
     }
