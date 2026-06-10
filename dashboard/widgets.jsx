@@ -388,6 +388,7 @@ function DataSourceBadge({ source, lastUpdated, cached, tone = 'green' }) {
   })();
   return (
     <span
+      className="datasource-badge"
       title={
         lastUpdated
           ? `Source: ${source}\nLast updated: ${new Date(lastUpdated).toLocaleString()}` +

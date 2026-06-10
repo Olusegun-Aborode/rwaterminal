@@ -1270,6 +1270,14 @@ body[data-theme="dark"] .icon-btn:hover { background: rgba(255,255,255,0.06); }
   .cmdk-trigger { min-width: 0; flex: 1 1 auto; }
   .cmdk-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .live-pill { display: none; }          /* reclaim horizontal space */
+  .datasource-badge { display: none !important; }   /* verbose source/freshness pill (nowrap, ~246px) pushed the theme toggle off-screen; !important beats the widget's inline display */
+
+  /* Belt-and-braces: never let the page itself scroll sideways. Wide tables still
+     scroll inside their own .panel-body; this only clips stray fixed/overlay chrome. */
+  html, body { overflow-x: hidden; max-width: 100%; }
+  /* Closed chart-modal overlay (opacity:0 but still laid out) is display:grid, so its
+     min-content width spilled past the viewport — clamp + clip it. */
+  .chart-modal-backdrop { min-width: 0; max-width: 100vw; overflow: hidden; }
 
   .main {
     overflow: visible;
@@ -1285,6 +1293,10 @@ body[data-theme="dark"] .icon-btn:hover { background: rgba(255,255,255,0.06); }
     -webkit-overflow-scrolling: touch;
     border-right: none; border-top: 1px solid var(--border);
     background: var(--surface); z-index: 60;
+    /* flex min-width:auto would size the bar to its content (the 6 nav items ≈ 418px),
+       breaking the left/right:0 clamp and forcing the whole PAGE to scroll sideways.
+       Pin to 0 so the bar stays viewport-width and scrolls its items internally. */
+    min-width: 0; max-width: 100vw;
   }
   .sidebar > div { display: flex; flex-direction: row; align-items: stretch; }
   .sidebar-section-label { display: none; }       /* section labels off in the bar */
