@@ -32,6 +32,8 @@
     const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
     const CLASS_COLORS = { 'US Treasuries':'#3B5FE0', 'Private Credit (CLO)':'#9B4AE0', 'Private Credit':'#FF6B35', 'Crypto Carry':'#0090B2', 'Stablecoin':'#0F9D58', 'Bonds':'#00A3A3', 'Govt Bonds (EU)':'#5B8DEF', 'Commodities (Gold)':'#D4A017', 'Other':'#9599A1' };
     const navUSD = (v) => v==null ? 'n/a' : window.fmtUSD(v, v>=1e9?2:1);
+    const pct = (n,d=1) => n==null ? 'n/a' : (n*100).toFixed(d)+'%';
+    const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
     // Measure a container so charts render at the panel's true pixel width (fills desktop)
     function useElementWidth(initial) {
@@ -158,6 +160,7 @@
       const treeItems = byClass.map(c=>({id:c.name,name:c.name,value:c.value/1e6,color:CLASS_COLORS[c.name]||'#9599A1'}));
       // ── Cross-venue DEPLOYMENT lens (Way 1): value locked per venue, additive across venues ──
       const morphoAssets = (morpho && morpho.assets) ? morpho.assets : [];
+      const morphoMarkets = (morpho && morpho.collateral_markets) ? morpho.collateral_markets : [];
       const positions = [
         ...reserves.filter(r=>!r.is_stable && (r.supplied_usd||0)>0).map(r=>({venue:'Aave Horizon', label:r.label, asset_class:r.asset_class, issuer:typeof r.issuer==='string'?r.issuer:'?', usd:r.supplied_usd})),
         ...morphoAssets.map(a=>({venue:'Morpho', label:a.label, asset_class:a.asset_class, issuer:a.issuer, usd:a.morpho_usd})),
@@ -542,6 +545,40 @@
                       })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              <div className="panel" style={{marginTop:16}}>
+                <div className="panel-header">
+                  <span className="panel-title"><span className="bullet">●</span> Collateral Risk — Morpho</span>
+                  <span className="panel-badge">{morphoMarkets.length} MARKETS{morpho&&morpho.avg_lltv!=null?` · AVG LLTV ${pct(morpho.avg_lltv,0)}`:''}</span>
+                </div>
+                <div className="panel-caption"><b>A different risk model.</b> Morpho markets are <b>isolated</b> — each pairs one RWA collateral with one loan asset at a fixed LLTV and oracle, so there's no shared-pool NAV grade; the risk is per-market. LLTV is the liquidation point; high utilization means thin exit liquidity if it unwinds.</div>
+                <div className="panel-body flush">
+                  {!morpho ? (
+                    <div style={{padding:'28px 16px',fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Loading Morpho markets…</div>
+                  ) : (
+                  <table className="datatable">
+                    <thead><tr><th>Collateral &rarr; Loan</th><th>Class</th><th className="num">LLTV</th><th className="num col-hide-sm">Liq. Incentive</th><th className="num">Borrowed $</th><th className="num">Utilization</th><th className="num col-hide-sm">Borrow APY</th><th className="col-hide-sm">Oracle</th></tr></thead>
+                    <tbody>
+                      {morphoMarkets.map((m,i)=>{
+                        const col=CLASS_COLORS[m.asset_class]||'var(--fg-muted)';
+                        const lltvHi=m.lltv!=null&&m.lltv>=0.95;
+                        const utilHi=m.utilization>=0.95;
+                        return (<tr key={i}>
+                          <td><div className="asset"><div className="asset-icon" style={{background:col}}>{(m.collateral_symbol||'?').slice(0,2)}</div><div><div className="asset-name">{m.collateral_symbol} <span style={{color:'var(--fg-dim)'}}>&rarr;</span> {m.loan_symbol}</div><div className="asset-sub">{m.issuer}</div></div></div></td>
+                          <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:col,marginRight:6,verticalAlign:'middle'}}/>{m.asset_class}</span></td>
+                          <td className="num"><div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:7}}><span style={{fontWeight:600,color:lltvHi?'var(--orange)':'var(--fg)'}}>{pct(m.lltv,0)}</span><span style={{width:30,height:5,background:'var(--bg-2)',borderRadius:3,overflow:'hidden',display:'inline-block'}}><span style={{display:'block',height:'100%',width:pct(m.lltv,0),background:lltvHi?'var(--orange)':col}}/></span></div></td>
+                          <td className="num col-hide-sm" style={{color:'var(--fg-muted)'}}>+{((m.liq_incentive-1)*100).toFixed(1)}%</td>
+                          <td className="num">{navUSD(m.borrow_usd)}</td>
+                          <td className="num"><span style={{color:utilHi?'var(--orange)':'var(--fg-muted)'}}>{pct(m.utilization,0)}</span></td>
+                          <td className="num col-hide-sm" style={{color:'var(--green)'}}>{pct(m.borrow_apy,1)}</td>
+                          <td className="col-hide-sm"><span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{shortAddr(m.oracle)}</span></td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                  )}
                 </div>
               </div>
             </>}
