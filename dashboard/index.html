@@ -312,7 +312,7 @@
         ]},
         {sec:'Analytics', items:[
           {id:'risk', icon:'◈', name:'Risk & Quality'},
-          {id:'activity', icon:'❑', name:'Activity'},
+          {id:'activity', icon:'❑', name:'RWA Utilisation'},
         ]},
       ];
 
@@ -405,8 +405,8 @@
             ) : (
               <div className="page-header">
                 <div>
-                  <h1 className="page-title">{view==='risk'?'Risk & Data Quality':'Activity'}</h1>
-                  <div className="page-subtitle">{view==='risk'?<span><b>Can you trust this RWA as collateral?</b> NAV freshness & grade, LTV / liquidation thresholds, and reconciliation vs DefiLlama: the risk a lender underwrites</span>:<span><b>Is this RWA used, or just parked?</b> Holders, active addresses & on-chain flows: the usage half of the collateral story (Envio indexer)</span>} · as of block {D.block.toLocaleString()}</div>
+                  <h1 className="page-title">{view==='risk'?'Risk & Data Quality':'RWA Utilisation'}</h1>
+                  <div className="page-subtitle">{view==='risk'?<span><b>Can you trust this RWA as collateral?</b> NAV freshness & grade, LTV / liquidation thresholds, and reconciliation vs DefiLlama: the risk a lender underwrites</span>:<span><b>Where is each RWA actually deployed, and is it used or just parked?</b> Composition across venues (deployed as collateral vs held elsewhere) plus on-chain engagement: holders, active addresses & flows</span>} · as of block {D.block.toLocaleString()}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>{Badges}</div>
               </div>
