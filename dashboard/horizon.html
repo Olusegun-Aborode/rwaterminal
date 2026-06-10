@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RWA Terminal: Aave Horizon (live)</title>
-  <link rel="stylesheet" href="styles.css?v=p6-mobile" />
+  <link rel="stylesheet" href="styles.css?v=p7-thesis" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
   <script>
@@ -86,7 +86,7 @@
             <div className="page-header">
               <div>
                 <h1 className="page-title">Aave Horizon: Live Reserves</h1>
-                <div className="page-subtitle">Venue lens: <b>Horizon-supplied × oracle price</b> (a venue position, <i>not</i> fund AUM, see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
+                <div className="page-subtitle"><b>How RWA is used as collateral on Aave Horizon.</b> Lens: Horizon-supplied × oracle price (a venue <i>position</i>, <i>not</i> fund AUM, see Market Overview) · stablecoins split out · as of block {D.block.toLocaleString()} · <span className="ok">●</span> {asOf.toUTCString()}</div>
               </div>
               <span className="risk-pill" title={`Data quality ${grade}: ${T.unknown_count} unmapped · ${T.nav_value_only} value-only NAV · ${T.nav_stale} stale. Details on the Methodology page.`} style={{background:'var(--bg-2)',color:gradeColor,cursor:'help',whiteSpace:'nowrap'}}>● GRADE {grade}</span>
             </div>
@@ -100,6 +100,7 @@
 
             <div className="panel" style={{marginBottom:16}}>
               <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> RWA Collateral Reserves</span><span className="panel-badge">{rwa.length} ASSETS · LIVE</span></div>
+              <div className="panel-caption">Each row is a tokenized RWA accepted as <b>collateral</b> here. Oracle price + NAV age tell you if pricing is current; LTV and liquidation threshold set the borrow limit before liquidation. <b>This is the risk a lender takes on the asset.</b></div>
               <div className="panel-body flush">
                 <table className="datatable">
                   <thead><tr><th>Asset</th><th>Issuer</th><th className="num">Oracle Price</th><th className="num">Supplied</th><th className="num">Supplied $</th><th className="num">LTV</th><th className="num">Liq. Thr</th><th className="num">NAV Age</th><th>Status</th></tr></thead>
@@ -125,6 +126,7 @@
 
             <div className="panel">
               <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Borrowable Stablecoin Pools</span><span className="panel-badge">{stables.length} POOLS</span></div>
+              <div className="panel-caption">The <b>other side of the trade</b> &mdash; the stablecoins users borrow against their RWA collateral. Peg deviation flags when a borrowed asset is itself drifting.</div>
               <div className="panel-body flush">
                 <table className="datatable">
                   <thead><tr><th>Stablecoin</th><th className="num">Oracle Price</th><th className="num">Supplied</th><th className="num">Supplied $</th><th className="num">Peg Dev</th></tr></thead>

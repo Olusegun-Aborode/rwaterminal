@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RWA Terminal: Morpho (live)</title>
-  <link rel="stylesheet" href="styles.css?v=p6-mobile" />
+  <link rel="stylesheet" href="styles.css?v=p7-thesis" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
@@ -92,7 +92,7 @@
             <div className="page-header">
               <div>
                 <h1 className="page-title">Morpho: RWA on Morpho</h1>
-                <div className="page-subtitle">Curated tokenized-RWA and RWA-backed collateral on <b>Morpho</b> (Ethereum). Lens: token value locked in Morpho markets (collateral or supplied). Source: Morpho GraphQL API.{asOf?` · ${asOf.toUTCString()}`:''}</div>
+                <div className="page-subtitle"><b>How RWA behaves as collateral on Morpho's isolated lending markets.</b> Each market sets its own LLTV, oracle and liquidation terms, so venue-level totals hide the real risk. Lens: token value locked per market (collateral or supplied). Source: Morpho GraphQL API.{asOf?` · ${asOf.toUTCString()}`:''}</div>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
                 <div className="time-range">
@@ -116,6 +116,7 @@
 
             <div className="panel" style={{marginBottom:16}}>
               <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> RWA Assets on Morpho</span><span className="panel-badge">{assets.length} ASSETS · LIVE</span></div>
+              <div className="panel-caption">The curated RWA tokens active on Morpho and <b>how each is used</b> &mdash; as collateral (borrow against it) or supplied (lent out). Per-market liquidation terms are in the table below.</div>
               <div className="panel-body flush">
                 <table className="datatable">
                   <thead><tr><th>Asset</th><th>What it is</th><th>Class</th><th>Issuer</th><th className="num">On Morpho</th><th>Lens</th><th className="num">Markets</th></tr></thead>
@@ -141,8 +142,8 @@
                 <span className="panel-title"><span className="bullet">●</span> RWA Collateral Markets &mdash; liquidation parameters</span>
                 <span className="panel-badge">{markets.length} MARKETS · LIVE</span>
               </div>
-              <div className="panel-subhead" style={{padding:'8px 16px',fontSize:11.5,color:'var(--fg-muted)',borderBottom:'1px solid var(--border)'}}>
-                Each Morpho market is <b>isolated</b> (one collateral, one loan asset, fixed LLTV &amp; oracle). LLTV is the liquidation loan-to-value; above it, a position is liquidatable at the liquidation incentive shown. This is the per-market risk that aggregate venue numbers hide.
+              <div className="panel-caption">
+                Each Morpho market is <b>isolated</b> (one collateral, one loan asset, fixed LLTV &amp; oracle). LLTV is the liquidation loan-to-value; above it, a position is liquidatable at the liquidation incentive shown. <b>This is the per-market risk that aggregate venue numbers hide.</b>
               </div>
               <div className="panel-body flush">
                 <table className="datatable">

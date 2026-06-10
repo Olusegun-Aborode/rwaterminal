@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RWA Terminal: Methodology</title>
-  <link rel="stylesheet" href="styles.css?v=p6-mobile" />
+  <link rel="stylesheet" href="styles.css?v=p7-thesis" />
 </head>
 <body data-theme="light" data-aesthetic="institutional" data-density="cozy">
   <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.body.setAttribute('data-theme',t);}catch(e){}})();</script>
@@ -35,13 +35,14 @@
     <main class="main">
       <div class="page-header"><div>
         <h1 class="page-title">Methodology</h1>
-        <div class="page-subtitle">How every figure on this terminal is sourced, computed, and lensed. <span class="ok">●</span> Phase 1 · Aave Horizon</div>
+        <div class="page-subtitle">How every figure is sourced, computed, and lensed &mdash; and why this is a <b>collateral-risk terminal</b>, not a registry. <span class="ok">●</span> Aave Horizon + Morpho</div>
       </div></div>
 
       <div class="grid grid-2" style="align-items:start">
-        <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> Scope &amp; the governing lens</span></div>
+        <div class="panel"><div class="panel-header"><span class="panel-title"><span class="bullet">●</span> What this is (and isn't)</span></div>
           <div class="panel-body"><div class="methodology">
-            <p><span class="key">Scope.</span> Phase 1 ingests <b>Aave Horizon only</b>. Every figure is the <b>Horizon-sourced subset</b>, the assets currently listed as Horizon reserves, <b>not the whole tokenized-RWA market</b> (which is multiples larger). "RWA AUM" here = the AUM of the funds that appear on Horizon.</p>
+            <p><span class="key">The question.</span> Which tokenized real-world assets are deployed in DeFi lending, and <b>how do they behave as collateral?</b> This is <b>not</b> a registry of what RWA exists (rwa.xyz) or protocol TVL (DefiLlama) &mdash; it's the <b>risk and usage of RWA as collateral</b>: per-<i>position</i> (asset × venue) risk (LTV, liquidation threshold, NAV freshness / grade) and usage (holders, flows), across venues.</p>
+            <p><span class="key">Scope.</span> Spans <b>Aave Horizon</b> (on-chain) and <b>Morpho</b> (GraphQL). Coverage is the assets actually listed/used on those venues, <b>not the whole tokenized-RWA market</b> (which is multiples larger). "RWA AUM" here = the AUM of the assets that appear on a venue.</p>
             <h4>The two numbers that are easy to confuse</h4>
             <ul>
               <li><span class="key">Asset AUM</span>, the size of the <i>fund</i> (issuer-reported or supply×NAV). This is the market-size number and the headline.</li>

@@ -573,6 +573,17 @@ body[data-aesthetic="evolved"] .panel-header { background: transparent; }
 .panel-body { padding: var(--panel-pad); flex: 1; }
 .panel-body.flush { padding: 0; }
 
+/* ─── Panel caption ─── one-line "what this is and why it matters" under a panel
+   header. Spells out the terminal's thesis at the point of each chart/table. */
+.panel-caption {
+  padding: 9px 16px;
+  font-family: var(--font-sans);
+  font-size: 11.5px; line-height: 1.5;
+  color: var(--fg-muted);
+  border-bottom: 1px solid var(--border);
+}
+.panel-caption b { color: var(--fg); font-weight: 600; }
+
 /* ─── Metric ─── */
 .metric {
   padding: 20px 22px;
