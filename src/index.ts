@@ -348,12 +348,35 @@ async function fetchMorpho(env: Env): Promise<any> {
   const byClass: Record<string, number> = {};
   for (const a of assets) byClass[a.asset_class] = (byClass[a.asset_class] || 0) + a.morpho_usd;
   const lltvs = collateralMarkets.map((m: any) => m.lltv).filter((v: any) => v != null);
+  // On-chain ACTIVITY on Morpho (cross-venue parity with Horizon's holders/active). Morpho positions
+  // aren't ERC-20s, so we pull them from the API: distinct addresses with a position in our RWA
+  // markets. holders = users with collateral (RWA-as-collateral depositors); active = all participants.
+  let holders = 0, active_users = 0, positions = 0;
+  try {
+    const ids = Array.from(new Set(collateralMarkets.map((m: any) => m.market_id))).filter(Boolean);
+    if (ids.length) {
+      const idList = ids.map((id) => `"${id}"`).join(",");
+      const collUsers = new Set<string>(), allUsers = new Set<string>();
+      let skip = 0; const PAGE = 1000;
+      for (let p = 0; p < 20; p++) {
+        const pq = `{ marketPositions(first:${PAGE}, skip:${skip}, where:{marketUniqueKey_in:[${idList}]}) { pageInfo{countTotal} items{ user{address} state{ collateral } } } }`;
+        const pr: any = await fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: pq }) }).then((r) => r.json()).catch(() => null);
+        const mp = pr?.data?.marketPositions; const its = mp?.items || [];
+        positions = mp?.pageInfo?.countTotal || positions;
+        for (const it of its) { const u = (it.user?.address || "").toLowerCase(); if (!u) continue; allUsers.add(u); if (Number(it.state?.collateral || 0) > 0) collUsers.add(u); }
+        if (its.length < PAGE) break;
+        skip += PAGE;
+      }
+      holders = collUsers.size; active_users = allUsers.size;
+    }
+  } catch {}
   return {
     ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets, collateral_markets: collateralMarkets,
     total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0),
     total_borrow: assets.reduce((s, a) => s + (a.borrow_usd || 0), 0),
     total_aum: assets.reduce((s, a) => s + (a.aum || 0), 0), asset_count: assets.length,
     market_count: collateralMarkets.length,
+    holders, active_users, positions,
     avg_lltv: lltvs.length ? lltvs.reduce((s: number, v: number) => s + v, 0) / lltvs.length : null,
     by_class: Object.entries(byClass).map(([name, usd]) => ({ name, usd })).sort((a, b) => b.usd - a.usd),
   };

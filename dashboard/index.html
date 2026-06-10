@@ -593,20 +593,25 @@
               const uPie=Object.entries(uAgg).map(([name,value])=>({name,value,color:PROTO_COLORS[name]||'#9599A1'})).sort((a,b)=>b.value-a.value);
               const uTotal=uTokens.reduce((s,t)=>s+(t.total_usd||0),0);
               const uDeployed=uTokens.reduce((s,t)=>s+(t.deployed_usd||0),0);
+              const hT=(events&&events.totals)?events.totals:{};
+              const fmtN=(n)=>window.fmtNum(n||0,0);
+              const hH=hT.holders||0, hA=hT.active_addresses||0, hAct=hT.actions||0;
+              const mH=morpho?(morpho.holders||0):0, mA=morpho?(morpho.active_users||0):0, mP=morpho?(morpho.positions||0):0;
+              const haveAct=!!events||!!morpho;
               return (<>
-              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.08em',textTransform:'uppercase',margin:'0 2px 10px'}}>On-chain activity · Aave Horizon</div>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.08em',textTransform:'uppercase',margin:'0 2px 10px'}}>On-chain activity · cross-venue (Horizon + Morpho)</div>
               <div className="grid grid-4" style={{marginBottom:16}}>
-                <Metric label="Asset Holders" value={events&&events.totals?window.fmtNum(events.totals.holders,0):'n/a'} delta={holdersDelta} sub="across funds" />
-                <Metric label="Active Addresses" value={events&&events.totals?window.fmtNum(events.totals.active_addresses,0):'n/a'} delta={activeDelta} sub="distinct since genesis" />
-                <Metric label="Actions" value={events&&events.totals?window.fmtNum(events.totals.actions,0):'n/a'} sub="supply / withdraw / borrow / repay" />
-                <Metric label="Indexer" value="Live" sub={events&&events.synced_block?`synced #${Number(events.synced_block).toLocaleString()}`:'Envio HyperIndex'} />
+                <Metric label="Asset Holders" value={haveAct?(hH+mH).toLocaleString():'n/a'} sub={`Horizon ${hH.toLocaleString()} · Morpho ${mH.toLocaleString()}`} />
+                <Metric label="Active Addresses" value={haveAct?(hA+mA).toLocaleString():'n/a'} sub={`Horizon ${hA.toLocaleString()} · Morpho ${mA.toLocaleString()}`} />
+                <Metric label="Horizon Actions" value={events&&events.totals?hAct.toLocaleString():'n/a'} sub="supply / withdraw / borrow / repay" />
+                <Metric label="Morpho Positions" value={morpho?mP.toLocaleString():'n/a'} sub="open positions in RWA markets" />
               </div>
               <div className="panel" ref={chartRef}>
                 <div className="panel-header">
                   <span className="panel-title">{ {holders:'Asset Holders',active:'Active Addresses',transfer:'Transfer Volume'}[am] }<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· over time, by category · Aave Horizon</span></span>
                   <div className="time-range">{['holders','active','transfer'].map(m=>(<button key={m} className={am===m?'active':''} onClick={()=>setMetric(m)}>{ {holders:'Holders',active:'Active Addrs',transfer:'Transfer Vol'}[m] }</button>))}</div>
                 </div>
-                <div className="panel-caption">Is this RWA actually <b>used</b>, or just parked? Holders, active addresses and transfer flows are the <b>usage</b> half of the collateral story; a thin, inactive holder base is itself a risk signal. (Aave Horizon, via the Envio indexer.)</div>
+                <div className="panel-caption">Is this RWA actually <b>used</b>, or just parked? Holders, active addresses and transfer flows are the <b>usage</b> half of the collateral story; a thin, inactive holder base is itself a risk signal. <i>The headline counts above are cross-venue (Horizon + Morpho); this trend chart is Aave Horizon history via the Envio indexer — Morpho positions are current-only (no time series yet).</i></div>
                 <div className="panel-body">
                   <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:14,flexWrap:'wrap'}}>
                     <span style={{fontSize:26,fontWeight:600,letterSpacing:'-0.02em'}}>{headline[am].val}</span>
