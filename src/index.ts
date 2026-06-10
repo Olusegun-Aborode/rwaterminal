@@ -254,7 +254,7 @@ const MORPHO_RWA: Record<string, { label: string; asset_class: string; issuer: s
 };
 async function fetchMorpho(env: Env): Promise<any> {
   const addrs = Object.keys(MORPHO_RWA);
-  const query = `{ markets(first: 1000, where: {chainId_in: [1]}) { items { loanAsset { address } collateralAsset { address } state { supplyAssetsUsd collateralAssetsUsd } } } }`;
+  const query = `{ markets(first: 1000, where: {chainId_in: [1]}) { items { marketId lltv loanAsset { symbol address } collateralAsset { symbol address } oracle { address } state { supplyAssetsUsd borrowAssetsUsd collateralAssetsUsd utilization supplyApy borrowApy } } } }`;
   // In parallel: Morpho markets (on-venue value) + DefiLlama prices (for full AUM = supply × price).
   const [mr, llama] = await Promise.all([
     fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }) }).then(r => r.json()).catch(() => null),
@@ -282,21 +282,57 @@ async function fetchMorpho(env: Env): Promise<any> {
   }
   const items = (mr as any)?.data?.markets?.items || [];
   const by: Record<string, any> = {};
-  for (const [addr, meta] of Object.entries(MORPHO_RWA)) by[addr] = { ...meta, address: addr, collateral_usd: 0, supplied_usd: 0, markets: 0, price: priceOf[addr] ?? null, aum: aumByAddr[addr] ?? null };
+  for (const [addr, meta] of Object.entries(MORPHO_RWA)) by[addr] = { ...meta, address: addr, collateral_usd: 0, supplied_usd: 0, borrow_usd: 0, markets: 0, markets_detail: [], price: priceOf[addr] ?? null, aum: aumByAddr[addr] ?? null };
+  // Morpho Blue liquidation incentive factor (LIF) from LLTV: LIF = min(1.15, 1/(0.3·LLTV + 0.7)).
+  const lifOf = (lltvFrac: number) => Math.min(1.15, 1 / (0.3 * lltvFrac + 0.7));
+  const mkDetail = (m: any, role: string) => {
+    const st = m.state || {}, lltv = m.lltv ? Number(m.lltv) / 1e18 : null;
+    return {
+      market_id: m.marketId, role, // 'collateral' = our RWA is the collateral; 'loan' = our asset is supplied/lent
+      collateral_symbol: m.collateralAsset?.symbol || "?", loan_symbol: m.loanAsset?.symbol || "?",
+      lltv, liq_incentive: lltv != null ? lifOf(lltv) : null,
+      supply_usd: st.supplyAssetsUsd || 0, borrow_usd: st.borrowAssetsUsd || 0, collateral_usd: st.collateralAssetsUsd || 0,
+      utilization: st.utilization || 0, supply_apy: st.supplyApy || 0, borrow_apy: st.borrowApy || 0,
+      oracle: m.oracle?.address || null,
+    };
+  };
   for (const m of items) {
     const ca = (m.collateralAsset?.address || "").toLowerCase(), la = (m.loanAsset?.address || "").toLowerCase();
-    if (by[ca]) { by[ca].collateral_usd += m.state?.collateralAssetsUsd || 0; by[ca].markets++; }
-    if (by[la]) { by[la].supplied_usd += m.state?.supplyAssetsUsd || 0; by[la].markets++; }
+    const st = m.state || {};
+    if (by[ca]) { by[ca].collateral_usd += st.collateralAssetsUsd || 0; by[ca].borrow_usd += st.borrowAssetsUsd || 0; by[ca].markets++; by[ca].markets_detail.push(mkDetail(m, "collateral")); }
+    if (by[la]) { by[la].supplied_usd += st.supplyAssetsUsd || 0; by[la].markets++; by[la].markets_detail.push(mkDetail(m, "loan")); }
+  }
+  // Drop dust + degenerate/broken-oracle markets (e.g. ~$0 collateral but huge borrow at absurd APY),
+  // then recompute each asset's aggregates from the clean market set so totals exclude ghosts.
+  for (const a of Object.values(by) as any[]) {
+    a.markets_detail = a.markets_detail
+      .filter((d: any) => (d.collateral_usd + d.supply_usd) > 1000 && (d.borrow_apy == null || d.borrow_apy < 5) && !(d.role === "collateral" && d.collateral_usd < 1000))
+      .sort((x: any, y: any) => (y.collateral_usd + y.borrow_usd) - (x.collateral_usd + x.borrow_usd));
+    const coll = a.markets_detail.filter((d: any) => d.role === "collateral");
+    const loan = a.markets_detail.filter((d: any) => d.role === "loan");
+    a.collateral_usd = coll.reduce((s: number, d: any) => s + d.collateral_usd, 0);
+    a.borrow_usd = coll.reduce((s: number, d: any) => s + d.borrow_usd, 0);
+    a.supplied_usd = loan.reduce((s: number, d: any) => s + d.supply_usd, 0);
+    a.markets = a.markets_detail.length;
   }
   const assets = (Object.values(by) as any[])
     .map((a) => ({ ...a, morpho_usd: a.collateral_usd + a.supplied_usd, role: a.collateral_usd >= a.supplied_usd ? "collateral" : "supplied" }))
     .filter((a) => a.morpho_usd > 1000).sort((a, b) => b.morpho_usd - a.morpho_usd);
+  // Flattened RWA-collateral markets (the liquidation-risk lens) across all assets.
+  const collateralMarkets = assets.flatMap((a: any) =>
+    (a.markets_detail || []).filter((d: any) => d.role === "collateral").map((d: any) => ({
+      ...d, asset_label: a.label, asset_class: a.asset_class, issuer: a.issuer, tier: a.tier,
+    }))).sort((x: any, y: any) => (y.collateral_usd + y.borrow_usd) - (x.collateral_usd + x.borrow_usd));
   const byClass: Record<string, number> = {};
   for (const a of assets) byClass[a.asset_class] = (byClass[a.asset_class] || 0) + a.morpho_usd;
+  const lltvs = collateralMarkets.map((m: any) => m.lltv).filter((v: any) => v != null);
   return {
-    ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets,
+    ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets, collateral_markets: collateralMarkets,
     total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0),
+    total_borrow: assets.reduce((s, a) => s + (a.borrow_usd || 0), 0),
     total_aum: assets.reduce((s, a) => s + (a.aum || 0), 0), asset_count: assets.length,
+    market_count: collateralMarkets.length,
+    avg_lltv: lltvs.length ? lltvs.reduce((s: number, v: number) => s + v, 0) / lltvs.length : null,
     by_class: Object.entries(byClass).map(([name, usd]) => ({ name, usd })).sort((a, b) => b.usd - a.usd),
   };
 }

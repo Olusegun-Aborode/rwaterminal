@@ -20,6 +20,8 @@
     const WORKER_URL = "https://rwa-terminal-worker.aborodeolusegun.workers.dev";
     const CLASS_COLORS = { 'Private Credit':'#FF6B35', 'Private Credit (CLO)':'#9B4AE0', 'US Treasuries':'#3B5FE0', 'Bonds':'#0090B2', 'Govt Bonds (EU)':'#5B8DEF', 'Commodities (Gold)':'#D4A017', 'Other':'#9599A1' };
     const money = (n) => n==null ? 'n/a' : (Math.abs(n)>=1e9?'$'+(n/1e9).toFixed(2)+'B':Math.abs(n)>=1e6?'$'+(n/1e6).toFixed(2)+'M':Math.abs(n)>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Number(n).toFixed(2));
+    const pct = (n,d=1) => n==null ? 'n/a' : (n*100).toFixed(d)+'%';
+    const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
     function KPI({label, value, sub}) {
       return (
@@ -43,6 +45,12 @@
       const allAssets = M ? M.assets : [];
       const assets = tier==='all' ? allAssets : allAssets.filter(a=>a.tier==='fund');
       const total = assets.reduce((s,a)=>s+(a.morpho_usd||0),0);
+      const allMarkets = M ? (M.collateral_markets||[]) : [];
+      const markets = tier==='all' ? allMarkets : allMarkets.filter(m=>m.tier==='fund');
+      const totalBorrow = markets.reduce((s,m)=>s+(m.borrow_usd||0),0);
+      const totalColl = markets.reduce((s,m)=>s+(m.collateral_usd||0),0);
+      const lltvVals = markets.map(m=>m.lltv).filter(v=>v!=null);
+      const avgLltv = lltvVals.length ? lltvVals.reduce((s,v)=>s+v,0)/lltvVals.length : null;
       const byClass = (()=>{ const bc={}; assets.forEach(a=>{bc[a.asset_class]=(bc[a.asset_class]||0)+a.morpho_usd}); return Object.entries(bc).map(([name,usd])=>({name,usd})).sort((a,b)=>b.usd-a.usd); })();
       const top = byClass[0];
       const asOf = M ? new Date(M.fetched_at*1000) : null;
@@ -101,9 +109,9 @@
             <>
             <div className="grid grid-4" style={{marginBottom:16}}>
               <KPI label="RWA on Morpho" value={money(total)} sub={`${assets.length} assets · ${tier==='all'?'all RWA':'tokenized funds'}`} />
+              <KPI label="Borrowed vs RWA" value={money(totalBorrow)} sub={`across ${markets.length} collateral markets`} />
+              <KPI label="Avg LLTV" value={avgLltv!=null?pct(avgLltv,0):'n/a'} sub="liquidation loan-to-value" />
               <KPI label="Largest Class" value={top?money(top.usd):'n/a'} sub={top?top.name:''} />
-              <KPI label="Asset Classes" value={byClass.length} sub="across the RWA assets" />
-              <KPI label="Lens" value="Collateral + Supplied" sub="token value in Morpho markets" />
             </div>
 
             <div className="panel" style={{marginBottom:16}}>
@@ -123,6 +131,44 @@
                         <td className="num" style={{color:'var(--fg-muted)'}}>{a.markets}</td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="panel" style={{marginBottom:16}}>
+              <div className="panel-header">
+                <span className="panel-title"><span className="bullet">●</span> RWA Collateral Markets &mdash; liquidation parameters</span>
+                <span className="panel-badge">{markets.length} MARKETS · LIVE</span>
+              </div>
+              <div className="panel-subhead" style={{padding:'8px 16px',fontSize:11.5,color:'var(--fg-muted)',borderBottom:'1px solid var(--border)'}}>
+                Each Morpho market is <b>isolated</b> (one collateral, one loan asset, fixed LLTV &amp; oracle). LLTV is the liquidation loan-to-value; above it, a position is liquidatable at the liquidation incentive shown. This is the per-market risk that aggregate venue numbers hide.
+              </div>
+              <div className="panel-body flush">
+                <table className="datatable">
+                  <thead><tr>
+                    <th>Collateral &rarr; Loan</th><th>Class</th>
+                    <th className="num">LLTV</th><th className="num col-hide-sm">Liq. Incentive</th>
+                    <th className="num">Collateral $</th><th className="num">Borrowed $</th>
+                    <th className="num">Utilization</th><th className="num">Borrow APY</th>
+                    <th className="col-hide-sm">Oracle</th>
+                  </tr></thead>
+                  <tbody>
+                    {markets.map((m,i)=>{
+                      const col = CLASS_COLORS[m.asset_class]||'var(--fg-muted)';
+                      const lltvHi = m.lltv!=null && m.lltv>=0.95;
+                      return (<tr key={i}>
+                        <td><div className="asset"><div className="asset-icon" style={{background:col}}>{m.collateral_symbol.slice(0,2)}</div><div><div className="asset-name">{m.collateral_symbol} <span style={{color:'var(--fg-dim)'}}>&rarr;</span> {m.loan_symbol}</div><div className="asset-sub">{m.issuer}</div></div></div></td>
+                        <td><span className="risk-pill" style={{background:'var(--bg-2)',color:'var(--fg-muted)'}}><span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:col,marginRight:6,verticalAlign:'middle'}}/>{m.asset_class}</span></td>
+                        <td className="num"><div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:7}}><span style={{fontWeight:600,color:lltvHi?'var(--orange)':'var(--fg)'}}>{pct(m.lltv,0)}</span><span style={{width:32,height:5,background:'var(--bg-2)',borderRadius:3,overflow:'hidden',display:'inline-block'}}><span style={{display:'block',height:'100%',width:pct(m.lltv,0),background:lltvHi?'var(--orange)':col}}/></span></div></td>
+                        <td className="num col-hide-sm" style={{color:'var(--fg-muted)'}}>+{((m.liq_incentive-1)*100).toFixed(1)}%</td>
+                        <td className="num" style={{fontWeight:600}}>{money(m.collateral_usd)}</td>
+                        <td className="num">{money(m.borrow_usd)}</td>
+                        <td className="num"><span style={{color:m.utilization>=0.95?'var(--orange)':'var(--fg-muted)'}}>{pct(m.utilization,0)}</span></td>
+                        <td className="num" style={{color:'var(--green)'}}>{pct(m.borrow_apy,1)}</td>
+                        <td className="col-hide-sm"><span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)'}}>{shortAddr(m.oracle)}</span></td>
+                      </tr>);
+                    })}
                   </tbody>
                 </table>
               </div>
