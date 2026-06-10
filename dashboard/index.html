@@ -451,17 +451,17 @@
                     </label>
                   </div>
                 </div>
-                <div style={{display:'flex',gap:18,flexWrap:'wrap',padding:'12px 16px',borderBottom:'1px solid var(--border)',alignItems:'center'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:9}}>
-                    <span style={{fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em'}}>VENUE</span>
+                <div style={{display:'flex',flexDirection:'column',gap:9,padding:'13px 16px',borderBottom:'1px solid var(--border)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:12}}>
+                    <span style={{width:46,flexShrink:0,fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em'}}>VENUE</span>
                     <div className="time-range">
                       <button className={!filterVenue?'active':''} onClick={()=>setFilterVenue(null)}>All</button>
                       <button className={filterVenue==='Aave Horizon'?'active':''} onClick={()=>setFilterVenue('Aave Horizon')}>Horizon</button>
                       <button className={filterVenue==='Morpho'?'active':''} onClick={()=>setFilterVenue('Morpho')}>Morpho</button>
                     </div>
                   </div>
-                  <div style={{display:'flex',alignItems:'center',gap:9}}>
-                    <span style={{fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em'}}>CLASS</span>
+                  <div style={{display:'flex',alignItems:'center',gap:12}}>
+                    <span style={{width:46,flexShrink:0,fontSize:10,color:'var(--fg-dim)',fontFamily:'var(--font-mono)',letterSpacing:'0.08em'}}>CLASS</span>
                     <div className="time-range" style={{flexWrap:'wrap'}}>
                       <button className={!filterClass?'active':''} onClick={()=>setFilterClass(null)}>All</button>
                       {classChips.map(c=>(<button key={c} className={filterClass===c?'active':''} onClick={()=>setFilterClass(c)}>{c}</button>))}
