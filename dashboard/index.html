@@ -35,8 +35,9 @@
     const pct = (n,d=1) => n==null ? 'n/a' : (n*100).toFixed(d)+'%';
     // Utilisation venue colors (shared by the Where-it's-used panel and the per-asset drawer)
     const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Uniswap':'#FF007A','Curve':'#0E76FD','Balancer':'#394150','Sushiswap':'#FA52A0','Aerodrome':'#1F7AE0','PancakeSwap':'#1FC7D4','Maverick':'#7B3FE4','Fluid':'#2EC4B6','Supernova':'#E8A13A','Orca':'#9945FF','Raydium':'#14B8A6','Meteora':'#E8A13A','Other DEX':'#7C8698','Held elsewhere':'#C2C7D0'};
-    const KIND_COLORS={lending:'#2C6BED',dex:'#16A34A',elsewhere:'#C2C7D0'};
-    const KIND_LABEL={lending:'Lending (collateral)',dex:'DEX liquidity',elsewhere:'Held elsewhere'};
+    const KIND_COLORS={lending:'#2C6BED',dex:'#16A34A',entity:'#E8833A',contract:'#8B5CF6',wallet:'#64748B',other:'#C2C7D0',elsewhere:'#C2C7D0'};
+    const KIND_CAT={lending:'Lending',dex:'DEX',entity:'CeFi / entities',contract:'Smart contracts',wallet:'Wallets / other',other:'Wallets / other',elsewhere:'Wallets / other'};
+    const CAT_COLOR={'Lending':KIND_COLORS.lending,'DEX':KIND_COLORS.dex,'CeFi / entities':KIND_COLORS.entity,'Smart contracts':KIND_COLORS.contract,'Wallets / other':KIND_COLORS.wallet};
     const protoColorOf=(p,kind)=>{const b=(p||'').replace(/\s*\(.*\)$/,'');return PROTO_COLORS[p]||PROTO_COLORS[b]||KIND_COLORS[kind]||'#9599A1';};
     const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
@@ -117,7 +118,7 @@
 
     function UsageDrawer({token, onClose}) {
       const t = token;
-      const kindName = {lending:'Lending',dex:'DEX',elsewhere:'Wallets / other'};
+      const kindName = {lending:'Lending',dex:'DEX',entity:'CeFi / entity',contract:'Smart contract',wallet:'Wallet (EOA)',other:'Other holders',elsewhere:'Held elsewhere'};
       return (
         <ExpandModal open={!!t} title={t ? `${t.symbol} · where it's used` : ''} onClose={onClose}>
           {t && <div style={{padding:'4px 4px 12px'}}>
@@ -139,7 +140,7 @@
               <tbody>
                 {(t.composition||[]).filter(c=>c.usd>0).sort((a,b)=>b.usd-a.usd).map((c,i)=>(
                   <tr key={i}>
-                    <td><span style={{display:'inline-flex',alignItems:'center',gap:8}}><span style={{width:9,height:9,borderRadius:'50%',background:protoColorOf(c.protocol,c.kind),display:'inline-block'}}/>{c.protocol}</span></td>
+                    <td><span style={{display:'inline-flex',alignItems:'center',gap:8}}><span style={{width:9,height:9,borderRadius:'50%',background:protoColorOf(c.protocol,c.kind),display:'inline-block'}}/>{c.address?<a href={`https://etherscan.io/address/${c.address}`} target="_blank" rel="noreferrer" style={{color:'inherit',textDecoration:'underline',textDecorationStyle:'dotted'}}>{c.protocol}</a>:c.protocol}</span></td>
                     <td style={{color:'var(--fg-muted)',fontSize:12}}>{kindName[c.kind]||c.kind}</td>
                     <td className="num" style={{fontWeight:600}}>{navUSD(c.usd)}</td>
                     <td className="num" style={{color:'var(--fg-muted)'}}>{t.total_usd>0?(c.usd/t.total_usd*100).toFixed(1)+'%':'n/a'}</td>
@@ -641,14 +642,19 @@
             {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders';
               const stableAddrs=new Set(reserves.filter(r=>r.is_stable).map(r=>(r.address||'').toLowerCase()));
               const uTokens=usage?usage.tokens.filter(t=>!stableAddrs.has((t.address||'').toLowerCase())):[];
-              const uKind={lending:0,dex:0,elsewhere:0}; const uProto={};
+              const uKind={}; const uProto={};
               uTokens.forEach(t=>{(t.composition||[]).forEach(c=>{uKind[c.kind]=(uKind[c.kind]||0)+c.usd; (uProto[c.protocol]=uProto[c.protocol]||{usd:0,kind:c.kind}).usd+=c.usd;});});
               const uTotal=uTokens.reduce((s,t)=>s+(t.total_usd||0),0);
               const uDeployed=(uKind.lending||0)+(uKind.dex||0);
+              const uElsewhere=uTotal-uDeployed;
               const protoColor=(p)=>protoColorOf(p,uProto[p]?.kind);
+              const holderKinds=new Set(['entity','contract','wallet','other','elsewhere']);
+              const labelsOn=usage&&usage.holders_labeled;
               const uPie = usageCat==='all'
-                ? [{name:'Lending (collateral)',value:uKind.lending,color:KIND_COLORS.lending},{name:'DEX liquidity',value:uKind.dex,color:KIND_COLORS.dex},{name:'Held elsewhere',value:uKind.elsewhere,color:KIND_COLORS.elsewhere}].filter(x=>x.value>0)
-                : Object.entries(uProto).filter(([p,o])=>o.kind===usageCat).map(([p,o])=>({name:p,value:o.usd,color:protoColor(p)})).sort((a,b)=>b.value-a.value);
+                ? (()=>{const cat={};Object.entries(uProto).forEach(([p,o])=>{const c=KIND_CAT[o.kind]||'Wallets / other';cat[c]=(cat[c]||0)+o.usd;});return Object.entries(cat).map(([name,value])=>({name,value,color:CAT_COLOR[name]||'#9599A1'})).sort((a,b)=>b.value-a.value);})()
+                : usageCat==='holders'
+                  ? Object.entries(uProto).filter(([p,o])=>holderKinds.has(o.kind)).map(([p,o])=>({name:p,value:o.usd,color:protoColor(p)})).sort((a,b)=>b.value-a.value).slice(0,12)
+                  : Object.entries(uProto).filter(([p,o])=>o.kind===usageCat).map(([p,o])=>({name:p,value:o.usd,color:protoColor(p)})).sort((a,b)=>b.value-a.value);
               const compSegs=(t)=>(t.composition||[]).filter(c=>c.usd>0).map(c=>({...c,w:t.total_usd>0?c.usd/t.total_usd*100:0}));
               const hT=(events&&events.totals)?events.totals:{};
               const fmtN=(n)=>window.fmtNum(n||0,0);
@@ -694,11 +700,12 @@
                       <button className={usageCat==='all'?'active':''} onClick={()=>setUsageCat('all')}>All</button>
                       <button className={usageCat==='lending'?'active':''} onClick={()=>setUsageCat('lending')}>Lending</button>
                       <button className={usageCat==='dex'?'active':''} onClick={()=>setUsageCat('dex')}>DEX</button>
+                      {labelsOn && <button className={usageCat==='holders'?'active':''} onClick={()=>setUsageCat('holders')}>Holders</button>}
                     </div>
                     <span className="panel-badge">{uTokens.length} assets · {Object.keys(uProto).filter(p=>uProto[p].kind!=='elsewhere').length} venues</span>
                   </div>
                 </div>
-                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read on-chain balances in <b>lending</b> venues (Aave Horizon, Morpho) and <b>DEX</b> liquidity across chains (Uniswap, Curve, Aerodrome on Base, Orca on Solana, via Dexscreener). The rest is <b>held elsewhere</b>: for treasury and gold assets this is largely issuer/CEX custody and institutional wallets, not hidden DeFi. Switch the lens with the buttons; click any asset for its full breakdown.</div>
+                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read on-chain balances in <b>lending</b> venues (Aave Horizon, Morpho) and <b>DEX</b> liquidity across chains (Uniswap, Curve, Aerodrome on Base, Orca on Solana, via Dexscreener). The rest is <b>held elsewhere</b>: the <b>Holders</b> lens breaks that into named entities (CeFi/custody), smart contracts and wallets (via Moralis). For treasury and gold assets it's largely institutional wallets and issuer/CEX custody, not hidden DeFi. Switch the lens with the buttons; click any asset for its full breakdown.</div>
                 <div className="panel-body">
                   {!usage ? (
                     <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'12px 0'}}>Loading usage…</div>
@@ -708,7 +715,10 @@
                     <div>
                       {usageCat==='all' ? (<>
                         <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{uTotal>0?Math.round(uDeployed/uTotal*100):0}%</div>
-                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> (lending or DEX): {navUSD(uDeployed)} of {navUSD(uTotal)}. The rest is held elsewhere (wallets, CEX/custody, or unlabeled venues).</div>
+                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> (lending or DEX): {navUSD(uDeployed)} of {navUSD(uTotal)}. {labelsOn?'The rest is broken down by holder below (Holders lens).':'The rest is held elsewhere (wallets, CEX/custody, or unlabeled venues).'}</div>
+                      </>) : usageCat==='holders' ? (<>
+                        <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(uElsewhere)}</div>
+                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>sits <b style={{color:'var(--fg)'}}>outside DeFi venues</b>, broken down by holder: named entities (CeFi/custody), smart contracts, and wallets. Top holders per asset, from Moralis.</div>
                       </>) : (<>
                         <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(usageCat==='lending'?uKind.lending:uKind.dex)}</div>
                         <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>{usageCat==='lending'?<span>of RWA is <b style={{color:'var(--fg)'}}>used as collateral</b> across lending venues.</span>:<span>of RWA sits in <b style={{color:'var(--fg)'}}>DEX liquidity</b> pools (swap / LP). These are the venues where these assets are actually traded.</span>}</div>

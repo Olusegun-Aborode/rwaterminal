@@ -24,7 +24,10 @@ export interface Env {
   HORIZON_POOL: string;
   HORIZON_ORACLE: string;
   HORIZON_DATA_PROVIDER: string;
+  MORALIS_API_KEY?: string;   // optional secret — enables top-holder labeling of "held elsewhere"
 }
+// Manually identified contracts Moralis doesn't label (extend over time). Keyed by lowercased address.
+const HOLDER_LABELS: Record<string, { name: string; kind: string }> = {};
 
 const KNOWN: Record<string, [string, string]> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": ["USTB", "Superstate"],
@@ -486,6 +489,7 @@ async function fetchUsage(env: Env): Promise<any> {
   for (const a of addrs) { queries.push({ a, q: a, chain: null }); for (const cc of (CROSS_CHAIN[a] || [])) queries.push({ a, q: cc.address, chain: cc.chain }); }
   const dsResults = await Promise.all(queries.map((x) => fetch(`https://api.dexscreener.com/latest/dex/tokens/${x.q}`).then((r) => r.json()).catch(() => null)));
   const dexByToken: Record<string, Record<string, number>> = {};
+  const dexPairs = new Set<string>(); // Ethereum pool addresses, excluded from holder counting (no double-count)
   dsResults.forEach((ds: any, idx) => {
     const { a, q, chain } = queries[idx];
     const wantChain = chain ? chain.toLowerCase() : "ethereum"; // exclude EVM-fork (PulseChain) same-address spam
@@ -494,9 +498,20 @@ async function fetchUsage(env: Env): Promise<any> {
       const bt = (p.baseToken?.address || "").toLowerCase();
       const liqUsd = Number(p.liquidity?.usd) || 0, baseAmt = Number(p.liquidity?.base) || 0, price = Number(p.priceUsd) || 0;
       const usd = bt === q.toLowerCase() ? baseAmt * price : Math.max(0, liqUsd - baseAmt * price); // token-side liquidity
-      if (usd > 25000) { const lbl = dexLabel(p.dexId) + (chain ? ` (${chain})` : ""); (dexByToken[a] ||= {}); dexByToken[a][lbl] = (dexByToken[a][lbl] || 0) + usd; }
+      if (usd > 25000) { const lbl = dexLabel(p.dexId) + (chain ? ` (${chain})` : ""); (dexByToken[a] ||= {}); dexByToken[a][lbl] = (dexByToken[a][lbl] || 0) + usd; if (!chain && p.pairAddress) dexPairs.add(String(p.pairAddress).toLowerCase()); }
     }
   });
+  // Moralis top holders → decompose "held elsewhere" into labeled entities / smart contracts / wallets.
+  const STABLE_SYMS = new Set(["GHO", "USDC", "RLUSD"]);
+  const exclude = new Set<string>([...USAGE_REGISTRY.map((r) => r.address.toLowerCase()), ...dexPairs]);
+  const holdersByAddr: Record<string, any[]> = {};
+  if (env.MORALIS_API_KEY) {
+    const mres = await Promise.all(addrs.map((a) =>
+      STABLE_SYMS.has(symBy[a] || "") ? Promise.resolve(null)
+        : fetch(`https://deep-index.moralis.io/api/v2.2/erc20/${a}/owners?chain=eth&order=DESC&limit=15`, { headers: { "X-API-Key": env.MORALIS_API_KEY! } }).then((r) => r.json()).catch(() => null)
+    ));
+    addrs.forEach((a, i) => { holdersByAddr[a] = (mres[i] as any)?.result || []; });
+  }
   const R = USAGE_REGISTRY.length, stride = 2 + R;
   const tokens: any[] = [];
   const agg: Record<string, { usd: number; kind: string }> = {};
@@ -525,28 +540,54 @@ async function fetchUsage(env: Env): Promise<any> {
     const dexByLbl: Record<string, number> = {}; let dexUsd = 0;
     for (const [lbl, v] of Object.entries(dexRaw)) { const sv = v * dexScale; if (sv > 1) { dexByLbl[lbl] = sv; dexUsd += sv; } }
     const elsewhere = Math.max(0, total - lendingUsd - dexUsd);
-    const comp: { protocol: string; usd: number; kind: string }[] = [];
+    const comp: { protocol: string; usd: number; kind: string; address?: string }[] = [];
     for (const [p, v] of Object.entries(byProto)) comp.push({ protocol: p, usd: v, kind: "lending" });
     for (const [p, v] of Object.entries(dexByLbl)) comp.push({ protocol: p, usd: v, kind: "dex" });
-    comp.push({ protocol: "Held elsewhere", usd: elsewhere, kind: "elsewhere" });
+    // Decompose "held elsewhere" into named entities / smart contracts / wallets via top holders.
+    const holders = (holdersByAddr[a] || []).filter((h) => !exclude.has((h.owner_address || "").toLowerCase()));
+    if (holders.length && elsewhere > 0) {
+      const entityUsd: Record<string, number> = {}; const contractBig: any[] = [];
+      let contractOther = 0, walletUsd = 0, idSum = 0;
+      for (const h of holders) {
+        const ha = (h.owner_address || "").toLowerCase();
+        const usd = (Number(h.percentage_relative_to_total_supply) || 0) / 100 * total;
+        if (!(usd > total * 0.001)) continue; // ignore <0.1%
+        idSum += usd;
+        const manual = HOLDER_LABELS[ha];
+        const entity = manual?.name || h.entity || h.owner_address_label;
+        if (entity) { const key = manual ? `${entity}::${manual.kind}` : `${entity}::entity`; entityUsd[key] = (entityUsd[key] || 0) + usd; }
+        else if (h.is_contract) { if (usd >= total * 0.03) contractBig.push({ protocol: `Contract ${ha.slice(0, 6)}…${ha.slice(-4)}`, usd, kind: "contract", address: ha }); else contractOther += usd; }
+        else walletUsd += usd;
+      }
+      const scale = idSum > elsewhere && idSum > 0 ? elsewhere / idSum : 1;
+      for (const [key, v] of Object.entries(entityUsd)) { const [name, kind] = key.split("::"); comp.push({ protocol: name, usd: v * scale, kind }); }
+      for (const c of contractBig) comp.push({ ...c, usd: c.usd * scale });
+      if (contractOther * scale > total * 0.002) comp.push({ protocol: "Other contracts", usd: contractOther * scale, kind: "contract" });
+      if (walletUsd * scale > total * 0.002) comp.push({ protocol: "Wallets (EOA)", usd: walletUsd * scale, kind: "wallet" });
+      const otherHolders = Math.max(0, elsewhere - Math.min(idSum, elsewhere));
+      if (otherHolders > total * 0.001) comp.push({ protocol: "Other holders", usd: otherHolders, kind: "other" });
+    } else if (elsewhere > 0) {
+      comp.push({ protocol: "Held elsewhere", usd: elsewhere, kind: "elsewhere" });
+    }
     comp.sort((x, y) => y.usd - x.usd);
     const deployed = lendingUsd + dexUsd;
+    const tbk: Record<string, number> = {};
+    for (const c of comp) tbk[c.kind] = (tbk[c.kind] || 0) + c.usd;
     tokens.push({
       address: a, symbol: symBy[a] || a.slice(0, 6), asset_class: classBy[a] || (KNOWN[a] ? ASSET_CLASS[KNOWN[a][0]] : null) || "Other",
       total_usd: total, composition: comp, deployed_usd: deployed, deployed_pct: total > 0 ? deployed / total : 0,
-      by_kind: { lending: lendingUsd, dex: dexUsd, elsewhere },
+      by_kind: tbk,
     });
     totalUsd += total;
-    kindAgg.lending += lendingUsd; kindAgg.dex += dexUsd; kindAgg.elsewhere += elsewhere;
-    for (const c of comp) { (agg[c.protocol] ||= { usd: 0, kind: c.kind }); agg[c.protocol].usd += c.usd; }
+    for (const c of comp) { kindAgg[c.kind] = (kindAgg[c.kind] || 0) + c.usd; (agg[c.protocol] ||= { usd: 0, kind: c.kind }); agg[c.protocol].usd += c.usd; }
   });
   tokens.sort((a, b) => b.total_usd - a.total_usd);
   return {
     ok: true, fetched_at: Math.floor(Date.now() / 1000), tokens,
     by_protocol: Object.entries(agg).map(([protocol, o]) => ({ protocol, usd: o.usd, kind: o.kind })).sort((a, b) => b.usd - a.usd),
     by_kind: kindAgg,
-    total_usd: totalUsd, deployed_usd: kindAgg.lending + kindAgg.dex, elsewhere_usd: kindAgg.elsewhere,
-    registry_count: USAGE_REGISTRY.length,
+    total_usd: totalUsd, deployed_usd: (kindAgg.lending || 0) + (kindAgg.dex || 0), elsewhere_usd: totalUsd - (kindAgg.lending || 0) - (kindAgg.dex || 0),
+    registry_count: USAGE_REGISTRY.length, holders_labeled: !!env.MORALIS_API_KEY,
   };
 }
 
