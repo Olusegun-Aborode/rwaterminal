@@ -36,8 +36,8 @@
     // Utilisation venue colors (shared by the Where-it's-used panel and the per-asset drawer)
     const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Uniswap':'#FF007A','Curve':'#0E76FD','Balancer':'#394150','Sushiswap':'#FA52A0','Aerodrome':'#1F7AE0','PancakeSwap':'#1FC7D4','Maverick':'#7B3FE4','Fluid':'#2EC4B6','Supernova':'#E8A13A','Orca':'#9945FF','Raydium':'#14B8A6','Meteora':'#E8A13A','Other DEX':'#7C8698','Held elsewhere':'#C2C7D0'};
     const KIND_COLORS={lending:'#2C6BED',dex:'#16A34A',entity:'#E8833A',contract:'#8B5CF6',wallet:'#64748B',other:'#C2C7D0',elsewhere:'#C2C7D0'};
-    const KIND_CAT={lending:'Lending',dex:'DEX',entity:'CeFi / entities',contract:'Smart contracts',wallet:'Wallets / other',other:'Wallets / other',elsewhere:'Wallets / other'};
-    const CAT_COLOR={'Lending':KIND_COLORS.lending,'DEX':KIND_COLORS.dex,'CeFi / entities':KIND_COLORS.entity,'Smart contracts':KIND_COLORS.contract,'Wallets / other':KIND_COLORS.wallet};
+    const KIND_CAT={lending:'Lending',dex:'DEX',entity:'Named holders',contract:'Smart contracts',wallet:'Wallets / other',other:'Wallets / other',elsewhere:'Wallets / other'};
+    const CAT_COLOR={'Lending':KIND_COLORS.lending,'DEX':KIND_COLORS.dex,'Named holders':KIND_COLORS.entity,'Smart contracts':KIND_COLORS.contract,'Wallets / other':KIND_COLORS.wallet};
     const protoColorOf=(p,kind)=>{const b=(p||'').replace(/\s*\(.*\)$/,'');return PROTO_COLORS[p]||PROTO_COLORS[b]||KIND_COLORS[kind]||'#9599A1';};
     const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
@@ -718,7 +718,7 @@
                         <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> (lending or DEX): {navUSD(uDeployed)} of {navUSD(uTotal)}. {labelsOn?'The rest is broken down by holder below (Holders lens).':'The rest is held elsewhere (wallets, CEX/custody, or unlabeled venues).'}</div>
                       </>) : usageCat==='holders' ? (<>
                         <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(uElsewhere)}</div>
-                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>sits <b style={{color:'var(--fg)'}}>outside DeFi venues</b>, broken down by holder: named entities (CeFi/custody), smart contracts, and wallets. Top holders per asset, from Moralis.</div>
+                        <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>sits <b style={{color:'var(--fg)'}}>outside our lending/DEX venues</b>, broken down by holder: named protocols &amp; custodians (Sky, Frax, Tether, exchanges, multisigs), smart contracts, and wallets. Top holders per asset, from Moralis + on-chain identification.</div>
                       </>) : (<>
                         <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{navUSD(usageCat==='lending'?uKind.lending:uKind.dex)}</div>
                         <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>{usageCat==='lending'?<span>of RWA is <b style={{color:'var(--fg)'}}>used as collateral</b> across lending venues.</span>:<span>of RWA sits in <b style={{color:'var(--fg)'}}>DEX liquidity</b> pools (swap / LP). These are the venues where these assets are actually traded.</span>}</div>

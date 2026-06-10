@@ -27,7 +27,20 @@ export interface Env {
   MORALIS_API_KEY?: string;   // optional secret — enables top-holder labeling of "held elsewhere"
 }
 // Manually identified contracts Moralis doesn't label (extend over time). Keyed by lowercased address.
-const HOLDER_LABELS: Record<string, { name: string; kind: string }> = {};
+// Identified via on-chain contract name (Blockscout): ALMProxy = Sky/Spark allocator, LockReleaseTokenPool
+// = Chainlink CCIP bridge, Frx/Midas redemption vaults, Gnosis/Safe = institutional multisig custody.
+const HOLDER_LABELS: Record<string, { name: string; kind: string }> = {
+  "0x491edfb0b8b608044e227225c715981a30f3a44e": { name: "Sky / Spark (ALM)", kind: "entity" },
+  "0xb6dd7ae22c9922afee0642f9ac13e58633f715a2": { name: "Sky / Spark (ALM)", kind: "entity" },
+  "0x1601843c5e9bc251a3272907010afa41fa18347e": { name: "Sky / Spark (ALM)", kind: "entity" },
+  "0x20b79d39bd44deee4f89b1e9d0e3b945fde06491": { name: "Chainlink CCIP (bridge)", kind: "entity" },
+  "0x5fbaa3a3b489199338fbd85f7e3d444dc0504f33": { name: "Frax (frxUSD custodian)", kind: "entity" },
+  "0x569d7dccbf6923350521ecbc28a555a500c4f0ec": { name: "Midas (redemption vault)", kind: "entity" },
+  "0x802e28e166c3f19983e0cf7688dca0c2e70176a6": { name: "Safe multisig (custody)", kind: "entity" },
+  "0x2b5ab59163a6e93b4486f6055d33ca4a115dd4d5": { name: "Safe multisig (custody)", kind: "entity" },
+  "0xa0759a0dfde5395a1892aed90eb5665698cfaa05": { name: "Safe multisig (custody)", kind: "entity" },
+  "0xdd82875f0840aad58a455a70b88eed9f59cec7c7": { name: "Safe multisig (custody)", kind: "entity" },
+};
 
 const KNOWN: Record<string, [string, string]> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": ["USTB", "Superstate"],
