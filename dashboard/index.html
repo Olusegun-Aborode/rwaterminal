@@ -119,6 +119,7 @@
       const [metric, setMetric] = useState('value');
       const [hist, setHist] = useState(null);
       const [events, setEvents] = useState(null);
+      const [usage, setUsage] = useState(null);
       const [flows, setFlows] = useState(null);
       const [mkt, setMkt] = useState(null);
       const [holdersHist, setHoldersHist] = useState(null);
@@ -147,6 +148,7 @@
         fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setMorpho(j); }).catch(()=>{});
         fetch(base+'/api/deltas').then(r=>r.json()).then(j=>{ if(alive && j && j.deltas) setDeltas(j.deltas); }).catch(()=>{});
+        fetch(base+'/api/usage').then(r=>r.json()).then(j=>{ if(alive && j && j.tokens) setUsage(j); }).catch(()=>{});
         return ()=>{alive=false;clearInterval(id);};
       }, []);
       const T = D.totals;
@@ -583,7 +585,53 @@
               </div>
             </>}
 
-            {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders'; return (<>
+            {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders';
+              const stableAddrs=new Set(reserves.filter(r=>r.is_stable).map(r=>(r.address||'').toLowerCase()));
+              const uTokens=usage?usage.tokens.filter(t=>!stableAddrs.has((t.address||'').toLowerCase())):[];
+              const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Held elsewhere':'#C2C7D0'};
+              const uAgg={}; uTokens.forEach(t=>{for(const [p,v] of Object.entries(t.composition||{})) uAgg[p]=(uAgg[p]||0)+v;});
+              const uPie=Object.entries(uAgg).map(([name,value])=>({name,value,color:PROTO_COLORS[name]||'#9599A1'})).sort((a,b)=>b.value-a.value);
+              const uTotal=uTokens.reduce((s,t)=>s+(t.total_usd||0),0);
+              const uDeployed=uTokens.reduce((s,t)=>s+(t.deployed_usd||0),0);
+              return (<>
+              <div className="panel" style={{marginBottom:16}}>
+                <div className="panel-header">
+                  <span className="panel-title"><span className="bullet">●</span> Where it's used<span style={{color:'var(--fg-dim)',fontWeight:400,marginLeft:8,textTransform:'none',letterSpacing:0}}>· utilisation across DeFi</span></span>
+                  <span className="panel-badge">{uTokens.length} assets · {usage?usage.registry_count:0} labeled venues</span>
+                </div>
+                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read the token's on-chain balance held by labeled protocol contracts (lending, DEX, perps, vaults) and treat the rest as held elsewhere. This is utilisation: how much of a token is truly deployed as collateral vs parked in wallets. <i>Coverage grows as venues are labeled; "held elsewhere" = wallets plus venues not yet in the registry.</i></div>
+                <div className="panel-body">
+                  {!usage ? (
+                    <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'12px 0'}}>Loading usage…</div>
+                  ) : (
+                  <div className="grid grid-2" style={{alignItems:'center',gap:20}}>
+                    <div style={{display:'flex',alignItems:'center'}}><Donut items={uPie} size={185} formatter={navUSD} /></div>
+                    <div>
+                      <div style={{fontSize:30,fontWeight:600,letterSpacing:'-0.02em'}}>{uTotal>0?Math.round(uDeployed/uTotal*100):0}%</div>
+                      <div style={{fontSize:13,color:'var(--fg-muted)',marginTop:4,lineHeight:1.5}}>of tracked RWA value is <b style={{color:'var(--fg)'}}>deployed in a labeled venue</b> ({navUSD(uDeployed)} of {navUSD(uTotal)}). The rest is held in wallets or venues not yet in the registry.</div>
+                    </div>
+                  </div>
+                  )}
+                </div>
+                {usage && <div className="panel-body flush" style={{borderTop:'1px solid var(--border)'}}>
+                  <table className="datatable">
+                    <thead><tr><th>Asset</th><th className="num">Total Value</th><th className="num">Deployed</th><th>Composition</th><th className="num col-hide-sm">In venues</th></tr></thead>
+                    <tbody>
+                      {uTokens.map((t,i)=>(
+                        <tr key={i}>
+                          <td><div className="asset"><div className="asset-icon" style={{background:CLASS_COLORS[t.asset_class]||'var(--fg-muted)'}}>{(t.symbol||'?').slice(0,2)}</div><div><div className="asset-name">{t.symbol}</div><div className="asset-sub">{t.asset_class}</div></div></div></td>
+                          <td className="num" style={{fontWeight:600}}>{navUSD(t.total_usd)}</td>
+                          <td className="num"><span style={{fontWeight:600,color:t.deployed_pct>=0.5?'var(--green)':'var(--fg)'}}>{Math.round(t.deployed_pct*100)}%</span></td>
+                          <td><div style={{display:'flex',height:8,borderRadius:4,overflow:'hidden',background:'var(--bg-2)',minWidth:110,maxWidth:240}}>{['Aave Horizon','Morpho','Held elsewhere'].map(p=>{const v=t.composition[p]||0;const w=t.total_usd>0?v/t.total_usd*100:0;return w>0.3?<span key={p} title={p+': '+navUSD(v)} style={{width:w+'%',background:PROTO_COLORS[p]||'#9599A1'}}/>:null;})}</div></td>
+                          <td className="num col-hide-sm" style={{color:'var(--fg-muted)'}}>{navUSD(t.deployed_usd)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>}
+              </div>
+
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)',letterSpacing:'0.08em',textTransform:'uppercase',margin:'0 2px 10px'}}>On-chain activity · Aave Horizon</div>
               <div className="grid grid-4" style={{marginBottom:16}}>
                 <Metric label="Asset Holders" value={events&&events.totals?window.fmtNum(events.totals.holders,0):'n/a'} delta={holdersDelta} sub="across funds" />
                 <Metric label="Active Addresses" value={events&&events.totals?window.fmtNum(events.totals.active_addresses,0):'n/a'} delta={activeDelta} sub="distinct since genesis" />

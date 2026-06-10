@@ -47,7 +47,29 @@ const ASSET_CLASS: Record<string, string> = {
 const erc20Abi = [
   { name: "totalSupply", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "decimals", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const;
+// Labeled-address registry for usage/utilisation: where each RWA token's supply physically sits.
+// We read the token's balanceOf(address) for every entry, then bucket by protocol; the unlabeled
+// remainder (totalSupply minus all labeled balances) is "held elsewhere". Indexer-free — pure RPC,
+// runs in the existing cron. EXTEND IT: add a DEX pool / Pendle / perp-margin / vault address here
+// and that slice immediately appears in the breakdown. (Aave v3 custodies the underlying in its
+// aToken; Morpho Blue is a singleton that custodies all collateral + supplied.)
+const USAGE_REGISTRY: { address: string; protocol: string; kind: string }[] = [
+  // Aave Horizon aTokens (each custodies its own underlying)
+  { address: "0x946281a2d0dd6e650d08f74833323d66ae4c8b12", protocol: "Aave Horizon", kind: "lending" }, // aGHO
+  { address: "0x68215b6533c47ff9f7125ac95adf00fe4a62f79e", protocol: "Aave Horizon", kind: "lending" }, // aUSDC
+  { address: "0xe3190143eb552456f88464662f0c0c4ac67a77eb", protocol: "Aave Horizon", kind: "lending" }, // aRLUSD
+  { address: "0x4e58a2e433a739726134c83d2f07b2562e8dfdb3", protocol: "Aave Horizon", kind: "lending" }, // aUSTB
+  { address: "0x08b798c40b9ab931356d9ab4235f548325c4cb80", protocol: "Aave Horizon", kind: "lending" }, // aUSCC
+  { address: "0xc167932ac4eec2b65844ef00d31b4550250536a5", protocol: "Aave Horizon", kind: "lending" }, // aUSYC
+  { address: "0x844f07ab09aa5dbdce6a9b1206ce150e1eadaccb", protocol: "Aave Horizon", kind: "lending" }, // aJTRSY
+  { address: "0xb0ec6c4482ac1ef77be239c0ac833cf37a27c876", protocol: "Aave Horizon", kind: "lending" }, // aJAAA
+  { address: "0xe1cfd16b8e4b1c86bb5b7a104cfefbc7b09326dd", protocol: "Aave Horizon", kind: "lending" }, // aVBILL
+  { address: "0xc293744ffbcf46696d589f5c415e71bc491519cd", protocol: "Aave Horizon", kind: "lending" }, // aACRED
+  // Morpho Blue singleton (custodies all collateral + supplied across markets)
+  { address: "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb", protocol: "Morpho", kind: "lending" },
+];
 const ISSUER: Record<string, { kind: "superstate"; fund: number } | { kind: "usyc" }> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": { kind: "superstate", fund: 1 },
   "0x14d60e7fdc0d71d8611742720e4c50e7a974020c": { kind: "superstate", fund: 2 },
@@ -390,6 +412,74 @@ async function fetchDeltas(env: Env): Promise<any> {
   return { ok: true, fetched_at: tsNow, block: Number(blockNow), deltas };
 }
 
+// Usage / utilisation: where each RWA token's supply physically sits across DeFi.
+// Reads balanceOf(registryAddress) for every (token × labeled-contract) pair in ONE multicall,
+// buckets by protocol, and treats the remainder (totalSupply − labeled) as "Held elsewhere".
+// No indexer — just RPC, so it runs free in the cron. Coverage grows by adding registry entries.
+async function fetchUsage(env: Env): Promise<any> {
+  if (!env.RPC_URL) return { ok: false, tokens: [] };
+  const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
+  let horizonAddrs: string[] = [];
+  const symBy: Record<string, string> = {}, classBy: Record<string, string> = {};
+  try {
+    const dp = getAddress(env.HORIZON_DATA_PROVIDER);
+    const toks = (await client.readContract({ address: dp, abi: dpAbi, functionName: "getAllReservesTokens" })) as any[];
+    for (const t of toks) { const a = String(t.tokenAddress).toLowerCase(); horizonAddrs.push(a); symBy[a] = t.symbol; }
+  } catch {}
+  for (const [a, m] of Object.entries(MORPHO_RWA)) { symBy[a] = symBy[a] || m.label; classBy[a] = m.asset_class; }
+  const addrs = Array.from(new Set([...horizonAddrs, ...Object.keys(MORPHO_RWA)]));
+  if (!addrs.length) return { ok: false, tokens: [] };
+  const coinKeys = addrs.map((a) => "ethereum:" + a).join(",");
+  const pmap = (obj: any) => { const m: Record<string, number> = {}; for (const [k, v] of Object.entries(obj || {})) m[k.toLowerCase().replace("ethereum:", "")] = (v as any)?.price; return m; };
+  // One multicall: per token → totalSupply + decimals + balanceOf(each registry address).
+  const calls: any[] = [];
+  for (const a of addrs) {
+    const ta = getAddress(a);
+    calls.push({ address: ta, abi: erc20Abi, functionName: "totalSupply" });
+    calls.push({ address: ta, abi: erc20Abi, functionName: "decimals" });
+    for (const r of USAGE_REGISTRY) calls.push({ address: ta, abi: erc20Abi, functionName: "balanceOf", args: [getAddress(r.address)] });
+  }
+  const [res, prices] = await Promise.all([
+    client.multicall({ contracts: calls, allowFailure: true }).catch(() => []),
+    fetch(`https://coins.llama.fi/prices/current/${coinKeys}`).then((r) => r.json()).then((j: any) => pmap(j?.coins)).catch(() => ({})),
+  ]);
+  const R = USAGE_REGISTRY.length, stride = 2 + R;
+  const tokens: any[] = [];
+  const agg: Record<string, number> = {};
+  let totalUsd = 0, elsewhereUsd = 0;
+  addrs.forEach((a, i) => {
+    const base = i * stride;
+    const ts = (res as any[])[base]?.status === "success" ? Number((res as any[])[base].result) : null;
+    const dec = (res as any[])[base + 1]?.status === "success" ? Number((res as any[])[base + 1].result) : 18;
+    const price = (prices as any)[a];
+    if (ts == null || price == null) return;
+    const totalTok = ts / 10 ** dec, total = totalTok * price;
+    const byProto: Record<string, number> = {};
+    let labeledTok = 0;
+    USAGE_REGISTRY.forEach((r, k) => {
+      const cell = (res as any[])[base + 2 + k];
+      const bal = cell?.status === "success" ? Number(cell.result) / 10 ** dec : 0;
+      if (bal > 0) { byProto[r.protocol] = (byProto[r.protocol] || 0) + bal * price; labeledTok += bal; }
+    });
+    const elsewhere = Math.max(0, (totalTok - labeledTok)) * price;
+    const composition = { ...byProto, "Held elsewhere": elsewhere };
+    const deployed = Object.entries(byProto).reduce((s, [, v]) => s + v, 0);
+    tokens.push({
+      address: a, symbol: symBy[a] || a.slice(0, 6), asset_class: classBy[a] || (KNOWN[a] ? ASSET_CLASS[KNOWN[a][0]] : null) || "Other",
+      total_usd: total, composition, deployed_usd: deployed, deployed_pct: total > 0 ? deployed / total : 0,
+    });
+    totalUsd += total; elsewhereUsd += elsewhere;
+    for (const [p, v] of Object.entries(composition)) agg[p] = (agg[p] || 0) + v;
+  });
+  tokens.sort((a, b) => b.total_usd - a.total_usd);
+  return {
+    ok: true, fetched_at: Math.floor(Date.now() / 1000), tokens,
+    by_protocol: Object.entries(agg).map(([protocol, usd]) => ({ protocol, usd })).sort((a, b) => b.usd - a.usd),
+    total_usd: totalUsd, deployed_usd: totalUsd - elsewhereUsd, elsewhere_usd: elsewhereUsd,
+    registry_count: USAGE_REGISTRY.length,
+  };
+}
+
 // DefiLlama — independent Horizon TVL for Tier-3 reconciliation. Gross supplied =
 // net Ethereum TVL + borrowed (matches our horizon_supplied_usd methodology).
 async function fetchDefiLlamaHorizon(): Promise<number | null> {
@@ -637,6 +727,10 @@ export default {
     if (url.pathname === "/api/deltas") {
       // 7D/30D Total-Value change per asset; archive reads are slow + slow-moving, so cache 1h.
       return new Response(JSON.stringify(await fetchDeltas(env)), { headers: { ...cors, "cache-control": "max-age=3600" } });
+    }
+    if (url.pathname === "/api/usage") {
+      // Where each RWA's supply sits across DeFi (balanceOf vs labeled-address registry). Slow-moving.
+      return new Response(JSON.stringify(await fetchUsage(env)), { headers: { ...cors, "cache-control": "max-age=1800" } });
     }
     if (url.pathname === "/api/snapshot") {
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
