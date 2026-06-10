@@ -34,10 +34,10 @@
     const navUSD = (v) => v==null ? 'n/a' : window.fmtUSD(v, v>=1e9?2:1);
     const pct = (n,d=1) => n==null ? 'n/a' : (n*100).toFixed(d)+'%';
     // Utilisation venue colors (shared by the Where-it's-used panel and the per-asset drawer)
-    const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Uniswap':'#FF007A','Curve':'#0E76FD','Balancer':'#394150','Sushiswap':'#FA52A0','Aerodrome':'#1F7AE0','PancakeSwap':'#1FC7D4','Maverick':'#7B3FE4','Fluid':'#2EC4B6','Supernova':'#E8A13A','Other DEX':'#7C8698','Held elsewhere':'#C2C7D0'};
+    const PROTO_COLORS={'Aave Horizon':'#B6509E','Morpho':'#2C6BED','Uniswap':'#FF007A','Curve':'#0E76FD','Balancer':'#394150','Sushiswap':'#FA52A0','Aerodrome':'#1F7AE0','PancakeSwap':'#1FC7D4','Maverick':'#7B3FE4','Fluid':'#2EC4B6','Supernova':'#E8A13A','Orca':'#9945FF','Raydium':'#14B8A6','Meteora':'#E8A13A','Other DEX':'#7C8698','Held elsewhere':'#C2C7D0'};
     const KIND_COLORS={lending:'#2C6BED',dex:'#16A34A',elsewhere:'#C2C7D0'};
     const KIND_LABEL={lending:'Lending (collateral)',dex:'DEX liquidity',elsewhere:'Held elsewhere'};
-    const protoColorOf=(p,kind)=>PROTO_COLORS[p]||KIND_COLORS[kind]||'#9599A1';
+    const protoColorOf=(p,kind)=>{const b=(p||'').replace(/\s*\(.*\)$/,'');return PROTO_COLORS[p]||PROTO_COLORS[b]||KIND_COLORS[kind]||'#9599A1';};
     const shortAddr = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : 'n/a';
 
     // Measure a container so charts render at the panel's true pixel width (fills desktop)
@@ -698,7 +698,7 @@
                     <span className="panel-badge">{uTokens.length} assets · {Object.keys(uProto).filter(p=>uProto[p].kind!=='elsewhere').length} venues</span>
                   </div>
                 </div>
-                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read on-chain balances in labeled <b>lending</b> venues (Aave Horizon, Morpho) and <b>DEX</b>-pool liquidity (Uniswap, Curve, and more, via Dexscreener); the rest is <b>held elsewhere</b> (wallets, CEX/custody, or venues not yet labeled). Switch the lens with the buttons; click any asset for its full breakdown.</div>
+                <div className="panel-caption"><b>Where does each RWA's supply actually sit?</b> We read on-chain balances in <b>lending</b> venues (Aave Horizon, Morpho) and <b>DEX</b> liquidity across chains (Uniswap, Curve, Aerodrome on Base, Orca on Solana, via Dexscreener). The rest is <b>held elsewhere</b>: for treasury and gold assets this is largely issuer/CEX custody and institutional wallets, not hidden DeFi. Switch the lens with the buttons; click any asset for its full breakdown.</div>
                 <div className="panel-body">
                   {!usage ? (
                     <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'12px 0'}}>Loading usage…</div>

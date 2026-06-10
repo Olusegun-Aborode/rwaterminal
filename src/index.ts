@@ -70,6 +70,15 @@ const USAGE_REGISTRY: { address: string; protocol: string; kind: string }[] = [
   // Morpho Blue singleton (custodies all collateral + supplied across markets)
   { address: "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb", protocol: "Morpho", kind: "lending" },
 ];
+// Verified cross-chain deployments of tracked assets (bridged/wrapped versions with their own DEX
+// liquidity on other chains). EXACT ADDRESSES ONLY — symbol search surfaces scam clones (we saw fake
+// "XAUt"/"PAXG" Solana pools larger than the real supply). Keyed by the Ethereum token address.
+const CROSS_CHAIN: Record<string, { chain: string; address: string }[]> = {
+  "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b": [ // syrupUSDC (Maple), bridged to Base + Solana
+    { chain: "Base", address: "0x660975730059246a68521a3e2fbd4740173100f5" },
+    { chain: "Solana", address: "AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj" },
+  ],
+};
 const ISSUER: Record<string, { kind: "superstate"; fund: number } | { kind: "usyc" }> = {
   "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e": { kind: "superstate", fund: 1 },
   "0x14d60e7fdc0d71d8611742720e4c50e7a974020c": { kind: "superstate", fund: 2 },
@@ -470,19 +479,22 @@ async function fetchUsage(env: Env): Promise<any> {
   // /tokens endpoint caps results, so we query PER TOKEN in parallel to capture every pool.
   const dexLabel = (id: string) => {
     if (!id || /^0x/i.test(id) || id.length > 16) return "Other DEX";
-    return (({ uniswap: "Uniswap", "uniswap-v3": "Uniswap", curve: "Curve", balancer: "Balancer", sushiswap: "Sushiswap", pancakeswap: "PancakeSwap", aerodrome: "Aerodrome", fluid: "Fluid", maverick: "Maverick" } as any)[id] || (id.charAt(0).toUpperCase() + id.slice(1)));
+    return (({ uniswap: "Uniswap", "uniswap-v3": "Uniswap", curve: "Curve", balancer: "Balancer", sushiswap: "Sushiswap", pancakeswap: "PancakeSwap", aerodrome: "Aerodrome", fluid: "Fluid", maverick: "Maverick", orca: "Orca", raydium: "Raydium", meteora: "Meteora" } as any)[id] || (id.charAt(0).toUpperCase() + id.slice(1)));
   };
-  const dsResults = await Promise.all(addrs.map((a) => fetch(`https://api.dexscreener.com/latest/dex/tokens/${a}`).then((r) => r.json()).catch(() => null)));
+  // Query each token's Ethereum address (chain=null) plus any verified cross-chain addresses.
+  const queries: { a: string; q: string; chain: string | null }[] = [];
+  for (const a of addrs) { queries.push({ a, q: a, chain: null }); for (const cc of (CROSS_CHAIN[a] || [])) queries.push({ a, q: cc.address, chain: cc.chain }); }
+  const dsResults = await Promise.all(queries.map((x) => fetch(`https://api.dexscreener.com/latest/dex/tokens/${x.q}`).then((r) => r.json()).catch(() => null)));
   const dexByToken: Record<string, Record<string, number>> = {};
   dsResults.forEach((ds: any, idx) => {
-    const a = addrs[idx];
+    const { a, q, chain } = queries[idx];
+    const wantChain = chain ? chain.toLowerCase() : "ethereum"; // exclude EVM-fork (PulseChain) same-address spam
     for (const p of (ds?.pairs || [])) {
-      // Same address exists on EVM forks (PulseChain etc.) with worthless copies — count only the real token.
-      if (p.chainId !== "ethereum") continue;
+      if (p.chainId !== wantChain) continue;
       const bt = (p.baseToken?.address || "").toLowerCase();
       const liqUsd = Number(p.liquidity?.usd) || 0, baseAmt = Number(p.liquidity?.base) || 0, price = Number(p.priceUsd) || 0;
-      const usd = bt === a ? baseAmt * price : Math.max(0, liqUsd - baseAmt * price); // token-side liquidity
-      if (usd > 25000) { const lbl = dexLabel(p.dexId); (dexByToken[a] ||= {}); dexByToken[a][lbl] = (dexByToken[a][lbl] || 0) + usd; } // drop sub-$25k dust
+      const usd = bt === q.toLowerCase() ? baseAmt * price : Math.max(0, liqUsd - baseAmt * price); // token-side liquidity
+      if (usd > 25000) { const lbl = dexLabel(p.dexId) + (chain ? ` (${chain})` : ""); (dexByToken[a] ||= {}); dexByToken[a][lbl] = (dexByToken[a][lbl] || 0) + usd; }
     }
   });
   const R = USAGE_REGISTRY.length, stride = 2 + R;
