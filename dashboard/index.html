@@ -110,7 +110,9 @@
 
     function App() {
       const [D, setD] = useState(window.HORIZON_DATA);
-      const [view, setView] = useState('overview');
+      const [view, setViewRaw] = useState(()=>{ try{ const h=(location.hash||'').replace('#',''); return ['overview','risk','activity'].includes(h)?h:'overview'; }catch(e){ return 'overview'; } });
+      const setView = (v)=>{ setViewRaw(v); try{ history.replaceState(null,'', v==='overview'?(location.pathname+location.search):('#'+v)); window.scrollTo(0,0); }catch(e){} };
+      React.useEffect(()=>{ const onHash=()=>{ const h=(location.hash||'').replace('#',''); setViewRaw(['overview','risk','activity'].includes(h)?h:'overview'); }; window.addEventListener('hashchange',onHash); return ()=>window.removeEventListener('hashchange',onHash); },[]);
       const [sel, setSel] = useState(null);
       const [metric, setMetric] = useState('value');
       const [hist, setHist] = useState(null);
