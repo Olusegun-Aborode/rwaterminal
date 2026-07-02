@@ -72,7 +72,7 @@ npx envio codegen && npx envio dev        # local; or deploy to Envio Cloud
 
 ## Push this repo to GitHub
 ```bash
-cd "/Users/olusegunaborode/Data Projects/DatumLabs/Datum Data/Root - Datum Dashboards/rwa-terminal"
+cd "/Users/olusegunaborode/Data Projects/DatumLabs/Datum Data/Datum Dashboards/rwa-terminal"
 git add -A && git commit -m "RWA Terminal pipeline scaffold"
 gh repo create rwa-terminal --private --source=. --push   # or create on github.com and: git remote add origin <url> && git push -u origin main
 ```

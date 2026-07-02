@@ -771,11 +771,25 @@ async function persist(env: Env, snap: any, ev?: any) {
       FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
   }
   const t = snap.totals, e = ev?.totals || {};
-  stmts.push(sql`INSERT INTO market_history
+  // Sanity guard for rwa_aum: a transient bad on-chain read (price/supply glitch) once persisted a
+  // ~$40B total (2026-06-29) vs a normal ~$5.5B. Baseline = median of recent values (robust to spikes,
+  // and it rises with genuine growth, so the 3x threshold self-adjusts). Self-heals existing spikes.
+  let rwaSane = true;
+  try {
+    const recent = await sql`SELECT rwa_aum FROM market_history WHERE rwa_aum IS NOT NULL ORDER BY ts DESC LIMIT 30`;
+    const vals = (recent as any[]).map((r) => Number(r.rwa_aum)).filter((v) => v > 0).sort((a, b) => a - b);
+    const median = vals.length ? vals[Math.floor(vals.length / 2)] : null;
+    if (median != null) {
+      stmts.push(sql`DELETE FROM market_history WHERE rwa_aum > ${median * 3}`); // remove already-persisted spikes
+      if (t.rwa_aum != null && (t.rwa_aum > median * 3 || t.rwa_aum < median / 3)) rwaSane = false; // don't persist an outlier
+    }
+  } catch {}
+  if (rwaSane) stmts.push(sql`INSERT INTO market_history
       (ts, rwa_aum, stablecoin_aum, total_aum, horizon_supplied_usd, holders, active_addresses, actions, issuers)
     VALUES (${ts}, ${t.rwa_aum}, ${t.stablecoin_aum}, ${t.total_aum}, ${t.horizon_supplied_usd},
             ${e.holders ?? null}, ${e.active_addresses ?? null}, ${e.actions ?? null}, ${t.by_issuer?.length ?? null})
     ON CONFLICT (ts) DO NOTHING`);
+  else console.warn("market_history: skipped anomalous rwa_aum", t.rwa_aum);
   if (stmts.length) await sql.transaction(stmts);
 }
 

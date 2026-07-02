@@ -2,6 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "rwa-terminal", "runtimeExecutable": "python3", "runtimeArgs": ["-m","http.server","5182"], "port": 5182 },
-    { "name": "rwa-dashboard", "runtimeExecutable": "python3", "runtimeArgs": ["-m","http.server","8799","--directory","/Users/olusegunaborode/Data Projects/DatumLabs/Datum Data/Root - Datum Dashboards/rwa-terminal/dashboard"], "port": 8799 }
+    { "name": "rwa-dashboard", "runtimeExecutable": "python3", "runtimeArgs": ["-m","http.server","8799","--directory","/Users/olusegunaborode/Data Projects/DatumLabs/Datum Data/Datum Dashboards/rwa-terminal/dashboard"], "port": 8799 }
   ]
 }
