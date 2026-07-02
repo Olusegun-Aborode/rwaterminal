@@ -1,4 +1,4 @@
-import json, time
+import json, time, os
 from web3 import Web3
 
 RPCS = ["https://eth.llamarpc.com","https://ethereum-rpc.publicnode.com",
@@ -161,6 +161,6 @@ for sym_onchain, addr in reserves:
 res = dict(market_id="proto_horizon_v3", pool=POOL, oracle=ORACLE, data_provider=DATA_PROVIDER,
            ui_pool_data_provider_new=UI_NEW, ui_pool_new_code_bytes=code_new,
            ui_pool_old_code_bytes=code_old, block=w3.eth.block_number, fetched_at=now, reserves=out)
-open("/Users/olusegunaborode/rwa-terminal/horizon.reserves.json","w").write(json.dumps(res, indent=2, default=str))
+open(os.path.join(os.path.dirname(__file__), "..", "horizon.reserves.json"),"w").write(json.dumps(res, indent=2, default=str))
 print("="*70)
 print(f"wrote horizon.reserves.json — {len(out)} reserves @ block {w3.eth.block_number}")
