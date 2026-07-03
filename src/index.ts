@@ -53,11 +53,12 @@ const KNOWN: Record<string, [string, string]> = {
   "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f": ["GHO", "Aave"],
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": ["USDC", "Circle"],
   "0x8292bb45bf1ee4d140127049757c2e0ff06317ed": ["RLUSD", "Ripple"],
+  "0x7433806912eae67919e66aea853d46fa0aef98a8": ["mGLOBAL", "Midas / Fasanara"], // "Midas Fasanara Global", listed on Horizon June 2026
 };
 const STABLE = new Set(["GHO", "USDC", "RLUSD"]);
 const ASSET_CLASS: Record<string, string> = {
   USTB: "US Treasuries", JTRSY: "US Treasuries", USYC: "US Treasuries", VBILL: "US Treasuries",
-  USCC: "Crypto Carry", JAAA: "Private Credit (CLO)", ACRED: "Private Credit",
+  USCC: "Crypto Carry", JAAA: "Private Credit (CLO)", ACRED: "Private Credit", mGLOBAL: "Private Credit",
   GHO: "Stablecoin", USDC: "Stablecoin", RLUSD: "Stablecoin",
 };
 const erc20Abi = [
@@ -755,6 +756,25 @@ async function persist(env: Env, snap: any, ev?: any) {
     ts timestamptz PRIMARY KEY, rwa_aum double precision, stablecoin_aum double precision,
     total_aum double precision, horizon_supplied_usd double precision,
     holders integer, active_addresses integer, actions integer, issuers integer)`);
+  // Per-reserve AUM guard: an issuer-API misread once inflated USTB/USCC AUM ~40x for ~21h while
+  // supply stayed flat (2026-06-29). Reject a >50% day-over-day AUM move that isn't backed by a
+  // comparable (>20%) supply move — a real mint/burn moves both, a bad read moves only AUM.
+  const lastByAddr: Record<string, { aum: number | null; supply: number | null }> = {};
+  try {
+    const rows = await sql`
+      SELECT t.contract_address AS addr, la.aum AS last_aum, ls.total_supply AS last_supply
+      FROM token t
+      LEFT JOIN (SELECT DISTINCT ON (asset_id) asset_id, aum FROM asset_aum_history ORDER BY asset_id, ts DESC) la ON la.asset_id = t.asset_id
+      LEFT JOIN (SELECT DISTINCT ON (token_id) token_id, total_supply FROM token_supply_history ORDER BY token_id, ts DESC) ls ON ls.token_id = t.token_id`;
+    for (const r of rows as any[]) lastByAddr[String(r.addr).toLowerCase()] = { aum: r.last_aum != null ? Number(r.last_aum) : null, supply: r.last_supply != null ? Number(r.last_supply) : null };
+  } catch {}
+  const aumOk = (addr: string, newAum: number, newSup: number | null) => {
+    const p = lastByAddr[addr]; if (!p || p.aum == null || p.aum <= 0) return true;
+    if (Math.abs(newAum - p.aum) / p.aum <= 0.5) return true; // within 50%: fine
+    const supMoved = p.supply != null && p.supply > 0 && newSup != null && Math.abs(newSup - p.supply) / p.supply > 0.2;
+    if (!supMoved) console.warn("asset_aum guard: rejected", addr, "aum", p.aum, "->", newAum, "(supply flat)");
+    return supMoved; // >50% AUM move only allowed if supply also moved
+  };
   for (const r of snap.reserves) {
     const addr = r.address.toLowerCase();
     if (r.nav_value != null)
@@ -762,7 +782,7 @@ async function persist(env: Env, snap: any, ev?: any) {
         SELECT t.asset_id, ${ts}, ${r.nav_value}, ${r.nav_freshness_source ?? "onchain"},
                ${r.nav_updated_at ? new Date(r.nav_updated_at * 1000).toISOString() : null}, ${r.nav_state === "stale"}
         FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
-    if (r.asset_aum != null)
+    if (r.asset_aum != null && aumOk(addr, r.asset_aum, r.total_supplied ?? null))
       stmts.push(sql`INSERT INTO asset_aum_history (asset_id, ts, aum, source)
         SELECT t.asset_id, ${ts}, ${r.asset_aum}, ${r.aum_source ?? "onchain_derived"}
         FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
