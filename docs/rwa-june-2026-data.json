@@ -1,0 +1,3117 @@
+{
+  "meta": {
+    "report": "RWA Terminal - Aave Horizon - June 2026",
+    "period": {
+      "start": "2026-06-01",
+      "end": "2026-06-30"
+    },
+    "generated_utc": "2026-07-03",
+    "sources": {
+      "flows_and_holders": "Envio HyperIndex (Horizon pool events)",
+      "market_and_asset_history": "Neon Postgres (5-min cron snapshots)",
+      "reserve_metadata": "on-chain snapshot"
+    },
+    "notes": [
+      "USD amounts rounded to cents. Dates YYYY-MM-DD (UTC).",
+      "Flow USD priced at current oracle/NAV per reserve (NAV-stable assets; treat as approximate for the month).",
+      "The 2026-06-29 rwa_aum spike (issuer-API AUM misread on USTB/USCC) has been corrected in both market and asset history.",
+      "Section 4 supplied_usd / supply_apy / LTV are current-snapshot values (per-reserve Horizon-supplied/APY/LTV are not stored historically); NAV/AUM/supply are as-of June 7 and June 30.",
+      "mGLOBAL (Midas Fasanara Global) was listed on Horizon in June and is not yet in the event indexer, so it has no per-token holder history (section 5); its pool flows ARE captured (sections 1,2).",
+      "Section 3 (daily market history) begins 2026-06-07: the market_history table was created mid-period, so June 1-6 have no aggregate snapshot. Flows (1,2,6) and holders (5) cover the full month from the event indexer.",
+      "Two different active-address metrics: section 3 active_addresses is cumulative distinct users since genesis (the terminal's headline); section 6 active_addresses is distinct users who acted on that specific day."
+    ]
+  },
+  "section1_daily_flows_per_reserve": {
+    "daily": [
+      {
+        "date": "2026-06-01",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1983.68
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1981.57
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 172.39
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 17.17
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 388074.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 0.12
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1981.42
+        },
+        "withdraw": {
+          "count": 5,
+          "usd": 1967.65
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 758.14
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 2976.32
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 25003201.14
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 0.01
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 0.26
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.26
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 5,
+          "usd": 1969.93
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1985.82
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 3,
+          "usd": 159970.56
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 455001.99
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 0.2
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.2
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1985.16
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1984.51
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 25002216.36
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 0.1
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 77481.24
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.18
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1982.81
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1981.11
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 3,
+          "usd": 804152.24
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 462858.18
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 90624.44
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 0.13
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 126773.08
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 0.14
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1980.57
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1980.04
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 212120.41
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 9892.71
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 42572.9
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.26
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1979.38
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1978.73
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 27075.89
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 15037.9
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 0.19
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 10997.31
+        },
+        "repay": {
+          "count": 2,
+          "usd": 0.19
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1975.37
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1972.02
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 1895594.06
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 6584.49
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 999.76
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 0.08
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.08
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 1974.76
+        },
+        "withdraw": {
+          "count": 8,
+          "usd": 3970946.64
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1.0
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 1,
+          "usd": 11.13
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 1.11
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 3,
+          "usd": 149773.06
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 184037.16
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 3016298.12
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 33600.72
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 0.32
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 59557.68
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 6,
+          "usd": 75357.99
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 1976.21
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 1,
+          "usd": 25000000.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 6881713.38
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 3,
+          "usd": 7741549.57
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 2625980.57
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 112536.1
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 1896223.77
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1896506.06
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 2,
+          "usd": 754291.86
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 5.18
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 59340.13
+        },
+        "repay": {
+          "count": 2,
+          "usd": 0.19
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 4,
+          "usd": 1949.53
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 1950.03
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 20001775.7
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 380.13
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 0.2
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 3,
+          "usd": 1918.57
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 3527.85
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 2500001.0
+        },
+        "repay": {
+          "count": 5,
+          "usd": 718040.32
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 3,
+          "usd": 3005302.37
+        },
+        "withdraw": {
+          "count": 5,
+          "usd": 814869.15
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 3,
+          "usd": 33758.14
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 10120.01
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 2,
+          "usd": 10.0
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 5.54
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 0.12
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 100133.99
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 297.32
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 384.08
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 5.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 3817314.56
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 1,
+          "usd": 1.5
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 1.5
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 1000000.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 592457.75
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 2,
+          "usd": 3004420.51
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 690188.77
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 19970.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 175.59
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 754460.97
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 2.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 806846.5
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 1054039.86
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 6,
+          "usd": 9886953.66
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 5436000.0
+        },
+        "repay": {
+          "count": 6,
+          "usd": 7204007.72
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 4,
+          "usd": 4275201.71
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 3495472.18
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 145509.54
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 9810.83
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 6.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 4192620.8
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 2,
+          "usd": 38491.59
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 0.69
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 4218278.03
+        },
+        "repay": {
+          "count": 5,
+          "usd": 3725055.35
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 3418655.52
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 1,
+          "usd": 50163.82
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 130000.09
+        },
+        "withdraw": {
+          "count": 5,
+          "usd": 716785.69
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 1.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 2751651.56
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 4998.78
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 2.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 11004721.64
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2800000.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 3212285.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 2,
+          "usd": 3294026.44
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 4,
+          "usd": 447004.76
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 214519.48
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 3200003.34
+        },
+        "repay": {
+          "count": 3,
+          "usd": 8805816.8
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 249.94
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 89978.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 238986.11
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 2,
+          "usd": 6137184.34
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 3067487.5
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 2070007.9
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 202433.21
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2000001.46
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 25405.85
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 212.17
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-21",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 118.02
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 5,
+          "usd": 7412340.29
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 100000.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 801772.08
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 2190491.27
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 4476396.2
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 10.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 12497309.69
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 3641649.03
+        },
+        "repay": {
+          "count": 1,
+          "usd": 3582277.29
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 1,
+          "usd": 3206038.18
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 3206038.18
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "mGLOBAL",
+        "asset_class": "Private Credit",
+        "reserve_address": "0x7433806912eae67919e66aea853d46fa0aef98a8",
+        "deposit": {
+          "count": 15,
+          "usd": 19962516.13
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 101618.43
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 291.74
+        },
+        "borrow": {
+          "count": 12,
+          "usd": 14296710.57
+        },
+        "repay": {
+          "count": 6,
+          "usd": 11107390.76
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 5.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 457.3
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 524968.79
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 1174436.08
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2022582.28
+        },
+        "repay": {
+          "count": 1,
+          "usd": 3642090.69
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 3502536.58
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "mGLOBAL",
+        "asset_class": "Private Credit",
+        "reserve_address": "0x7433806912eae67919e66aea853d46fa0aef98a8",
+        "deposit": {
+          "count": 11,
+          "usd": 4113106.98
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 212778.98
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 157.25
+        },
+        "borrow": {
+          "count": 11,
+          "usd": 3131613.1
+        },
+        "repay": {
+          "count": 3,
+          "usd": 2071351.09
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 0.1
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 444891.23
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 3918779.24
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 2472360.54
+        },
+        "repay": {
+          "count": 2,
+          "usd": 472201.26
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 4,
+          "usd": 1068083.86
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 569962.34
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "mGLOBAL",
+        "asset_class": "Private Credit",
+        "reserve_address": "0x7433806912eae67919e66aea853d46fa0aef98a8",
+        "deposit": {
+          "count": 9,
+          "usd": 3321253.96
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 139872.04
+        },
+        "withdraw": {
+          "count": 4,
+          "usd": 4618.9
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 1688394.23
+        },
+        "repay": {
+          "count": 4,
+          "usd": 4172575.96
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 0.1
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 696331.96
+        },
+        "repay": {
+          "count": 2,
+          "usd": 556964.57
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 1558162.72
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 3002129.19
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1360311.56
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 1,
+          "usd": 1.0
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 1919.32
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1919.32
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 2,
+          "usd": 200032.15
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 131.18
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 1,
+          "usd": 0.1
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 100000.07
+        },
+        "withdraw": {
+          "count": 1,
+          "usd": 129.85
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 9.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 1402117.6
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 100300.69
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 1,
+          "usd": 342.46
+        },
+        "withdraw": {
+          "count": 3,
+          "usd": 2000133.07
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 1109039.98
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "reserve_address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 2,
+          "usd": 6860567.2
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 48402.41
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "reserve_address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+        "deposit": {
+          "count": 1,
+          "usd": 36951.12
+        },
+        "withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+        "deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "withdraw": {
+          "count": 5,
+          "usd": 5005581.27
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 5999557.01
+        }
+      }
+    ],
+    "reserve_net_june": [
+      {
+        "reserve": "mGLOBAL",
+        "asset_class": "Private Credit",
+        "deposit_usd": 27396877.07,
+        "withdraw_usd": 0.0,
+        "borrow_usd": 0.0,
+        "repay_usd": 0.0,
+        "net_flow_usd": 27396877.07
+      },
+      {
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "deposit_usd": 25000001.6,
+        "withdraw_usd": 1.5,
+        "borrow_usd": 26902710.65,
+        "repay_usd": 20326191.95,
+        "net_flow_usd": 25000000.1
+      },
+      {
+        "reserve": "USTB",
+        "asset_class": "US Treasuries",
+        "deposit_usd": 25681748.69,
+        "withdraw_usd": 14905048.89,
+        "borrow_usd": 0.0,
+        "repay_usd": 0.0,
+        "net_flow_usd": 10776699.8
+      },
+      {
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "deposit_usd": 827679.36,
+        "withdraw_usd": 1449529.81,
+        "borrow_usd": 5599896.21,
+        "repay_usd": 6081417.05,
+        "net_flow_usd": -621850.45
+      },
+      {
+        "reserve": "USCC",
+        "asset_class": "Crypto Carry",
+        "deposit_usd": 6234223.53,
+        "withdraw_usd": 70013077.87,
+        "borrow_usd": 0.0,
+        "repay_usd": 0.0,
+        "net_flow_usd": -63778854.34
+      },
+      {
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "deposit_usd": 7091017.13,
+        "withdraw_usd": 86395137.82,
+        "borrow_usd": 24316729.7,
+        "repay_usd": 51804601.32,
+        "net_flow_usd": -79304120.69
+      }
+    ],
+    "sector_net_june": [
+      {
+        "sector": "Private Credit",
+        "net_flow_usd": 27396877.07
+      },
+      {
+        "sector": "US Treasuries",
+        "net_flow_usd": 10776699.8
+      },
+      {
+        "sector": "Stablecoin",
+        "net_flow_usd": -54925971.03
+      },
+      {
+        "sector": "Crypto Carry",
+        "net_flow_usd": -63778854.34
+      }
+    ]
+  },
+  "section2_top10_flow_events": [
+    {
+      "date": "2026-06-02",
+      "reserve": "RLUSD",
+      "direction": "withdraw",
+      "usd": 25000018.25,
+      "tx_hash": "0x2872ec65994eee3856e2d427596cb1116a0f7965dfaafe925e8b1af3137e8d61"
+    },
+    {
+      "date": "2026-06-04",
+      "reserve": "RLUSD",
+      "direction": "withdraw",
+      "usd": 25000018.25,
+      "tx_hash": "0xb2d11e488cbe890efc25e28dfdd5311098bda31852b3a2a3042fbd39e544999e"
+    },
+    {
+      "date": "2026-06-10",
+      "reserve": "GHO",
+      "direction": "deposit",
+      "usd": 25000000.0,
+      "tx_hash": "0xd9007475de107e40202cd02108bbb5467075d458bb9683e59d75efb5ebb112f3"
+    },
+    {
+      "date": "2026-06-11",
+      "reserve": "RLUSD",
+      "direction": "withdraw",
+      "usd": 20000014.6,
+      "tx_hash": "0x2a834c86c30adfa1437cae78d1348518e9f60fc90a754e67e1f7714f509b11fc"
+    },
+    {
+      "date": "2026-06-23",
+      "reserve": "USCC",
+      "direction": "withdraw",
+      "usd": 7572175.18,
+      "tx_hash": "0x52b5380e1f02da75484da32875b1f4c1a1b44c70f1f79945d78e61de0609757c"
+    },
+    {
+      "date": "2026-06-18",
+      "reserve": "USCC",
+      "direction": "withdraw",
+      "usd": 6976848.0,
+      "tx_hash": "0x8d3694c82fb69ac1790b884f4a6ea5488bdc5feb8510a40c40d2d52bdb0b7765"
+    },
+    {
+      "date": "2026-06-23",
+      "reserve": "RLUSD",
+      "direction": "repay",
+      "usd": 6198778.57,
+      "tx_hash": "0x375858439837c284337fcda0857c570e04d6d92699507e8aafc2f9101bc2e1b0"
+    },
+    {
+      "date": "2026-06-23",
+      "reserve": "mGLOBAL",
+      "direction": "deposit",
+      "usd": 5837195.71,
+      "tx_hash": "0x38468c21435463f7ec1a04eacab2ddb805aefeca4ad8d11afbb5532b417e3c9a"
+    },
+    {
+      "date": "2026-06-16",
+      "reserve": "USCC",
+      "direction": "withdraw",
+      "usd": 5814040.0,
+      "tx_hash": "0x57291f796bc0c3928d991586f9e0ba57b8e9a57da3f135ec37c7ddafd25a8c09"
+    },
+    {
+      "date": "2026-06-18",
+      "reserve": "RLUSD",
+      "direction": "repay",
+      "usd": 5805809.61,
+      "tx_hash": "0x6cb06e26871e7b640f89e3b937e98e2056bc513ef3ab77fe81f49bcaa0a2e8ed"
+    }
+  ],
+  "section3_daily_market_history": [
+    {
+      "date": "2026-06-07",
+      "rwa_aum": 5105537480.0,
+      "stablecoin_aum": 53089824815.01,
+      "horizon_supplied_usd": 468146360.63,
+      "holders": 400,
+      "active_addresses": 901
+    },
+    {
+      "date": "2026-06-08",
+      "rwa_aum": 5225878772.71,
+      "stablecoin_aum": 53524253392.31,
+      "horizon_supplied_usd": 470041861.28,
+      "holders": 400,
+      "active_addresses": 903
+    },
+    {
+      "date": "2026-06-09",
+      "rwa_aum": 5395013291.56,
+      "stablecoin_aum": 53320247445.41,
+      "horizon_supplied_usd": 466156664.38,
+      "holders": 405,
+      "active_addresses": 908
+    },
+    {
+      "date": "2026-06-10",
+      "rwa_aum": 5485403412.37,
+      "stablecoin_aum": 53201411799.14,
+      "horizon_supplied_usd": 495331508.17,
+      "holders": 407,
+      "active_addresses": 912
+    },
+    {
+      "date": "2026-06-11",
+      "rwa_aum": 5478976684.5,
+      "stablecoin_aum": 53006257212.56,
+      "horizon_supplied_usd": 475395505.23,
+      "holders": 407,
+      "active_addresses": 912
+    },
+    {
+      "date": "2026-06-12",
+      "rwa_aum": 5467477747.57,
+      "stablecoin_aum": 52872422760.91,
+      "horizon_supplied_usd": 477613881.07,
+      "holders": 410,
+      "active_addresses": 914
+    },
+    {
+      "date": "2026-06-13",
+      "rwa_aum": 5467477747.57,
+      "stablecoin_aum": 52819090354.65,
+      "horizon_supplied_usd": 477716125.11,
+      "holders": 410,
+      "active_addresses": 915
+    },
+    {
+      "date": "2026-06-14",
+      "rwa_aum": 5467477747.57,
+      "stablecoin_aum": 52839971653.9,
+      "horizon_supplied_usd": 477760986.14,
+      "holders": 411,
+      "active_addresses": 915
+    },
+    {
+      "date": "2026-06-15",
+      "rwa_aum": 5522270618.33,
+      "stablecoin_aum": 53277535517.1,
+      "horizon_supplied_usd": 475541023.53,
+      "holders": 409,
+      "active_addresses": 916
+    },
+    {
+      "date": "2026-06-16",
+      "rwa_aum": 5565119411.07,
+      "stablecoin_aum": 53325612801.57,
+      "horizon_supplied_usd": 466672530.44,
+      "holders": 409,
+      "active_addresses": 920
+    },
+    {
+      "date": "2026-06-17",
+      "rwa_aum": 5615067171.88,
+      "stablecoin_aum": 53207440064.0,
+      "horizon_supplied_usd": 462717021.4,
+      "holders": 407,
+      "active_addresses": 921
+    },
+    {
+      "date": "2026-06-18",
+      "rwa_aum": 5577993877.92,
+      "stablecoin_aum": 53364055523.84,
+      "horizon_supplied_usd": 455263657.93,
+      "holders": 410,
+      "active_addresses": 922
+    },
+    {
+      "date": "2026-06-19",
+      "rwa_aum": 5578482002.79,
+      "stablecoin_aum": 53386639724.95,
+      "horizon_supplied_usd": 460245381.73,
+      "holders": 409,
+      "active_addresses": 923
+    },
+    {
+      "date": "2026-06-20",
+      "rwa_aum": 5578482002.79,
+      "stablecoin_aum": 53328960262.8,
+      "horizon_supplied_usd": 460280040.78,
+      "holders": 409,
+      "active_addresses": 923
+    },
+    {
+      "date": "2026-06-21",
+      "rwa_aum": 5578482002.79,
+      "stablecoin_aum": 53293448825.84,
+      "horizon_supplied_usd": 460300526.25,
+      "holders": 409,
+      "active_addresses": 923
+    },
+    {
+      "date": "2026-06-22",
+      "rwa_aum": 5592716334.27,
+      "stablecoin_aum": 52946040102.57,
+      "horizon_supplied_usd": 450708888.83,
+      "holders": 408,
+      "active_addresses": 924
+    },
+    {
+      "date": "2026-06-23",
+      "rwa_aum": 5687092332.58,
+      "stablecoin_aum": 52830952363.17,
+      "horizon_supplied_usd": 458228716.12,
+      "holders": 404,
+      "active_addresses": 933
+    },
+    {
+      "date": "2026-06-24",
+      "rwa_aum": 5673997553.92,
+      "stablecoin_aum": 52790282968.0,
+      "horizon_supplied_usd": 457887298.13,
+      "holders": 408,
+      "active_addresses": 937
+    },
+    {
+      "date": "2026-06-25",
+      "rwa_aum": 5492054190.51,
+      "stablecoin_aum": 52658497410.51,
+      "horizon_supplied_usd": 457954755.95,
+      "holders": 410,
+      "active_addresses": 944
+    },
+    {
+      "date": "2026-06-26",
+      "rwa_aum": 5426229079.65,
+      "stablecoin_aum": 52776996967.75,
+      "horizon_supplied_usd": 453465131.13,
+      "holders": 410,
+      "active_addresses": 944
+    },
+    {
+      "date": "2026-06-27",
+      "rwa_aum": 5426229079.65,
+      "stablecoin_aum": 52799169014.43,
+      "horizon_supplied_usd": 453685584.93,
+      "holders": 411,
+      "active_addresses": 944
+    },
+    {
+      "date": "2026-06-28",
+      "rwa_aum": 5426229079.65,
+      "stablecoin_aum": 52792617908.9,
+      "horizon_supplied_usd": 453782928.19,
+      "holders": 412,
+      "active_addresses": 944
+    },
+    {
+      "date": "2026-06-29",
+      "rwa_aum": 5408886654.74,
+      "stablecoin_aum": 52699831658.48,
+      "horizon_supplied_usd": 452751479.53,
+      "holders": 412,
+      "active_addresses": 944
+    },
+    {
+      "date": "2026-06-30",
+      "rwa_aum": 5504423033.74,
+      "stablecoin_aum": 52205830573.33,
+      "horizon_supplied_usd": 438739789.74,
+      "holders": 411,
+      "active_addresses": 944
+    }
+  ],
+  "section4_reserve_state_jun07_jun30": [
+    {
+      "reserve": "GHO",
+      "asset_class": "Stablecoin",
+      "issuer": "Aave",
+      "address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+      "jun07": {
+        "nav": 1.0,
+        "aum_usd": 584000000.0,
+        "token_supply": 34707256.78
+      },
+      "jun30": {
+        "nav": 1.0,
+        "aum_usd": 599000000.0,
+        "token_supply": 59781659.09
+      },
+      "current": {
+        "supplied_usd": 59789037.89,
+        "supply_apy_pct": 1.95,
+        "ltv_pct": 0,
+        "liq_threshold_pct": 0,
+        "nav": 1
+      }
+    },
+    {
+      "reserve": "USDC",
+      "asset_class": "Stablecoin",
+      "issuer": "Circle",
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "jun07": {
+        "nav": 0.9997,
+        "aum_usd": 51574732838.41,
+        "token_supply": 7508501.41
+      },
+      "jun30": {
+        "nav": 0.9996,
+        "aum_usd": 50872841341.53,
+        "token_supply": 7535149.54
+      },
+      "current": {
+        "supplied_usd": 6346635.5,
+        "supply_apy_pct": 2.724,
+        "ltv_pct": 0,
+        "liq_threshold_pct": 0,
+        "nav": 0.99975557
+      }
+    },
+    {
+      "reserve": "RLUSD",
+      "asset_class": "Stablecoin",
+      "issuer": "Ripple",
+      "address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
+      "jun07": {
+        "nav": 0.9999,
+        "aum_usd": 931091976.6,
+        "token_supply": 214054010.16
+      },
+      "jun30": {
+        "nav": 0.9999,
+        "aum_usd": 733989231.81,
+        "token_supply": 184743464.31
+      },
+      "current": {
+        "supplied_usd": 155847455.22,
+        "supply_apy_pct": 2.156,
+        "ltv_pct": 0,
+        "liq_threshold_pct": 0,
+        "nav": 1.00000073
+      }
+    },
+    {
+      "reserve": "USTB",
+      "asset_class": "US Treasuries",
+      "issuer": "Superstate",
+      "address": "0x43415eb6ff9db7e26a15b704e7a3edce97d31c4e",
+      "jun07": {
+        "nav": 11.1047,
+        "aum_usd": 925926485.67,
+        "token_supply": 6000000.99
+      },
+      "jun30": {
+        "nav": 11.13,
+        "aum_usd": 861761169.28,
+        "token_supply": 6968077.28
+      },
+      "current": {
+        "supplied_usd": 78917426.25,
+        "supply_apy_pct": 0,
+        "ltv_pct": 88,
+        "liq_threshold_pct": 90,
+        "nav": 11.132077
+      }
+    },
+    {
+      "reserve": "USCC",
+      "asset_class": "Crypto Carry",
+      "issuer": "Superstate",
+      "address": "0x14d60e7fdc0d71d8611742720e4c50e7a974020c",
+      "jun07": {
+        "nav": 11.6061,
+        "aum_usd": 241201909.56,
+        "token_supply": 10489383.12
+      },
+      "jun30": {
+        "nav": 11.625,
+        "aum_usd": 174658293.63,
+        "token_supply": 5004482.96
+      },
+      "current": {
+        "supplied_usd": 53471527.68,
+        "supply_apy_pct": 0,
+        "ltv_pct": 85,
+        "liq_threshold_pct": 88,
+        "nav": 11.62808
+      }
+    },
+    {
+      "reserve": "USYC",
+      "asset_class": "US Treasuries",
+      "issuer": "Circle (Hashnote)",
+      "address": "0x136471a34f6ef19fe571effc1ca711fdb8e49f2b",
+      "jun07": {
+        "nav": 1.1272,
+        "aum_usd": 2830197236.73,
+        "token_supply": 0.0
+      },
+      "jun30": {
+        "nav": 1.1296,
+        "aum_usd": 3108644991.43,
+        "token_supply": 0.0
+      },
+      "current": {
+        "supplied_usd": 0.0,
+        "supply_apy_pct": 0,
+        "ltv_pct": 88,
+        "liq_threshold_pct": 90,
+        "nav": 1.12983673
+      }
+    },
+    {
+      "reserve": "JTRSY",
+      "asset_class": "US Treasuries",
+      "issuer": "Janus Henderson / Anemoy / Centrifuge",
+      "address": "0x8c213ee79581ff4984583c6a801e5263418c4b86",
+      "jun07": {
+        "nav": 1.1055,
+        "aum_usd": 865429013.83,
+        "token_supply": 0.0
+      },
+      "jun30": {
+        "nav": 1.108,
+        "aum_usd": 870241192.03,
+        "token_supply": 0.0
+      },
+      "current": {
+        "supplied_usd": 0.0,
+        "supply_apy_pct": 0,
+        "ltv_pct": 86,
+        "liq_threshold_pct": 88,
+        "nav": 1.10824717353243
+      }
+    },
+    {
+      "reserve": "JAAA",
+      "asset_class": "Private Credit (CLO)",
+      "issuer": "Janus Henderson / Anemoy / Centrifuge",
+      "address": "0x5a0f93d040de44e78f251b03c43be9cf317dcf64",
+      "jun07": {
+        "nav": 1.0368,
+        "aum_usd": 173680703.33,
+        "token_supply": 16672271.0
+      },
+      "jun30": {
+        "nav": 1.0393,
+        "aum_usd": 370993580.26,
+        "token_supply": 16672271.0
+      },
+      "current": {
+        "supplied_usd": 17334226.84,
+        "supply_apy_pct": 0,
+        "ltv_pct": 81,
+        "liq_threshold_pct": 86,
+        "nav": 1.03970488177699
+      }
+    },
+    {
+      "reserve": "VBILL",
+      "asset_class": "US Treasuries",
+      "issuer": "VanEck (Securitize)",
+      "address": "0x2255718832bc9fd3be1caf75084f4803da14ff01",
+      "jun07": {
+        "nav": 1.0,
+        "aum_usd": 31152499.12,
+        "token_supply": 6250000.0
+      },
+      "jun30": {
+        "nav": 1.0,
+        "aum_usd": 19436606.03,
+        "token_supply": 6250000.0
+      },
+      "current": {
+        "supplied_usd": 6250000.0,
+        "supply_apy_pct": 0,
+        "ltv_pct": 88,
+        "liq_threshold_pct": 90,
+        "nav": 1
+      }
+    },
+    {
+      "reserve": "ACRED",
+      "asset_class": "Private Credit",
+      "issuer": "Apollo / Securitize",
+      "address": "0x17418038ecf73ba4026c4f428547bf099706f27b",
+      "jun07": {
+        "nav": 1098.3749,
+        "aum_usd": 37949631.76,
+        "token_supply": 0.0
+      },
+      "jun30": {
+        "nav": 1101.7166,
+        "aum_usd": 38065089.17,
+        "token_supply": 0.0
+      },
+      "current": {
+        "supplied_usd": 0.0,
+        "supply_apy_pct": 0,
+        "ltv_pct": 66,
+        "liq_threshold_pct": 76,
+        "nav": 1101.8825
+      }
+    },
+    {
+      "reserve": "mGLOBAL",
+      "asset_class": "Private Credit",
+      "issuer": "Midas / Fasanara",
+      "address": "0x7433806912eae67919e66aea853d46fa0aef98a8",
+      "jun07": {
+        "nav": null,
+        "aum_usd": null,
+        "token_supply": null
+      },
+      "jun30": {
+        "nav": null,
+        "aum_usd": null,
+        "token_supply": null
+      },
+      "current": {
+        "supplied_usd": 27396877.07,
+        "supply_apy_pct": 0,
+        "ltv_pct": 0.05,
+        "liq_threshold_pct": 0.1,
+        "nav": 1.0057648
+      }
+    }
+  ],
+  "section5_holders_start_vs_end": [
+    {
+      "token": "GHO",
+      "holders_jun01": 11,
+      "holders_jun30": 12,
+      "change": 1
+    },
+    {
+      "token": "USDC",
+      "holders_jun01": 152,
+      "holders_jun30": 156,
+      "change": 4
+    },
+    {
+      "token": "RLUSD",
+      "holders_jun01": 210,
+      "holders_jun30": 219,
+      "change": 9
+    },
+    {
+      "token": "USTB",
+      "holders_jun01": 8,
+      "holders_jun30": 12,
+      "change": 4
+    },
+    {
+      "token": "USCC",
+      "holders_jun01": 14,
+      "holders_jun30": 7,
+      "change": -7
+    },
+    {
+      "token": "USYC",
+      "holders_jun01": 0,
+      "holders_jun30": 0,
+      "change": 0
+    },
+    {
+      "token": "JTRSY",
+      "holders_jun01": 0,
+      "holders_jun30": 0,
+      "change": 0
+    },
+    {
+      "token": "JAAA",
+      "holders_jun01": 3,
+      "holders_jun30": 3,
+      "change": 0
+    },
+    {
+      "token": "VBILL",
+      "holders_jun01": 2,
+      "holders_jun30": 2,
+      "change": 0
+    },
+    {
+      "token": "ACRED",
+      "holders_jun01": null,
+      "holders_jun30": null,
+      "change": null
+    }
+  ],
+  "section6_daily_active_addresses": [
+    {
+      "date": "2026-06-01",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-02",
+      "active_addresses": 10
+    },
+    {
+      "date": "2026-06-03",
+      "active_addresses": 11
+    },
+    {
+      "date": "2026-06-04",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-05",
+      "active_addresses": 12
+    },
+    {
+      "date": "2026-06-06",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-07",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-08",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-09",
+      "active_addresses": 12
+    },
+    {
+      "date": "2026-06-10",
+      "active_addresses": 14
+    },
+    {
+      "date": "2026-06-11",
+      "active_addresses": 4
+    },
+    {
+      "date": "2026-06-12",
+      "active_addresses": 10
+    },
+    {
+      "date": "2026-06-13",
+      "active_addresses": 3
+    },
+    {
+      "date": "2026-06-14",
+      "active_addresses": 2
+    },
+    {
+      "date": "2026-06-15",
+      "active_addresses": 9
+    },
+    {
+      "date": "2026-06-16",
+      "active_addresses": 13
+    },
+    {
+      "date": "2026-06-17",
+      "active_addresses": 10
+    },
+    {
+      "date": "2026-06-18",
+      "active_addresses": 9
+    },
+    {
+      "date": "2026-06-19",
+      "active_addresses": 6
+    },
+    {
+      "date": "2026-06-20",
+      "active_addresses": 3
+    },
+    {
+      "date": "2026-06-21",
+      "active_addresses": 1
+    },
+    {
+      "date": "2026-06-22",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-23",
+      "active_addresses": 12
+    },
+    {
+      "date": "2026-06-24",
+      "active_addresses": 8
+    },
+    {
+      "date": "2026-06-25",
+      "active_addresses": 15
+    },
+    {
+      "date": "2026-06-26",
+      "active_addresses": 6
+    },
+    {
+      "date": "2026-06-27",
+      "active_addresses": 4
+    },
+    {
+      "date": "2026-06-28",
+      "active_addresses": 4
+    },
+    {
+      "date": "2026-06-29",
+      "active_addresses": 7
+    },
+    {
+      "date": "2026-06-30",
+      "active_addresses": 8
+    }
+  ]
+}
