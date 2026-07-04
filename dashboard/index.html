@@ -171,6 +171,7 @@
       const [holdersHist, setHoldersHist] = useState(null);
       const [activeHist, setActiveHist] = useState(null);
       const [morpho, setMorpho] = useState(null);
+      const [riskHist, setRiskHist] = useState(null);
       const [deltas, setDeltas] = useState(null);
       const [includeStables, setIncludeStables] = useState(false);
       const [sortKey, setSortKey] = useState('total_value');
@@ -184,6 +185,7 @@
       // half-width grid-2, so sharing one ref leaked its narrow width into this full-width chart.
       const [chartWrapRef2, CW2] = useElementWidth(900);
       const CH2 = CW2>=1100 ? 360 : CW2>=760 ? 320 : 280;
+      const [chartWrapRef3, CW3] = useElementWidth(900); // Risk-page liquidation-risk trend
       useEffect(() => {
         if (!WORKER_URL) return; let alive=true; const base = WORKER_URL.replace(/\/$/,'');
         const load = () => {
@@ -197,6 +199,7 @@
         fetch(base+'/api/holders-history').then(r=>r.json()).then(j=>{ if(alive && j) setHoldersHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/active-history').then(r=>r.json()).then(j=>{ if(alive && j) setActiveHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/morpho').then(r=>r.json()).then(j=>{ if(alive && j && j.assets) setMorpho(j); }).catch(()=>{});
+        fetch(base+'/api/morpho-risk-history').then(r=>r.json()).then(j=>{ if(alive && j) setRiskHist(j.points||[]); }).catch(()=>{});
         fetch(base+'/api/deltas').then(r=>r.json()).then(j=>{ if(alive && j && j.deltas) setDeltas(j.deltas); }).catch(()=>{});
         fetch(base+'/api/usage').then(r=>r.json()).then(j=>{ if(alive && j && j.tokens){
           // Tolerate the older object-shaped composition from a stale cache: normalise to a kind-tagged array.
@@ -637,6 +640,50 @@
                   )}
                 </div>
               </div>
+
+              {(()=>{
+                const H = morpho && morpho.health ? morpho.health : null;
+                const buckets = H ? [
+                  {name:'At risk (<1.05)', n:H.at_risk||0, color:'var(--red)'},
+                  {name:'Tight (1.05-1.15)', n:H.tight||0, color:'var(--orange)'},
+                  {name:'Moderate (1.15-1.5)', n:H.moderate||0, color:'#D9A406'},
+                  {name:'Safe (>=1.5)', n:H.safe||0, color:'var(--green)'},
+                ] : [];
+                const totalB = buckets.reduce((s,b)=>s+b.n,0) || 1;
+                const rh = riskHist || [];
+                const hfSeries = rh.length>=2 ? [{name:'Min health factor', values: rh.map(p=>p.min_health_factor!=null?Number(p.min_health_factor):null), color:'var(--blue)'}] : [];
+                const hfLabels = rh.map(p=>p.d);
+                const minHF = H && H.min_hf!=null ? Number(H.min_hf) : null;
+                return (
+                <div className="panel" style={{marginTop:16}}>
+                  <div className="panel-header">
+                    <span className="panel-title"><span className="bullet">●</span> Liquidation Risk: Morpho</span>
+                    <span className="panel-badge">{H?H.borrowers:0} BORROWERS</span>
+                  </div>
+                  <div className="panel-caption"><b>Health factor</b> = collateral value / debt at the market LLTV; below <b>1.0</b> a position can be liquidated. Live distribution across all borrowers in our RWA-collateral Morpho markets, with the minimum health factor tracked over time. <i>This is the risk that a venue-level average hides.</i></div>
+                  <div className="panel-body">
+                    {!morpho ? (<div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'12px 0'}}>Loading Morpho positions…</div>) : (<>
+                      <div className="grid grid-4" style={{marginBottom:16}}>
+                        <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">Borrowers</div><div style={{fontSize:20,fontWeight:600,marginTop:3}}>{H?H.borrowers:'n/a'}</div></div>
+                        <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">Min health factor</div><div style={{fontSize:20,fontWeight:600,marginTop:3,color:minHF!=null&&minHF<1.05?'var(--red)':'var(--fg)'}}>{minHF!=null?minHF.toFixed(3):'n/a'}</div><div className="asset-sub">{minHF!=null&&minHF<1?'below 1.0 = liquidatable':'lowest of any borrower'}</div></div>
+                        <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">At-risk positions</div><div style={{fontSize:20,fontWeight:600,marginTop:3,color:(H&&H.at_risk>0)?'var(--red)':'var(--fg)'}}>{H?H.at_risk:'n/a'}</div><div className="asset-sub">health factor &lt; 1.05</div></div>
+                        <div className="panel" style={{padding:'12px 14px'}}><div className="metric-label">Borrowed vs RWA</div><div style={{fontSize:20,fontWeight:600,marginTop:3}}>{navUSD(morpho.total_borrow)}</div></div>
+                      </div>
+                      <div style={{fontSize:11,color:'var(--fg-muted)',marginBottom:6}}>Health-factor distribution ({H?H.borrowers:0} borrowers)</div>
+                      <div style={{display:'flex',height:12,borderRadius:6,overflow:'hidden',background:'var(--bg-2)',marginBottom:10}}>
+                        {buckets.map((b,i)=> b.n>0 ? <span key={i} title={b.name+': '+b.n} style={{width:(b.n/totalB*100)+'%',background:b.color}}/> : null)}
+                      </div>
+                      <div style={{display:'flex',gap:16,flexWrap:'wrap',marginBottom:16}}>
+                        {buckets.map((b,i)=>(<span key={i} style={{display:'flex',alignItems:'center',gap:7,fontSize:12}}><span style={{width:9,height:9,borderRadius:'50%',background:b.color}}/>{b.name} <b style={{marginLeft:2}}>{b.n}</b></span>))}
+                      </div>
+                      <div ref={chartWrapRef3} style={{width:'100%'}}>
+                        {hfSeries.length ? <AreaChart series={hfSeries} width={CW3} height={CW3>=760?240:200} labels={hfLabels} formatter={(v)=>v!=null?Number(v).toFixed(2):''} /> : <div style={{height:110,display:'grid',placeItems:'center',textAlign:'center'}}><div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)'}}>Min health factor over time, a snapshot lands every 5 min ({rh.length} day{rh.length===1?'':'s'} so far)</div></div>}
+                      </div>
+                    </>)}
+                  </div>
+                </div>
+                );
+              })()}
             </>}
 
             {view==='activity' && (()=>{ const am=['holders','active','transfer'].includes(metric)?metric:'holders';
