@@ -378,6 +378,7 @@ async function fetchMorpho(env: Env): Promise<any> {
   // aren't ERC-20s, so we pull them from the API: distinct addresses with a position in our RWA
   // markets. holders = users with collateral (RWA-as-collateral depositors); active = all participants.
   let holders = 0, active_users = 0, positions = 0;
+  const hfs: number[] = []; // borrower health factors (for the liquidation-risk distribution)
   try {
     const ids = Array.from(new Set(collateralMarkets.map((m: any) => m.market_id))).filter(Boolean);
     if (ids.length) {
@@ -385,24 +386,36 @@ async function fetchMorpho(env: Env): Promise<any> {
       const collUsers = new Set<string>(), allUsers = new Set<string>();
       let skip = 0; const PAGE = 1000;
       for (let p = 0; p < 20; p++) {
-        const pq = `{ marketPositions(first:${PAGE}, skip:${skip}, where:{marketUniqueKey_in:[${idList}]}) { pageInfo{countTotal} items{ user{address} state{ collateral } } } }`;
+        const pq = `{ marketPositions(first:${PAGE}, skip:${skip}, where:{marketUniqueKey_in:[${idList}]}) { pageInfo{countTotal} items{ user{address} healthFactor state{ collateral } } } }`;
         const pr: any = await fetch(MORPHO_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: pq }) }).then((r) => r.json()).catch(() => null);
         const mp = pr?.data?.marketPositions; const its = mp?.items || [];
         positions = mp?.pageInfo?.countTotal || positions;
-        for (const it of its) { const u = (it.user?.address || "").toLowerCase(); if (!u) continue; allUsers.add(u); if (Number(it.state?.collateral || 0) > 0) collUsers.add(u); }
+        for (const it of its) {
+          const u = (it.user?.address || "").toLowerCase(); if (!u) continue;
+          allUsers.add(u); if (Number(it.state?.collateral || 0) > 0) collUsers.add(u);
+          const hf = Number(it.healthFactor); if (isFinite(hf) && hf > 0 && hf < 50) hfs.push(hf); // borrowers only
+        }
         if (its.length < PAGE) break;
         skip += PAGE;
       }
       holders = collUsers.size; active_users = allUsers.size;
     }
   } catch {}
+  // Liquidation-risk distribution across borrower health factors (HF = collateral value / debt at LLTV;
+  // <1 is liquidatable). Buckets: at_risk <1.05, tight 1.05-1.15, moderate 1.15-1.5, safe >=1.5.
+  const health = {
+    borrowers: hfs.length, min_hf: hfs.length ? Math.min(...hfs) : null,
+    at_risk: hfs.filter((h) => h < 1.05).length, tight: hfs.filter((h) => h >= 1.05 && h < 1.15).length,
+    moderate: hfs.filter((h) => h >= 1.15 && h < 1.5).length, safe: hfs.filter((h) => h >= 1.5).length,
+  };
+  const totalCollateral = collateralMarkets.reduce((s: number, m: any) => s + (m.collateral_usd || 0), 0);
   return {
     ok: true, venue: "morpho", fetched_at: Math.floor(Date.now() / 1000), assets, collateral_markets: collateralMarkets,
     total_usd: assets.reduce((s, a) => s + a.morpho_usd, 0),
-    total_borrow: assets.reduce((s, a) => s + (a.borrow_usd || 0), 0),
+    total_borrow: assets.reduce((s, a) => s + (a.borrow_usd || 0), 0), total_collateral: totalCollateral,
     total_aum: assets.reduce((s, a) => s + (a.aum || 0), 0), asset_count: assets.length,
     market_count: collateralMarkets.length,
-    holders, active_users, positions,
+    holders, active_users, positions, health,
     avg_lltv: lltvs.length ? lltvs.reduce((s: number, v: number) => s + v, 0) / lltvs.length : null,
     by_class: Object.entries(byClass).map(([name, usd]) => ({ name, usd })).sort((a, b) => b.usd - a.usd),
   };
@@ -823,6 +836,32 @@ async function persist(env: Env, snap: any, ev?: any) {
   if (stmts.length) await sql.transaction(stmts);
 }
 
+// Morpho market + liquidation-risk history (self-migrating). Per-market LLTV/utilisation/borrow-APY
+// trends + a borrower health-factor distribution over time. Accumulates from now (no backfill).
+async function persistMorpho(env: Env, m: any) {
+  if (!env.DATABASE_URL || !m || !m.ok) return;
+  const sql = neon(env.DATABASE_URL);
+  const ts = new Date((m.fetched_at || Math.floor(Date.now() / 1000)) * 1000).toISOString();
+  const stmts: any[] = [];
+  stmts.push(sql`CREATE TABLE IF NOT EXISTS morpho_market_history (
+    ts timestamptz, market_id text, collateral_symbol text, loan_symbol text, asset_class text,
+    lltv double precision, collateral_usd double precision, borrow_usd double precision,
+    utilization double precision, borrow_apy double precision, PRIMARY KEY (ts, market_id))`);
+  stmts.push(sql`CREATE TABLE IF NOT EXISTS morpho_risk_history (
+    ts timestamptz PRIMARY KEY, total_collateral_usd double precision, total_borrow_usd double precision,
+    avg_lltv double precision, market_count int, borrowers int, min_health_factor double precision,
+    hf_at_risk int, hf_tight int, hf_moderate int, hf_safe int)`);
+  for (const mk of (m.collateral_markets || []))
+    stmts.push(sql`INSERT INTO morpho_market_history (ts, market_id, collateral_symbol, loan_symbol, asset_class, lltv, collateral_usd, borrow_usd, utilization, borrow_apy)
+      VALUES (${ts}, ${mk.market_id}, ${mk.collateral_symbol}, ${mk.loan_symbol}, ${mk.asset_class}, ${mk.lltv ?? null}, ${mk.collateral_usd ?? null}, ${mk.borrow_usd ?? null}, ${mk.utilization ?? null}, ${mk.borrow_apy ?? null})
+      ON CONFLICT DO NOTHING`);
+  const h = m.health || {};
+  stmts.push(sql`INSERT INTO morpho_risk_history (ts, total_collateral_usd, total_borrow_usd, avg_lltv, market_count, borrowers, min_health_factor, hf_at_risk, hf_tight, hf_moderate, hf_safe)
+    VALUES (${ts}, ${m.total_collateral ?? null}, ${m.total_borrow ?? null}, ${m.avg_lltv ?? null}, ${m.market_count ?? null}, ${h.borrowers ?? null}, ${h.min_hf ?? null}, ${h.at_risk ?? null}, ${h.tight ?? null}, ${h.moderate ?? null}, ${h.safe ?? null})
+    ON CONFLICT (ts) DO NOTHING`);
+  await sql.transaction(stmts);
+}
+
 export default {
   async scheduled(_e: ScheduledController, env: Env, ctx: ExecutionContext) {
     const snap = await buildSnapshot(env);
@@ -830,6 +869,7 @@ export default {
     if (env.DATABASE_URL) {
       const ev = await fetchEvents().catch(() => null);
       ctx.waitUntil(persist(env, snap, ev).catch(err => console.error("persist failed:", err)));
+      ctx.waitUntil(fetchMorpho(env).then(m => persistMorpho(env, m)).catch(err => console.error("morpho persist failed:", err)));
     }
   },
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -892,6 +932,42 @@ export default {
         return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
       } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); }
     }
+    if (url.pathname === "/api/morpho-history") {
+      // Daily last-value per Morpho market (LLTV / utilisation / borrow-APY / collateral / borrowed).
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [] }), { headers: cors });
+      const sql = neon(env.DATABASE_URL);
+      try {
+        const rows = await sql`
+          SELECT market_id, collateral_symbol, loan_symbol, asset_class, to_char(date_trunc('day', ts), 'YYYY-MM-DD') AS d,
+                 (array_agg(lltv ORDER BY ts DESC))[1] AS lltv,
+                 (array_agg(collateral_usd ORDER BY ts DESC))[1] AS collateral_usd,
+                 (array_agg(borrow_usd ORDER BY ts DESC))[1] AS borrow_usd,
+                 (array_agg(utilization ORDER BY ts DESC))[1] AS utilization,
+                 (array_agg(borrow_apy ORDER BY ts DESC))[1] AS borrow_apy
+          FROM morpho_market_history GROUP BY market_id, collateral_symbol, loan_symbol, asset_class, date_trunc('day', ts) ORDER BY d`;
+        return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
+      } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); }
+    }
+    if (url.pathname === "/api/morpho-risk-history") {
+      // Daily last-value Morpho aggregate + borrower health-factor distribution.
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [] }), { headers: cors });
+      const sql = neon(env.DATABASE_URL);
+      try {
+        const rows = await sql`
+          SELECT to_char(date_trunc('day', ts), 'YYYY-MM-DD') AS d,
+                 (array_agg(total_collateral_usd ORDER BY ts DESC))[1] AS total_collateral_usd,
+                 (array_agg(total_borrow_usd ORDER BY ts DESC))[1] AS total_borrow_usd,
+                 (array_agg(avg_lltv ORDER BY ts DESC))[1] AS avg_lltv,
+                 (array_agg(borrowers ORDER BY ts DESC))[1] AS borrowers,
+                 (array_agg(min_health_factor ORDER BY ts DESC))[1] AS min_health_factor,
+                 (array_agg(hf_at_risk ORDER BY ts DESC))[1] AS hf_at_risk,
+                 (array_agg(hf_tight ORDER BY ts DESC))[1] AS hf_tight,
+                 (array_agg(hf_moderate ORDER BY ts DESC))[1] AS hf_moderate,
+                 (array_agg(hf_safe ORDER BY ts DESC))[1] AS hf_safe
+          FROM morpho_risk_history GROUP BY date_trunc('day', ts) ORDER BY d`;
+        return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
+      } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); }
+    }
     if (url.pathname === "/api/events") {
       const ev = await fetchEvents();
       return new Response(JSON.stringify(ev), { headers: { ...cors, "cache-control": "max-age=60" } });
@@ -928,7 +1004,10 @@ export default {
       const snap = await buildSnapshot(env);
       if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
       const ev = await fetchEvents().catch(() => null);
-      if (env.DATABASE_URL) await persist(env, snap, ev).catch(e => console.error(e));
+      if (env.DATABASE_URL) {
+        await persist(env, snap, ev).catch(e => console.error(e));
+        await fetchMorpho(env).then(m => persistMorpho(env, m)).catch(e => console.error("morpho persist:", e));
+      }
       return new Response(JSON.stringify({ ok: true, block: snap.block, reserves: snap.reserves.length, events: !!ev }), { headers: cors });
     }
     return new Response(JSON.stringify({ error: "unknown route" }), { status: 404, headers: cors });
