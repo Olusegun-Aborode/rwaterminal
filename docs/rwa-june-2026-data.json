@@ -5,7 +5,7 @@
       "start": "2026-06-01",
       "end": "2026-06-30"
     },
-    "generated_utc": "2026-07-03",
+    "generated_utc": "2026-07-04",
     "sources": {
       "flows_and_holders": "Envio HyperIndex (Horizon pool events)",
       "market_and_asset_history": "Neon Postgres (5-min cron snapshots)",
@@ -56,7 +56,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 172.39
+          "usd": 172.4
         },
         "borrow": {
           "count": 0,
@@ -78,7 +78,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 388074.0
+          "usd": 388083.48
         },
         "borrow": {
           "count": 0,
@@ -140,11 +140,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 2976.32
+          "usd": 2976.39
         },
         "withdraw": {
           "count": 4,
-          "usd": 25003201.14
+          "usd": 25003779.46
         },
         "borrow": {
           "count": 0,
@@ -206,11 +206,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 3,
-          "usd": 159970.56
+          "usd": 159974.26
         },
         "withdraw": {
           "count": 6,
-          "usd": 455001.99
+          "usd": 455012.51
         },
         "borrow": {
           "count": 0,
@@ -276,7 +276,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 25002216.36
+          "usd": 25002794.66
         },
         "borrow": {
           "count": 0,
@@ -298,7 +298,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 77481.24
+          "usd": 77483.13
         },
         "borrow": {
           "count": 0,
@@ -338,11 +338,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 3,
-          "usd": 804152.24
+          "usd": 804170.84
         },
         "withdraw": {
           "count": 3,
-          "usd": 462858.18
+          "usd": 462868.88
         },
         "borrow": {
           "count": 0,
@@ -350,7 +350,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 90624.44
+          "usd": 90626.54
         }
       },
       {
@@ -364,7 +364,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 126773.08
+          "usd": 126776.18
         },
         "borrow": {
           "count": 0,
@@ -404,11 +404,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 212120.41
+          "usd": 212125.31
         },
         "withdraw": {
           "count": 2,
-          "usd": 9892.71
+          "usd": 9892.94
         },
         "borrow": {
           "count": 0,
@@ -430,7 +430,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 42572.9
+          "usd": 42573.95
         },
         "borrow": {
           "count": 0,
@@ -470,11 +470,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 27075.89
+          "usd": 27076.52
         },
         "withdraw": {
           "count": 2,
-          "usd": 15037.9
+          "usd": 15038.25
         },
         "borrow": {
           "count": 0,
@@ -500,7 +500,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 10997.31
+          "usd": 10997.58
         },
         "repay": {
           "count": 2,
@@ -536,11 +536,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 1895594.06
+          "usd": 1895637.91
         },
         "withdraw": {
           "count": 2,
-          "usd": 6584.49
+          "usd": 6584.64
         },
         "borrow": {
           "count": 0,
@@ -558,7 +558,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 1,
-          "usd": 999.76
+          "usd": 999.78
         },
         "withdraw": {
           "count": 3,
@@ -646,11 +646,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 3,
-          "usd": 149773.06
+          "usd": 149776.53
         },
         "withdraw": {
           "count": 1,
-          "usd": 184037.16
+          "usd": 184041.42
         },
         "borrow": {
           "count": 0,
@@ -658,7 +658,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 3016298.12
+          "usd": 3016367.89
         }
       },
       {
@@ -668,7 +668,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 1,
-          "usd": 33600.72
+          "usd": 33601.54
         },
         "withdraw": {
           "count": 3,
@@ -680,7 +680,7 @@
         },
         "repay": {
           "count": 4,
-          "usd": 59557.68
+          "usd": 59559.13
         }
       },
       {
@@ -756,11 +756,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 112536.1
+          "usd": 112538.71
         },
         "withdraw": {
           "count": 2,
-          "usd": 1896223.77
+          "usd": 1896267.63
         },
         "borrow": {
           "count": 0,
@@ -768,7 +768,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 1896506.06
+          "usd": 1896549.93
         }
       },
       {
@@ -778,7 +778,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 2,
-          "usd": 754291.86
+          "usd": 754310.3
         },
         "withdraw": {
           "count": 3,
@@ -786,7 +786,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 59340.13
+          "usd": 59341.58
         },
         "repay": {
           "count": 2,
@@ -826,7 +826,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 20001775.7
+          "usd": 20002238.34
         },
         "borrow": {
           "count": 0,
@@ -848,7 +848,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 380.13
+          "usd": 380.14
         },
         "borrow": {
           "count": 0,
@@ -932,11 +932,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 3,
-          "usd": 33758.14
+          "usd": 33758.92
         },
         "withdraw": {
           "count": 2,
-          "usd": 10120.01
+          "usd": 10120.24
         },
         "borrow": {
           "count": 0,
@@ -976,7 +976,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 100133.99
+          "usd": 100136.31
         },
         "withdraw": {
           "count": 2,
@@ -1108,7 +1108,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 19970.0
+          "usd": 19970.47
         },
         "withdraw": {
           "count": 1,
@@ -1120,7 +1120,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 754460.97
+          "usd": 754478.42
         }
       },
       {
@@ -1134,7 +1134,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 806846.5
+          "usd": 806866.22
         },
         "borrow": {
           "count": 0,
@@ -1142,7 +1142,7 @@
         },
         "repay": {
           "count": 4,
-          "usd": 1054039.86
+          "usd": 1054065.62
         }
       },
       {
@@ -1218,11 +1218,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 145509.54
+          "usd": 145512.9
         },
         "withdraw": {
           "count": 2,
-          "usd": 9810.83
+          "usd": 9811.06
         },
         "borrow": {
           "count": 2,
@@ -1230,7 +1230,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 4192620.8
+          "usd": 4192717.78
         }
       },
       {
@@ -1240,7 +1240,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 2,
-          "usd": 38491.59
+          "usd": 38492.53
         },
         "withdraw": {
           "count": 2,
@@ -1248,11 +1248,11 @@
         },
         "borrow": {
           "count": 3,
-          "usd": 4218278.03
+          "usd": 4218381.1
         },
         "repay": {
           "count": 5,
-          "usd": 3725055.35
+          "usd": 3725146.37
         }
       },
       {
@@ -1306,11 +1306,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 130000.09
+          "usd": 130003.1
         },
         "withdraw": {
           "count": 5,
-          "usd": 716785.69
+          "usd": 716802.27
         },
         "borrow": {
           "count": 1,
@@ -1318,7 +1318,7 @@
         },
         "repay": {
           "count": 3,
-          "usd": 2751651.56
+          "usd": 2751715.21
         }
       },
       {
@@ -1332,7 +1332,7 @@
         },
         "withdraw": {
           "count": 1,
-          "usd": 4998.78
+          "usd": 4998.9
         },
         "borrow": {
           "count": 2,
@@ -1416,19 +1416,19 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 4,
-          "usd": 447004.76
+          "usd": 447015.1
         },
         "withdraw": {
           "count": 2,
-          "usd": 214519.48
+          "usd": 214524.44
         },
         "borrow": {
           "count": 2,
-          "usd": 3200003.34
+          "usd": 3200077.35
         },
         "repay": {
           "count": 3,
-          "usd": 8805816.8
+          "usd": 8806020.47
         }
       },
       {
@@ -1446,11 +1446,11 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 89978.0
+          "usd": 89980.2
         },
         "repay": {
           "count": 2,
-          "usd": 238986.11
+          "usd": 238991.95
         }
       },
       {
@@ -1482,15 +1482,15 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 2070007.9
+          "usd": 2070055.78
         },
         "withdraw": {
           "count": 3,
-          "usd": 202433.21
+          "usd": 202437.89
         },
         "borrow": {
           "count": 1,
-          "usd": 2000001.46
+          "usd": 2000047.72
         },
         "repay": {
           "count": 0,
@@ -1504,7 +1504,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 25405.85
+          "usd": 25406.44
         },
         "withdraw": {
           "count": 1,
@@ -1596,7 +1596,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 2190491.27
+          "usd": 2190541.94
         },
         "borrow": {
           "count": 0,
@@ -1604,7 +1604,7 @@
         },
         "repay": {
           "count": 4,
-          "usd": 4476396.2
+          "usd": 4476499.74
         }
       },
       {
@@ -1724,19 +1724,19 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 101618.43
+          "usd": 101620.78
         },
         "withdraw": {
           "count": 3,
-          "usd": 291.74
+          "usd": 291.75
         },
         "borrow": {
           "count": 12,
-          "usd": 14296710.57
+          "usd": 14297041.25
         },
         "repay": {
           "count": 6,
-          "usd": 11107390.76
+          "usd": 11107647.67
         }
       },
       {
@@ -1750,11 +1750,11 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 457.3
+          "usd": 457.31
         },
         "borrow": {
           "count": 5,
-          "usd": 524968.79
+          "usd": 524981.61
         },
         "repay": {
           "count": 0,
@@ -1856,7 +1856,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 212778.98
+          "usd": 212783.9
         },
         "withdraw": {
           "count": 1,
@@ -1864,11 +1864,11 @@
         },
         "borrow": {
           "count": 11,
-          "usd": 3131613.1
+          "usd": 3131685.54
         },
         "repay": {
           "count": 3,
-          "usd": 2071351.09
+          "usd": 2071399.0
         }
       },
       {
@@ -1890,7 +1890,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 444891.23
+          "usd": 444902.1
         }
       },
       {
@@ -1988,19 +1988,19 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 139872.04
+          "usd": 139875.28
         },
         "withdraw": {
           "count": 4,
-          "usd": 4618.9
+          "usd": 4619.01
         },
         "borrow": {
           "count": 5,
-          "usd": 1688394.23
+          "usd": 1688433.29
         },
         "repay": {
           "count": 4,
-          "usd": 4172575.96
+          "usd": 4172672.47
         }
       },
       {
@@ -2018,11 +2018,11 @@
         },
         "borrow": {
           "count": 6,
-          "usd": 696331.96
+          "usd": 696348.97
         },
         "repay": {
           "count": 2,
-          "usd": 556964.57
+          "usd": 556978.18
         }
       },
       {
@@ -2058,7 +2058,7 @@
         },
         "withdraw": {
           "count": 3,
-          "usd": 3002129.19
+          "usd": 3002198.63
         },
         "borrow": {
           "count": 0,
@@ -2066,7 +2066,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 1360311.56
+          "usd": 1360343.02
         }
       },
       {
@@ -2080,7 +2080,7 @@
         },
         "withdraw": {
           "count": 1,
-          "usd": 1919.32
+          "usd": 1919.37
         },
         "borrow": {
           "count": 0,
@@ -2088,7 +2088,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 1919.32
+          "usd": 1919.37
         }
       },
       {
@@ -2098,7 +2098,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 2,
-          "usd": 200032.15
+          "usd": 200036.78
         },
         "withdraw": {
           "count": 2,
@@ -2142,7 +2142,7 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 100000.07
+          "usd": 100002.39
         },
         "withdraw": {
           "count": 1,
@@ -2230,11 +2230,11 @@
         "reserve_address": "0x8292bb45bf1ee4d140127049757c2e0ff06317ed",
         "deposit": {
           "count": 1,
-          "usd": 342.46
+          "usd": 342.47
         },
         "withdraw": {
           "count": 3,
-          "usd": 2000133.07
+          "usd": 2000179.33
         },
         "borrow": {
           "count": 0,
@@ -2242,7 +2242,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 1109039.98
+          "usd": 1109065.63
         }
       },
       {
@@ -2322,7 +2322,7 @@
         },
         "withdraw": {
           "count": 5,
-          "usd": 5005581.27
+          "usd": 5005697.05
         },
         "borrow": {
           "count": 0,
@@ -2330,7 +2330,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 5999557.01
+          "usd": 5999695.78
         }
       }
     ],
@@ -2365,11 +2365,11 @@
       {
         "reserve": "USDC",
         "asset_class": "Stablecoin",
-        "deposit_usd": 827679.36,
-        "withdraw_usd": 1449529.81,
-        "borrow_usd": 5599896.21,
-        "repay_usd": 6081417.05,
-        "net_flow_usd": -621850.45
+        "deposit_usd": 827699.59,
+        "withdraw_usd": 1449565.23,
+        "borrow_usd": 5600033.05,
+        "repay_usd": 6081565.66,
+        "net_flow_usd": -621865.64
       },
       {
         "reserve": "USCC",
@@ -2383,11 +2383,11 @@
       {
         "reserve": "RLUSD",
         "asset_class": "Stablecoin",
-        "deposit_usd": 7091017.13,
-        "withdraw_usd": 86395137.82,
-        "borrow_usd": 24316729.7,
-        "repay_usd": 51804601.32,
-        "net_flow_usd": -79304120.69
+        "deposit_usd": 7091181.14,
+        "withdraw_usd": 86397136.13,
+        "borrow_usd": 24317292.15,
+        "repay_usd": 51805799.56,
+        "net_flow_usd": -79305954.99
       }
     ],
     "sector_net_june": [
@@ -2401,7 +2401,7 @@
       },
       {
         "sector": "Stablecoin",
-        "net_flow_usd": -54925971.03
+        "net_flow_usd": -54927820.53
       },
       {
         "sector": "Crypto Carry",
@@ -2414,14 +2414,14 @@
       "date": "2026-06-02",
       "reserve": "RLUSD",
       "direction": "withdraw",
-      "usd": 25000018.25,
+      "usd": 25000596.5,
       "tx_hash": "0x2872ec65994eee3856e2d427596cb1116a0f7965dfaafe925e8b1af3137e8d61"
     },
     {
       "date": "2026-06-04",
       "reserve": "RLUSD",
       "direction": "withdraw",
-      "usd": 25000018.25,
+      "usd": 25000596.5,
       "tx_hash": "0xb2d11e488cbe890efc25e28dfdd5311098bda31852b3a2a3042fbd39e544999e"
     },
     {
@@ -2435,7 +2435,7 @@
       "date": "2026-06-11",
       "reserve": "RLUSD",
       "direction": "withdraw",
-      "usd": 20000014.6,
+      "usd": 20000477.2,
       "tx_hash": "0x2a834c86c30adfa1437cae78d1348518e9f60fc90a754e67e1f7714f509b11fc"
     },
     {
@@ -2456,7 +2456,7 @@
       "date": "2026-06-23",
       "reserve": "RLUSD",
       "direction": "repay",
-      "usd": 6198778.57,
+      "usd": 6198921.94,
       "tx_hash": "0x375858439837c284337fcda0857c570e04d6d92699507e8aafc2f9101bc2e1b0"
     },
     {
@@ -2477,7 +2477,7 @@
       "date": "2026-06-18",
       "reserve": "RLUSD",
       "direction": "repay",
-      "usd": 5805809.61,
+      "usd": 5805943.89,
       "tx_hash": "0x6cb06e26871e7b640f89e3b937e98e2056bc513ef3ab77fe81f49bcaa0a2e8ed"
     }
   ],
@@ -2692,8 +2692,8 @@
         "token_supply": 59781659.09
       },
       "current": {
-        "supplied_usd": 59789037.89,
-        "supply_apy_pct": 1.95,
+        "supplied_usd": 59792747.59,
+        "supply_apy_pct": 2.036,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
         "nav": 1
@@ -2715,11 +2715,11 @@
         "token_supply": 7535149.54
       },
       "current": {
-        "supplied_usd": 6346635.5,
-        "supply_apy_pct": 2.724,
+        "supplied_usd": 6094080.92,
+        "supply_apy_pct": 2.739,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
-        "nav": 0.99975557
+        "nav": 0.99978
       }
     },
     {
@@ -2738,11 +2738,11 @@
         "token_supply": 184743464.31
       },
       "current": {
-        "supplied_usd": 155847455.22,
-        "supply_apy_pct": 2.156,
+        "supplied_usd": 150861111.81,
+        "supply_apy_pct": 2.247,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
-        "nav": 1.00000073
+        "nav": 1.00002386
       }
     },
     {
@@ -2761,7 +2761,7 @@
         "token_supply": 6968077.28
       },
       "current": {
-        "supplied_usd": 78917426.25,
+        "supplied_usd": 79562825.26,
         "supply_apy_pct": 0,
         "ltv_pct": 88,
         "liq_threshold_pct": 90,
@@ -2834,7 +2834,7 @@
         "supply_apy_pct": 0,
         "ltv_pct": 86,
         "liq_threshold_pct": 88,
-        "nav": 1.10824717353243
+        "nav": 1.1087139576411897
       }
     },
     {
@@ -2853,11 +2853,11 @@
         "token_supply": 16672271.0
       },
       "current": {
-        "supplied_usd": 17334226.84,
+        "supplied_usd": 17342829.74,
         "supply_apy_pct": 0,
         "ltv_pct": 81,
         "liq_threshold_pct": 86,
-        "nav": 1.03970488177699
+        "nav": 1.04022031332153
       }
     },
     {
@@ -3113,5 +3113,321 @@
       "date": "2026-06-30",
       "active_addresses": 8
     }
-  ]
+  ],
+  "supplementary_metrics": {
+    "note": "Beyond the 6-section spec, computed from the same existing data. Flow-derived (s7,s8) cover June; NAV/supply (s9,s11) are June-bounded; holder concentration (s10) and cross-venue (s12) are current-state, labeled as such.",
+    "s7_per_user_flows": {
+      "total_unique_users": 89,
+      "top5_concentration_pct": 61.21,
+      "top10_users": [
+        {
+          "address": "0x491edfb0b8b608044e227225c715981a30f3a44e",
+          "total_flow_usd": 80001908.8
+        },
+        {
+          "address": "0xcf25fedb1a51edc27dba47c87c28be1c983168fb",
+          "total_flow_usd": 68964162.34
+        },
+        {
+          "address": "0x3c1765de3efb746235526b10b94de1e2332aedbf",
+          "total_flow_usd": 36561808.6
+        },
+        {
+          "address": "0x882c825405fbbe45dcc1ad52b639afbc4592edb7",
+          "total_flow_usd": 30409490.84
+        },
+        {
+          "address": "0x64471d103a7f77262529383d53bdd28b260b1ae8",
+          "total_flow_usd": 28902183.47
+        },
+        {
+          "address": "0x80559941c1a741bc435cb6782b6f161d5772ac4b",
+          "total_flow_usd": 28417399.73
+        },
+        {
+          "address": "0xe10c78a3ac7f016ed2de1a89c5479b1039eab9ea",
+          "total_flow_usd": 25000000.0
+        },
+        {
+          "address": "0x971b34b997843b82051b3e781d6a6d5a21bbdda0",
+          "total_flow_usd": 18721199.93
+        },
+        {
+          "address": "0xba474ab1642101968633525fb117fa12c5bcb4e6",
+          "total_flow_usd": 15712754.12
+        },
+        {
+          "address": "0xba5d9cc840745aeeeeedac5712e32f13ab8ea352",
+          "total_flow_usd": 11388725.99
+        }
+      ],
+      "unique_users_per_reserve": {
+        "RLUSD": 59,
+        "USDC": 31,
+        "USCC": 11,
+        "GHO": 11,
+        "USTB": 7,
+        "mGLOBAL": 6
+      }
+    },
+    "s8_borrow_demand": [
+      {
+        "reserve": "GHO",
+        "asset_class": "Stablecoin",
+        "borrowed_usd": 26902710.65,
+        "repaid_usd": 20326191.95,
+        "net_borrow_usd": 6576518.7
+      },
+      {
+        "reserve": "USDC",
+        "asset_class": "Stablecoin",
+        "borrowed_usd": 5600033.05,
+        "repaid_usd": 6081565.66,
+        "net_borrow_usd": -481532.61
+      },
+      {
+        "reserve": "RLUSD",
+        "asset_class": "Stablecoin",
+        "borrowed_usd": 24317292.15,
+        "repaid_usd": 51805799.56,
+        "net_borrow_usd": -27488507.41
+      }
+    ],
+    "s9_nav_yield_and_data_quality": [
+      {
+        "token": "GHO",
+        "nav_jun07": 1,
+        "nav_jun30": 1,
+        "annualized_yield_pct": 0.0,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "USDC",
+        "nav_jun07": 0.9997,
+        "nav_jun30": 0.9996,
+        "annualized_yield_pct": -0.17,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "RLUSD",
+        "nav_jun07": 0.9999,
+        "nav_jun30": 0.9999,
+        "annualized_yield_pct": -0.01,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "USTB",
+        "nav_jun07": 11.1047,
+        "nav_jun30": 11.13,
+        "annualized_yield_pct": 3.61,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "USCC",
+        "nav_jun07": 11.6061,
+        "nav_jun30": 11.625,
+        "annualized_yield_pct": 2.59,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "USYC",
+        "nav_jun07": 1.1272,
+        "nav_jun30": 1.1296,
+        "annualized_yield_pct": 3.43,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "JTRSY",
+        "nav_jun07": 1.1055,
+        "nav_jun30": 1.108,
+        "annualized_yield_pct": 3.59,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "JAAA",
+        "nav_jun07": 1.0368,
+        "nav_jun30": 1.0393,
+        "annualized_yield_pct": 3.89,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "VBILL",
+        "nav_jun07": 1,
+        "nav_jun30": 1,
+        "annualized_yield_pct": 0.0,
+        "stale_snapshots_june": 0
+      },
+      {
+        "token": "ACRED",
+        "nav_jun07": 1098.3749,
+        "nav_jun30": 1101.7166,
+        "annualized_yield_pct": 4.83,
+        "stale_snapshots_june": 0
+      }
+    ],
+    "s10_holder_concentration_current": [
+      {
+        "token": "GHO",
+        "holders": 13,
+        "top1_share_pct": 99.87,
+        "top5_share_pct": 100.0
+      },
+      {
+        "token": "USDC",
+        "holders": 158,
+        "top1_share_pct": 54.76,
+        "top5_share_pct": 93.84
+      },
+      {
+        "token": "RLUSD",
+        "holders": 217,
+        "top1_share_pct": 91.28,
+        "top5_share_pct": 95.78
+      },
+      {
+        "token": "USTB",
+        "holders": 12,
+        "top1_share_pct": 38.02,
+        "top5_share_pct": 90.7
+      },
+      {
+        "token": "USCC",
+        "holders": 7,
+        "top1_share_pct": 76.11,
+        "top5_share_pct": 100.0
+      },
+      {
+        "token": "JAAA",
+        "holders": 3,
+        "top1_share_pct": 81.74,
+        "top5_share_pct": 100.0
+      },
+      {
+        "token": "VBILL",
+        "holders": 2,
+        "top1_share_pct": 80.0,
+        "top5_share_pct": 100.0
+      }
+    ],
+    "s11_issuance_vs_redemption": [
+      {
+        "token": "GHO",
+        "supply_jun07": 34707256.78,
+        "supply_jun30": 59781659.09,
+        "net_change_tokens": 25074402.31,
+        "net_change_usd": 25074402.31,
+        "direction": "issuance"
+      },
+      {
+        "token": "USDC",
+        "supply_jun07": 7508501.41,
+        "supply_jun30": 7535149.54,
+        "net_change_tokens": 26648.13,
+        "net_change_usd": 26642.26,
+        "direction": "issuance"
+      },
+      {
+        "token": "RLUSD",
+        "supply_jun07": 214054010.16,
+        "supply_jun30": 184743464.31,
+        "net_change_tokens": -29310545.86,
+        "net_change_usd": -29311245.21,
+        "direction": "redemption"
+      },
+      {
+        "token": "USTB",
+        "supply_jun07": 6000000.99,
+        "supply_jun30": 6968077.28,
+        "net_change_tokens": 968076.29,
+        "net_change_usd": 10776699.8,
+        "direction": "issuance"
+      },
+      {
+        "token": "USCC",
+        "supply_jun07": 10489383.12,
+        "supply_jun30": 5004482.96,
+        "net_change_tokens": -5484900.16,
+        "net_change_usd": -63778857.88,
+        "direction": "redemption"
+      },
+      {
+        "token": "USYC",
+        "supply_jun07": 0,
+        "supply_jun30": 0,
+        "net_change_tokens": 0,
+        "net_change_usd": 0.0,
+        "direction": "flat"
+      },
+      {
+        "token": "JTRSY",
+        "supply_jun07": 0,
+        "supply_jun30": 0,
+        "net_change_tokens": 0,
+        "net_change_usd": 0.0,
+        "direction": "flat"
+      },
+      {
+        "token": "JAAA",
+        "supply_jun07": 16672271.0,
+        "supply_jun30": 16672271.0,
+        "net_change_tokens": 0.0,
+        "net_change_usd": 0.0,
+        "direction": "flat"
+      },
+      {
+        "token": "VBILL",
+        "supply_jun07": 6250000,
+        "supply_jun30": 6250000,
+        "net_change_tokens": 0,
+        "net_change_usd": 0.0,
+        "direction": "flat"
+      },
+      {
+        "token": "ACRED",
+        "supply_jun07": 0,
+        "supply_jun30": 0,
+        "net_change_tokens": 0,
+        "net_change_usd": 0.0,
+        "direction": "flat"
+      }
+    ],
+    "s12_cross_venue_current": {
+      "as_of": "current (report generation)",
+      "by_kind_usd": {
+        "lending": 516306818.37,
+        "dex": 96076453.01,
+        "elsewhere": 51232963074.9,
+        "wallet": 2570952559.62,
+        "other": 2872314168.88,
+        "entity": 3051916146.37,
+        "contract": 369866473.62
+      },
+      "deployed_pct_of_tracked": 1.01,
+      "morpho": {
+        "total_collateral_usd": 169851557.66,
+        "total_borrow_usd": 137118407.66,
+        "avg_lltv_pct": 88.1,
+        "borrowers": 307,
+        "min_health_factor": 0.892,
+        "at_risk_positions": 21
+      }
+    }
+  },
+  "next_report_metrics": {
+    "note": "These series began recording 2026-07-04 (forward-only, no backfill), so the JULY report will include them as true time-series; they could not be produced for June.",
+    "items": [
+      {
+        "metric": "Per-reserve month-over-month deltas (supplied USD, supply APY, LTV, LT)",
+        "source": "reserve_state_history / api/reserve-history"
+      },
+      {
+        "metric": "Morpho market trends (per-market LLTV, utilisation, borrow APY, collateral, borrowed)",
+        "source": "morpho_market_history / api/morpho-history"
+      },
+      {
+        "metric": "Liquidation-risk history (borrower health-factor distribution + min HF over time)",
+        "source": "morpho_risk_history / api/morpho-risk-history"
+      }
+    ]
+  }
 }

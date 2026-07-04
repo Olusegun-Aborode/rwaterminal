@@ -3,7 +3,7 @@
 import json, ssl, os, urllib.request, subprocess
 from datetime import datetime, timezone
 
-CONN = os.environ.get('DATABASE_URL', '')  # export DATABASE_URL=<neon connection string> before running
+CONN = os.environ.get('DATABASE_URL', '')  # export DATABASE_URL before running
 ENVIO = 'https://indexer.dev.hyperindex.xyz/3609531/v1/graphql'
 WORKER = 'https://rwa-terminal-worker.aborodeolusegun.workers.dev'
 OUT = os.path.join(os.path.dirname(__file__), '..', 'docs', 'rwa-june-2026-data.json')
@@ -153,6 +153,73 @@ for atok, symn in ATOKEN.items():
     sec5.append({'token': symn, 'holders_jun01': h_start.get(atok), 'holders_jun30': h_end.get(atok),
                  'change': (h_end.get(atok, 0) - h_start.get(atok, 0)) if (atok in h_start and atok in h_end) else None})
 
+# ==== SUPPLEMENTARY METRICS (the "available now" set) ====
+# S7 - per-user flows
+uf = {}; ur = {}
+for a in actions:
+    u = a['user'].lower(); res = a['reserve'].lower(); v = abs(to_usd(res, a['amount']))
+    uf[u] = uf.get(u, 0) + v; ur.setdefault(res, set()).add(u)
+tot_uf = sum(uf.values()) or 1
+top_users = sorted(uf.items(), key=lambda x: -x[1])[:10]
+supp_users = {'total_unique_users': len(uf),
+              'top5_concentration_pct': round(sum(x[1] for x in top_users[:5]) / tot_uf * 100, 2),
+              'top10_users': [{'address': ad, 'total_flow_usd': c2(v)} for ad, v in top_users],
+              'unique_users_per_reserve': {sym(r): len(u) for r, u in sorted(ur.items(), key=lambda x: -len(x[1]))}}
+
+# S8 - borrow demand & utilisation (net borrow = borrow - repay per reserve, from June flows)
+supp_borrow = [{'reserve': sym(r), 'asset_class': cls(r), 'borrowed_usd': c2(rn['borrow']), 'repaid_usd': c2(rn['repay']),
+                'net_borrow_usd': c2(rn['borrow'] - rn['repay'])}
+               for r, rn in sorted(res_net.items(), key=lambda x: -(x[1]['borrow'] - x[1]['repay'])) if rn['borrow'] or rn['repay']]
+
+# S9 - NAV yield & data-quality (NAV drift Jun07->Jun30 + stale-NAV incident count).
+# NAV/supply history began 2026-06-04; using Jun07 start for consistency with section 4.
+navq = psql_json("""SELECT COALESCE(json_agg(row_to_json(x)),'[]') FROM (
+  SELECT t.symbol,
+    (SELECT nav FROM asset_nav_history WHERE asset_id=t.asset_id AND ts<'2026-06-08' ORDER BY ts DESC LIMIT 1) AS nav_start,
+    (SELECT nav FROM asset_nav_history WHERE asset_id=t.asset_id AND ts<'2026-07-01' ORDER BY ts DESC LIMIT 1) AS nav_end,
+    (SELECT count(*) FROM asset_nav_history WHERE asset_id=t.asset_id AND ts>='2026-06-01' AND ts<'2026-07-01' AND is_stale) AS stale_snapshots
+  FROM token t) x;""")
+supp_nav = []
+for r in (navq or []):
+    ns, ne = r.get('nav_start'), r.get('nav_end'); ay = round(((ne / ns) - 1) * (365 / 23) * 100, 2) if (ns and ne and ns > 0) else None
+    supp_nav.append({'token': r['symbol'], 'nav_jun07': round(ns, 4) if ns else None, 'nav_jun30': round(ne, 4) if ne else None,
+                     'annualized_yield_pct': ay, 'stale_snapshots_june': r.get('stale_snapshots')})
+
+# S11 - issuance vs redemption (token supply change Jun07->Jun30)
+iss = psql_json("""SELECT COALESCE(json_agg(row_to_json(x)),'[]') FROM (
+  SELECT t.symbol, lower(t.contract_address) AS addr,
+    (SELECT total_supply FROM token_supply_history WHERE token_id=t.token_id AND ts<'2026-06-08' ORDER BY ts DESC LIMIT 1) AS s_start,
+    (SELECT total_supply FROM token_supply_history WHERE token_id=t.token_id AND ts<'2026-07-01' ORDER BY ts DESC LIMIT 1) AS s_end
+  FROM token t) x;""")
+supp_iss = []
+for r in (iss or []):
+    ss, se = r.get('s_start'), r.get('s_end'); m = meta.get(r['addr'], {}); pr = m.get('price') or 0
+    chg = (se - ss) if (ss is not None and se is not None) else None
+    supp_iss.append({'token': r['symbol'], 'supply_jun07': round(ss, 2) if ss is not None else None, 'supply_jun30': round(se, 2) if se is not None else None,
+                     'net_change_tokens': round(chg, 2) if chg is not None else None, 'net_change_usd': c2(chg * pr) if chg is not None else None,
+                     'direction': ('issuance' if chg > 0 else 'redemption' if chg < 0 else 'flat') if chg is not None else None})
+
+# S10 - holder concentration (current, Envio Holding balances per aToken; no _aggregate, so sum in Python)
+supp_conc = []
+for atok, symn in ATOKEN.items():
+    try:
+        hs = gql(f'{{ Holding(where:{{token:{{_eq:"{atok}"}}, balance:{{_gt:"0"}}}}, order_by:{{balance:desc}}, limit:1000) {{ balance }} }}')['Holding']
+        bals = [float(h['balance']) for h in hs]; tsum = sum(bals)
+        if bals and tsum > 0:
+            supp_conc.append({'token': symn, 'holders': len(bals), 'top1_share_pct': round(bals[0] / tsum * 100, 2),
+                              'top5_share_pct': round(sum(bals[:5]) / tsum * 100, 2)})
+    except Exception:
+        pass
+
+# S12 - cross-venue deployment (current state)
+usage = get(WORKER + '/api/usage'); mor = get(WORKER + '/api/morpho'); mh = (mor.get('health') or {})
+supp_cross = {'as_of': 'current (report generation)',
+              'by_kind_usd': {k: c2(v) for k, v in (usage.get('by_kind') or {}).items()},
+              'deployed_pct_of_tracked': round((usage.get('deployed_usd') or 0) / (usage.get('total_usd') or 1) * 100, 2),
+              'morpho': {'total_collateral_usd': c2(mor.get('total_collateral')), 'total_borrow_usd': c2(mor.get('total_borrow')),
+                         'avg_lltv_pct': round((mor.get('avg_lltv') or 0) * 100, 1), 'borrowers': mh.get('borrowers'),
+                         'min_health_factor': round(mh.get('min_hf'), 3) if mh.get('min_hf') is not None else None, 'at_risk_positions': mh.get('at_risk')}}
+
 # ---- assemble ----
 doc = {
     'meta': {
@@ -177,6 +244,23 @@ doc = {
     'section4_reserve_state_jun07_jun30': sec4,
     'section5_holders_start_vs_end': sec5,
     'section6_daily_active_addresses': sec6,
+    'supplementary_metrics': {
+        'note': 'Beyond the 6-section spec, computed from the same existing data. Flow-derived (s7,s8) cover June; NAV/supply (s9,s11) are June-bounded; holder concentration (s10) and cross-venue (s12) are current-state, labeled as such.',
+        's7_per_user_flows': supp_users,
+        's8_borrow_demand': supp_borrow,
+        's9_nav_yield_and_data_quality': supp_nav,
+        's10_holder_concentration_current': supp_conc,
+        's11_issuance_vs_redemption': supp_iss,
+        's12_cross_venue_current': supp_cross,
+    },
+    'next_report_metrics': {
+        'note': 'These series began recording 2026-07-04 (forward-only, no backfill), so the JULY report will include them as true time-series; they could not be produced for June.',
+        'items': [
+            {'metric': 'Per-reserve month-over-month deltas (supplied USD, supply APY, LTV, LT)', 'source': 'reserve_state_history / api/reserve-history'},
+            {'metric': 'Morpho market trends (per-market LLTV, utilisation, borrow APY, collateral, borrowed)', 'source': 'morpho_market_history / api/morpho-history'},
+            {'metric': 'Liquidation-risk history (borrower health-factor distribution + min HF over time)', 'source': 'morpho_risk_history / api/morpho-risk-history'},
+        ],
+    },
 }
 import os
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
