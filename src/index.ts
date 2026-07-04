@@ -756,6 +756,13 @@ async function persist(env: Env, snap: any, ev?: any) {
     ts timestamptz PRIMARY KEY, rwa_aum double precision, stablecoin_aum double precision,
     total_aum double precision, horizon_supplied_usd double precision,
     holders integer, active_addresses integer, actions integer, issuers integer)`);
+  // Self-migrating per-reserve Horizon state history (supplied / APY / LTV / LT) — these are venue-side
+  // and NOT captured by asset_aum/nav/supply history, so this table is the source for true month-over-month
+  // per-reserve deltas going forward. Starts accumulating now (no backfill possible).
+  stmts.push(sql`CREATE TABLE IF NOT EXISTS reserve_state_history (
+    ts timestamptz, reserve text, symbol text, supplied_usd double precision, supply_apy_pct double precision,
+    ltv_pct double precision, liq_threshold_pct double precision, oracle_price double precision,
+    nav double precision, PRIMARY KEY (ts, reserve))`);
   // Per-reserve AUM guard: an issuer-API misread once inflated USTB/USCC AUM ~40x for ~21h while
   // supply stayed flat (2026-06-29). Reject a >50% day-over-day AUM move that isn't backed by a
   // comparable (>20%) supply move — a real mint/burn moves both, a bad read moves only AUM.
@@ -789,6 +796,9 @@ async function persist(env: Env, snap: any, ev?: any) {
     stmts.push(sql`INSERT INTO token_supply_history (token_id, ts, total_supply)
       SELECT t.token_id, ${ts}, ${r.total_supplied}
       FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
+    stmts.push(sql`INSERT INTO reserve_state_history (ts, reserve, symbol, supplied_usd, supply_apy_pct, ltv_pct, liq_threshold_pct, oracle_price, nav)
+      VALUES (${ts}, ${addr}, ${r.label && r.label !== "?" ? r.label : r.symbol_onchain}, ${r.supplied_usd ?? null}, ${r.supply_apy_pct ?? null}, ${r.ltv_pct ?? null}, ${r.liq_threshold_pct ?? null}, ${r.oracle_price_usd ?? null}, ${r.nav_value ?? null})
+      ON CONFLICT DO NOTHING`);
   }
   const t = snap.totals, e = ev?.totals || {};
   // Sanity guard for rwa_aum: a transient bad on-chain read (price/supply glitch) once persisted a
@@ -864,6 +874,23 @@ export default {
           FROM market_history GROUP BY date_trunc('day', ts) ORDER BY d`;
         return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
       } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); } // table not seeded yet
+    }
+    if (url.pathname === "/api/reserve-history") {
+      // Daily last-value per-reserve Horizon state (supplied/APY/LTV/LT) — accumulates from 2026-07-03.
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [] }), { headers: cors });
+      const sql = neon(env.DATABASE_URL);
+      try {
+        const rows = await sql`
+          SELECT reserve, symbol, to_char(date_trunc('day', ts), 'YYYY-MM-DD') AS d,
+                 (array_agg(supplied_usd ORDER BY ts DESC))[1] AS supplied_usd,
+                 (array_agg(supply_apy_pct ORDER BY ts DESC))[1] AS supply_apy_pct,
+                 (array_agg(ltv_pct ORDER BY ts DESC))[1] AS ltv_pct,
+                 (array_agg(liq_threshold_pct ORDER BY ts DESC))[1] AS liq_threshold_pct,
+                 (array_agg(oracle_price ORDER BY ts DESC))[1] AS oracle_price,
+                 (array_agg(nav ORDER BY ts DESC))[1] AS nav
+          FROM reserve_state_history GROUP BY reserve, symbol, date_trunc('day', ts) ORDER BY d, reserve`;
+        return new Response(JSON.stringify({ points: rows }), { headers: { ...cors, "cache-control": "max-age=120" } });
+      } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); }
     }
     if (url.pathname === "/api/events") {
       const ev = await fetchEvents();
