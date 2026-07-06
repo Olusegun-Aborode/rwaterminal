@@ -22,6 +22,169 @@
       "Two different active-address metrics: section 3 active_addresses is cumulative distinct users since genesis (the terminal's headline); section 6 active_addresses is distinct users who acted on that specific day."
     ]
   },
+  "section0_cross_venue_reconciliation": {
+    "lens": "RWA deployed as COLLATERAL in a lending venue (supplied on Horizon / collateral on Morpho). This is the composability metric.",
+    "rwa_collateral_deployed_usd": {
+      "aave_horizon": 184024059.75,
+      "morpho": 171588983.72,
+      "both_venues_total": 355613043.47
+    },
+    "cross_venue_assets": [
+      "JAAA"
+    ],
+    "by_asset": [
+      {
+        "asset": "syrupUSDC",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 138433928.49,
+        "total_deployed_usd": 138433928.49,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "USTB",
+        "horizon_collateral_usd": 79562825.26,
+        "morpho_collateral_usd": 0.0,
+        "total_deployed_usd": 79562825.26,
+        "venues": [
+          "Aave Horizon"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "USCC",
+        "horizon_collateral_usd": 53471527.68,
+        "morpho_collateral_usd": 0.0,
+        "total_deployed_usd": 53471527.68,
+        "venues": [
+          "Aave Horizon"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "mGLOBAL",
+        "horizon_collateral_usd": 27396877.07,
+        "morpho_collateral_usd": 0.0,
+        "total_deployed_usd": 27396877.07,
+        "venues": [
+          "Aave Horizon"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "JAAA",
+        "horizon_collateral_usd": 17342829.74,
+        "morpho_collateral_usd": 4662184.68,
+        "total_deployed_usd": 22005014.41,
+        "venues": [
+          "Aave Horizon",
+          "Morpho"
+        ],
+        "cross_venue": true
+      },
+      {
+        "asset": "mF-ONE",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 19111790.21,
+        "total_deployed_usd": 19111790.21,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "VBILL",
+        "horizon_collateral_usd": 6250000.0,
+        "morpho_collateral_usd": 0.0,
+        "total_deployed_usd": 6250000.0,
+        "venues": [
+          "Aave Horizon"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "XAUt",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 6008772.77,
+        "total_deployed_usd": 6008772.77,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "EUTBL",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 2878949.56,
+        "total_deployed_usd": 2878949.56,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "muBOND",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 273158.28,
+        "total_deployed_usd": 273158.28,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      },
+      {
+        "asset": "PAXG",
+        "horizon_collateral_usd": 0.0,
+        "morpho_collateral_usd": 220199.72,
+        "total_deployed_usd": 220199.72,
+        "venues": [
+          "Morpho"
+        ],
+        "cross_venue": false
+      }
+    ],
+    "by_sector_deployed_usd": [
+      {
+        "sector": "Private Credit",
+        "usd": 184942595.78
+      },
+      {
+        "sector": "US Treasuries",
+        "usd": 85812825.26
+      },
+      {
+        "sector": "Crypto Carry",
+        "usd": 53471527.68
+      },
+      {
+        "sector": "Private Credit (CLO)",
+        "usd": 22005014.41
+      },
+      {
+        "sector": "Commodities (Gold)",
+        "usd": 6228972.5
+      },
+      {
+        "sector": "Govt Bonds (EU)",
+        "usd": 2878949.56
+      },
+      {
+        "sector": "Bonds",
+        "usd": 273158.28
+      }
+    ],
+    "context_not_deployment": {
+      "addressable_universe_fund_aum_usd": 5497150696.29,
+      "warning": "Fund AUM (section 3 rwa_aum, ~$5.5B) is the addressable universe of Horizon-listed assets, NOT venue deployment. Do NOT compare it to Morpho collateral or sum it with venue figures."
+    },
+    "notes": [
+      "Only ~$356M of RWA is actually deployed as collateral across both venues, vs a ~$5.5B addressable universe.",
+      "JAAA (Horizon) and wJAAA (Morpho) are the SAME underlying asset used across both venues, counted once per venue and flagged cross_venue (not double-summed as distinct value).",
+      "The two venues host largely different assets: Horizon skews US Treasuries + JAAA; Morpho skews Private Credit (syrupUSDC/mF-ONE) + Gold."
+    ]
+  },
   "section1_daily_flows_per_reserve": {
     "daily": [
       {
@@ -79,7 +242,7 @@
         },
         "withdraw": {
           "count": 2,
-          "usd": 388079.6
+          "usd": 388086.03
         },
         "borrow": {
           "count": 0,
@@ -299,7 +462,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 77482.36
+          "usd": 77483.64
         },
         "borrow": {
           "count": 0,
@@ -365,7 +528,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 126774.91
+          "usd": 126777.01
         },
         "borrow": {
           "count": 0,
@@ -431,7 +594,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 42573.52
+          "usd": 42574.22
         },
         "borrow": {
           "count": 0,
@@ -501,7 +664,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 10997.47
+          "usd": 10997.65
         },
         "repay": {
           "count": 2,
@@ -559,7 +722,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 1,
-          "usd": 999.77
+          "usd": 999.79
         },
         "withdraw": {
           "count": 3,
@@ -669,7 +832,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 1,
-          "usd": 33601.2
+          "usd": 33601.76
         },
         "withdraw": {
           "count": 3,
@@ -681,7 +844,7 @@
         },
         "repay": {
           "count": 4,
-          "usd": 59558.54
+          "usd": 59559.52
         }
       },
       {
@@ -779,7 +942,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 2,
-          "usd": 754302.75
+          "usd": 754315.25
         },
         "withdraw": {
           "count": 3,
@@ -787,7 +950,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 59340.99
+          "usd": 59341.97
         },
         "repay": {
           "count": 2,
@@ -1135,7 +1298,7 @@
         },
         "withdraw": {
           "count": 4,
-          "usd": 806858.15
+          "usd": 806871.52
         },
         "borrow": {
           "count": 0,
@@ -1143,7 +1306,7 @@
         },
         "repay": {
           "count": 4,
-          "usd": 1054055.08
+          "usd": 1054072.55
         }
       },
       {
@@ -1241,7 +1404,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 2,
-          "usd": 38492.14
+          "usd": 38492.78
         },
         "withdraw": {
           "count": 2,
@@ -1249,11 +1412,11 @@
         },
         "borrow": {
           "count": 3,
-          "usd": 4218338.91
+          "usd": 4218408.82
         },
         "repay": {
           "count": 5,
-          "usd": 3725109.11
+          "usd": 3725170.85
         }
       },
       {
@@ -1333,7 +1496,7 @@
         },
         "withdraw": {
           "count": 1,
-          "usd": 4998.85
+          "usd": 4998.93
         },
         "borrow": {
           "count": 2,
@@ -1439,7 +1602,7 @@
         "reserve_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "deposit": {
           "count": 1,
-          "usd": 249.94
+          "usd": 249.95
         },
         "withdraw": {
           "count": 0,
@@ -1447,11 +1610,11 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 89979.3
+          "usd": 89980.79
         },
         "repay": {
           "count": 2,
-          "usd": 238989.56
+          "usd": 238993.52
         }
       },
       {
@@ -1755,7 +1918,7 @@
         },
         "borrow": {
           "count": 5,
-          "usd": 524976.36
+          "usd": 524985.06
         },
         "repay": {
           "count": 0,
@@ -1891,7 +2054,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 444897.65
+          "usd": 444905.02
         }
       },
       {
@@ -2019,11 +2182,11 @@
         },
         "borrow": {
           "count": 6,
-          "usd": 696342.01
+          "usd": 696353.55
         },
         "repay": {
           "count": 2,
-          "usd": 556972.61
+          "usd": 556981.84
         }
       },
       {
@@ -2081,7 +2244,7 @@
         },
         "withdraw": {
           "count": 1,
-          "usd": 1919.35
+          "usd": 1919.38
         },
         "borrow": {
           "count": 0,
@@ -2089,7 +2252,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 1919.35
+          "usd": 1919.38
         }
       },
       {
@@ -2366,11 +2529,11 @@
       {
         "reserve": "USDC",
         "asset_class": "Stablecoin",
-        "deposit_usd": 827691.31,
-        "withdraw_usd": 1449550.73,
-        "borrow_usd": 5599977.03,
-        "repay_usd": 6081504.83,
-        "net_flow_usd": -621859.42
+        "deposit_usd": 827705.03,
+        "withdraw_usd": 1449574.76,
+        "borrow_usd": 5600069.85,
+        "repay_usd": 6081605.62,
+        "net_flow_usd": -621869.73
       },
       {
         "reserve": "USCC",
@@ -2402,7 +2565,7 @@
       },
       {
         "sector": "Stablecoin",
-        "net_flow_usd": -54917683.22
+        "net_flow_usd": -54917693.53
       },
       {
         "sector": "Crypto Carry",
@@ -2693,7 +2856,7 @@
         "token_supply": 59781659.09
       },
       "current": {
-        "supplied_usd": 59803828.79,
+        "supplied_usd": 59803910.79,
         "supply_apy_pct": 2.036,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -2716,11 +2879,11 @@
         "token_supply": 7535149.54
       },
       "current": {
-        "supplied_usd": 6095804.54,
+        "supplied_usd": 6095916.82,
         "supply_apy_pct": 2.739,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
-        "nav": 0.99977
+        "nav": 0.99978657
       }
     },
     {
@@ -2739,7 +2902,7 @@
         "token_supply": 184743464.31
       },
       "current": {
-        "supplied_usd": 150933390.13,
+        "supplied_usd": 150933618.42,
         "supply_apy_pct": 2.246,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -3127,7 +3290,7 @@
         },
         {
           "address": "0xcf25fedb1a51edc27dba47c87c28be1c983168fb",
-          "total_flow_usd": 68963444.96
+          "total_flow_usd": 68963533.03
         },
         {
           "address": "0x3c1765de3efb746235526b10b94de1e2332aedbf",
@@ -3139,7 +3302,7 @@
         },
         {
           "address": "0x64471d103a7f77262529383d53bdd28b260b1ae8",
-          "total_flow_usd": 28901175.37
+          "total_flow_usd": 28901258.35
         },
         {
           "address": "0x80559941c1a741bc435cb6782b6f161d5772ac4b",
@@ -3155,7 +3318,7 @@
         },
         {
           "address": "0xba474ab1642101968633525fb117fa12c5bcb4e6",
-          "total_flow_usd": 15711902.07
+          "total_flow_usd": 15711927.08
         },
         {
           "address": "0xba5d9cc840745aeeeeedac5712e32f13ab8ea352",
@@ -3182,9 +3345,9 @@
       {
         "reserve": "USDC",
         "asset_class": "Stablecoin",
-        "borrowed_usd": 5599977.03,
-        "repaid_usd": 6081504.83,
-        "net_borrow_usd": -481527.79
+        "borrowed_usd": 5600069.85,
+        "repaid_usd": 6081605.62,
+        "net_borrow_usd": -481535.77
       },
       {
         "reserve": "RLUSD",
@@ -3324,7 +3487,7 @@
         "supply_jun07": 7508501.41,
         "supply_jun30": 7535149.54,
         "net_change_tokens": 26648.13,
-        "net_change_usd": 26642.0,
+        "net_change_usd": 26642.44,
         "direction": "issuance"
       },
       {
@@ -3395,18 +3558,18 @@
     "s12_cross_venue_current": {
       "as_of": "current (report generation)",
       "by_kind_usd": {
-        "lending": 518368129.7,
-        "dex": 97731841.39,
-        "elsewhere": 51325122381.91,
-        "wallet": 2559895546.86,
-        "other": 2830994359.92,
-        "entity": 3101007697.92,
-        "contract": 370336961.26
+        "lending": 518155142.38,
+        "dex": 98557175.85,
+        "elsewhere": 51316190876.82,
+        "wallet": 2562977939.78,
+        "other": 2852400769.78,
+        "entity": 3088903391.74,
+        "contract": 369381212.49
       },
       "deployed_pct_of_tracked": 1.01,
       "morpho": {
-        "total_collateral_usd": 171564019.13,
-        "total_borrow_usd": 138716755.05,
+        "total_collateral_usd": 171588983.72,
+        "total_borrow_usd": 138741019.56,
         "avg_lltv_pct": 88.1,
         "borrowers": 307,
         "min_health_factor": 0.888,
@@ -3682,20 +3845,19 @@
     ]
   },
   "next_report_metrics": {
-    "note": "These series began recording 2026-07-04 (forward-only, no backfill), so the JULY report will include them as true time-series; they could not be produced for June.",
+    "note": "Genuinely forward-only series (no historical source), recording from 2026-07-04 -> full time-series in the JULY report.",
     "items": [
       {
-        "metric": "Per-reserve month-over-month deltas (supplied USD, supply APY, LTV, LT)",
-        "source": "reserve_state_history / api/reserve-history"
-      },
-      {
-        "metric": "Morpho market trends (per-market LLTV, utilisation, borrow APY, collateral, borrowed)",
-        "source": "morpho_market_history / api/morpho-history"
+        "metric": "Per-reserve Horizon state deltas (supplied USD, supply APY, LTV, LT) month-over-month",
+        "source": "reserve_state_history / api/reserve-history",
+        "why_not_june": "Horizon per-reserve supplied/APY/LTV were only kept as a current snapshot; not stored over June."
       },
       {
         "metric": "Liquidation-risk history (borrower health-factor distribution + min HF over time)",
-        "source": "morpho_risk_history / api/morpho-risk-history"
+        "source": "morpho_risk_history / api/morpho-risk-history",
+        "why_not_june": "Computed from live positions; the Morpho API exposes historical market state but not a historical health-factor distribution."
       }
-    ]
+    ],
+    "note2": "Morpho per-market history (collateral/borrow/utilisation/borrow-APY) is NOT forward-only: it is backfillable from the Morpho API historicalState and is already included for June in section 13."
   }
 }

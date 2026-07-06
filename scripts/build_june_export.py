@@ -11,9 +11,15 @@ CTX = ssl._create_unverified_context()
 
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36'
 
-def gql(q):
-    r = urllib.request.Request(ENVIO, json.dumps({'query': q}).encode(), {'content-type': 'application/json', 'User-Agent': UA})
-    return json.load(urllib.request.urlopen(r, timeout=120, context=CTX))['data']
+def gql(q, _tries=4):
+    import time
+    for i in range(_tries):
+        try:
+            r = urllib.request.Request(ENVIO, json.dumps({'query': q}).encode(), {'content-type': 'application/json', 'User-Agent': UA})
+            return json.load(urllib.request.urlopen(r, timeout=120, context=CTX))['data']
+        except Exception:
+            if i == _tries - 1: raise
+            time.sleep(1.5)
 
 def get(url):
     return json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=120, context=CTX))
@@ -220,10 +226,81 @@ supp_cross = {'as_of': 'current (report generation)',
                          'avg_lltv_pct': round((mor.get('avg_lltv') or 0) * 100, 1), 'borrowers': mh.get('borrowers'),
                          'min_health_factor': round(mh.get('min_hf'), 3) if mh.get('min_hf') is not None else None, 'at_risk_positions': mh.get('at_risk')}}
 
+# ==== SECTION 13: Morpho RWA-collateral market history for June (backfilled from Morpho API historicalState) ====
+def morpho_gql(q):  # via curl (Morpho's CDN 403s python-urllib)
+    out = subprocess.run(['curl', '-s', '--max-time', '90', '-X', 'POST', 'https://blue-api.morpho.org/graphql',
+                          '-H', 'content-type: application/json', '-d', json.dumps({'query': q})], capture_output=True, text=True, timeout=100)
+    return json.loads(out.stdout)
+_opt = f'options:{{startTimestamp:{S},endTimestamp:{E},interval:DAY}}'
+def _ser(pts): return {dstr(p['x']): p['y'] for p in (pts or []) if p.get('y') is not None}
+# Query per market by uniqueKey (a multi-market query exceeds Morpho's complexity cap).
+cmk = get(WORKER + '/api/morpho').get('collateral_markets', [])
+morpho_per_market = []; magg = {}
+for m0 in cmk:
+    mid = m0.get('market_id')
+    if not mid: continue
+    q = (f'{{ markets(first:1, where:{{chainId_in:[1], uniqueKey_in:["{mid}"]}}) {{ items {{ lltv collateralAsset{{symbol}} loanAsset{{symbol}} '
+         f'historicalState {{ collateralAssetsUsd({_opt}){{x y}} borrowAssetsUsd({_opt}){{x y}} utilization({_opt}){{x y}} borrowApy({_opt}){{x y}} }} }} }} }}')
+    try:
+        its = morpho_gql(q)['data']['markets']['items']
+    except Exception:
+        continue
+    if not its: continue
+    m = its[0]; hs = m.get('historicalState') or {}
+    cs, bs, us, aps = _ser(hs.get('collateralAssetsUsd')), _ser(hs.get('borrowAssetsUsd')), _ser(hs.get('utilization')), _ser(hs.get('borrowApy'))
+    jd = sorted(d for d in cs if d.startswith('2026-06'))
+    if not jd: continue
+    d0, d1 = jd[0], jd[-1]
+    morpho_per_market.append({'market': f"{m['collateralAsset']['symbol']}/{m['loanAsset']['symbol']}",
+                              'lltv_pct': round(int(m['lltv']) / 1e18 * 100, 1),
+                              'collateral_jun_start_usd': c2(cs.get(d0)), 'collateral_jun_end_usd': c2(cs.get(d1)),
+                              'borrow_jun_start_usd': c2(bs.get(d0)), 'borrow_jun_end_usd': c2(bs.get(d1)),
+                              'avg_utilization': round(sum(us.get(d, 0) for d in jd) / len(jd), 3),
+                              'borrow_apy_jun_end_pct': round((aps.get(d1) or 0) * 100, 2)})
+    for d in jd:
+        a = magg.setdefault(d, {'c': 0.0, 'b': 0.0}); a['c'] += cs.get(d, 0) or 0; a['b'] += bs.get(d, 0) or 0
+morpho_daily = [{'date': d, 'total_collateral_usd': c2(v['c']), 'total_borrow_usd': c2(v['b'])} for d, v in sorted(magg.items())]
+
+# ==== SECTION 0: cross-venue reconciliation on ONE consistent lens (RWA deployed as collateral) ====
+# This is what makes a "State of RWA composability" claim accurate. NOT fund AUM.
+mor_full = get(WORKER + '/api/morpho')
+WRAP = {'wjaaa': 'JAAA'}  # Morpho wrapped symbol -> Horizon underlying (the cross-venue asset)
+def base_sym(s): return WRAP.get((s or '').lower(), s)
+hz_by = {m['symbol']: (m.get('supplied_usd') or 0) for a, m in meta.items() if not m.get('is_stable') and (m.get('supplied_usd') or 0) > 0}
+mo_by = {}
+for a in mor_full.get('assets', []):
+    c = a.get('collateral_usd') or 0
+    if c > 1e4:
+        k = base_sym(a['label']); mo_by[k] = mo_by.get(k, 0) + c
+recon_assets = []
+for s in sorted(set(hz_by) | set(mo_by), key=lambda s: -(hz_by.get(s, 0) + mo_by.get(s, 0))):
+    h, mo = hz_by.get(s, 0), mo_by.get(s, 0); venues = [v for v, x in [('Aave Horizon', h), ('Morpho', mo)] if x > 0]
+    recon_assets.append({'asset': s, 'horizon_collateral_usd': c2(h), 'morpho_collateral_usd': c2(mo),
+                         'total_deployed_usd': c2(h + mo), 'venues': venues, 'cross_venue': len(venues) > 1})
+hz_tot, mo_tot = sum(hz_by.values()), sum(mo_by.values())
+recon_sector = {}
+for s, h in hz_by.items(): recon_sector[cls([a for a, m in meta.items() if m['symbol'] == s][0])] = recon_sector.get(cls([a for a, m in meta.items() if m['symbol'] == s][0]), 0) + h
+for a in mor_full.get('assets', []):
+    c = a.get('collateral_usd') or 0
+    if c > 1e4: recon_sector[a['asset_class']] = recon_sector.get(a['asset_class'], 0) + c
+section0 = {
+    'lens': 'RWA deployed as COLLATERAL in a lending venue (supplied on Horizon / collateral on Morpho). This is the composability metric.',
+    'rwa_collateral_deployed_usd': {'aave_horizon': c2(hz_tot), 'morpho': c2(mo_tot), 'both_venues_total': c2(hz_tot + mo_tot)},
+    'cross_venue_assets': [r['asset'] for r in recon_assets if r['cross_venue']],
+    'by_asset': recon_assets,
+    'by_sector_deployed_usd': [{'sector': k, 'usd': c2(v)} for k, v in sorted(recon_sector.items(), key=lambda x: -x[1])],
+    'context_not_deployment': {'addressable_universe_fund_aum_usd': c2(snap['totals']['rwa_aum']),
+                               'warning': 'Fund AUM (section 3 rwa_aum, ~$5.5B) is the addressable universe of Horizon-listed assets, NOT venue deployment. Do NOT compare it to Morpho collateral or sum it with venue figures.'},
+    'notes': ['Only ~$356M of RWA is actually deployed as collateral across both venues, vs a ~$5.5B addressable universe.',
+              'JAAA (Horizon) and wJAAA (Morpho) are the SAME underlying asset used across both venues, counted once per venue and flagged cross_venue (not double-summed as distinct value).',
+              'The two venues host largely different assets: Horizon skews US Treasuries + JAAA; Morpho skews Private Credit (syrupUSDC/mF-ONE) + Gold.'],
+}
+
 # ---- assemble ----
 doc = {
     'meta': {
-        'report': 'RWA Terminal - Aave Horizon - June 2026', 'period': {'start': '2026-06-01', 'end': '2026-06-30'},
+        'report': 'RWA Terminal - June 2026 (Aave Horizon + Morpho)', 'period': {'start': '2026-06-01', 'end': '2026-06-30'},
+        'scope': 'Sections 1-11 are Aave Horizon (the event indexer covers Horizon only). Section 12 and 13 are cross-venue: s12 = current-state deployment across Horizon/Morpho/DEX/wallets, s13 = Morpho RWA-collateral market history for June (backfilled from the Morpho API). Morpho flows/holders history is not available for the period (Morpho is not in our event indexer).',
         'generated_utc': dstr(int(datetime.now(timezone.utc).timestamp())),
         'sources': {'flows_and_holders': 'Envio HyperIndex (Horizon pool events)',
                     'market_and_asset_history': 'Neon Postgres (5-min cron snapshots)',
@@ -238,6 +315,7 @@ doc = {
             "Two different active-address metrics: section 3 active_addresses is cumulative distinct users since genesis (the terminal's headline); section 6 active_addresses is distinct users who acted on that specific day.",
         ],
     },
+    'section0_cross_venue_reconciliation': section0,
     'section1_daily_flows_per_reserve': {'daily': sec1_daily, 'reserve_net_june': sec1_reserve_net, 'sector_net_june': sec1_sector},
     'section2_top10_flow_events': sec2,
     'section3_daily_market_history': sec3,
@@ -253,13 +331,18 @@ doc = {
         's11_issuance_vs_redemption': supp_iss,
         's12_cross_venue_current': supp_cross,
     },
+    'section13_morpho_market_history_june': {
+        'note': 'Morpho RWA-collateral markets over June, backfilled from the Morpho API historicalState (daily). LLTV is the current fixed value per market. Makes the report whole-dashboard for market state; Morpho flows/holders history is still unavailable for June.',
+        'per_market_june': morpho_per_market,
+        'aggregate_daily': morpho_daily,
+    },
     'next_report_metrics': {
-        'note': 'These series began recording 2026-07-04 (forward-only, no backfill), so the JULY report will include them as true time-series; they could not be produced for June.',
+        'note': 'Genuinely forward-only series (no historical source), recording from 2026-07-04 -> full time-series in the JULY report.',
         'items': [
-            {'metric': 'Per-reserve month-over-month deltas (supplied USD, supply APY, LTV, LT)', 'source': 'reserve_state_history / api/reserve-history'},
-            {'metric': 'Morpho market trends (per-market LLTV, utilisation, borrow APY, collateral, borrowed)', 'source': 'morpho_market_history / api/morpho-history'},
-            {'metric': 'Liquidation-risk history (borrower health-factor distribution + min HF over time)', 'source': 'morpho_risk_history / api/morpho-risk-history'},
+            {'metric': 'Per-reserve Horizon state deltas (supplied USD, supply APY, LTV, LT) month-over-month', 'source': 'reserve_state_history / api/reserve-history', 'why_not_june': 'Horizon per-reserve supplied/APY/LTV were only kept as a current snapshot; not stored over June.'},
+            {'metric': 'Liquidation-risk history (borrower health-factor distribution + min HF over time)', 'source': 'morpho_risk_history / api/morpho-risk-history', 'why_not_june': 'Computed from live positions; the Morpho API exposes historical market state but not a historical health-factor distribution.'},
         ],
+        'note2': 'Morpho per-market history (collateral/borrow/utilisation/borrow-APY) is NOT forward-only: it is backfillable from the Morpho API historicalState and is already included for June in section 13.',
     },
 }
 import os
