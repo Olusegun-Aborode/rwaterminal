@@ -5,7 +5,7 @@
       "start": "2026-06-01",
       "end": "2026-06-30"
     },
-    "scope": "Sections 1-11 are Aave Horizon (the event indexer covers Horizon only). Section 12 and 13 are cross-venue: s12 = current-state deployment across Horizon/Morpho/DEX/wallets, s13 = Morpho RWA-collateral market history for June (backfilled from the Morpho API). Morpho flows/holders history is not available for the period (Morpho is not in our event indexer).",
+    "scope": "Sections 1-11 are Aave Horizon (the event indexer covers Horizon only). Sections 12-14 are cross-venue: s12 = current-state deployment across Horizon/Morpho/DEX/wallets; s13 = Morpho RWA-collateral market history for June (backfilled from the Morpho API historicalState); s14 = Morpho RWA flows for June (backfilled from the Morpho marketTransactions API) - the direct Horizon-parity analog of sections 1/2/6. Morpho per-token holder history over June is still unavailable (Morpho is not in our event indexer); only start-vs-end holder counts (current) are available for Morpho assets.",
     "generated_utc": "2026-07-06",
     "sources": {
       "flows_and_holders": "Envio HyperIndex (Horizon pool events)",
@@ -26,8 +26,8 @@
     "lens": "RWA deployed as COLLATERAL in a lending venue (supplied on Horizon / collateral on Morpho). This is the composability metric.",
     "rwa_collateral_deployed_usd": {
       "aave_horizon": 184024059.75,
-      "morpho": 171588983.72,
-      "both_venues_total": 355613043.47
+      "morpho": 171592835.91,
+      "both_venues_total": 355616895.66
     },
     "cross_venue_assets": [
       "JAAA"
@@ -36,8 +36,8 @@
       {
         "asset": "syrupUSDC",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 138433928.49,
-        "total_deployed_usd": 138433928.49,
+        "morpho_collateral_usd": 138442892.58,
+        "total_deployed_usd": 138442892.58,
         "venues": [
           "Morpho"
         ],
@@ -107,8 +107,8 @@
       {
         "asset": "XAUt",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 6008772.77,
-        "total_deployed_usd": 6008772.77,
+        "morpho_collateral_usd": 6003760.51,
+        "total_deployed_usd": 6003760.51,
         "venues": [
           "Morpho"
         ],
@@ -127,8 +127,8 @@
       {
         "asset": "muBOND",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 273158.28,
-        "total_deployed_usd": 273158.28,
+        "morpho_collateral_usd": 273176.89,
+        "total_deployed_usd": 273176.89,
         "venues": [
           "Morpho"
         ],
@@ -137,8 +137,8 @@
       {
         "asset": "PAXG",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 220199.72,
-        "total_deployed_usd": 220199.72,
+        "morpho_collateral_usd": 220081.48,
+        "total_deployed_usd": 220081.48,
         "venues": [
           "Morpho"
         ],
@@ -148,7 +148,7 @@
     "by_sector_deployed_usd": [
       {
         "sector": "Private Credit",
-        "usd": 184942595.78
+        "usd": 184951559.86
       },
       {
         "sector": "US Treasuries",
@@ -164,7 +164,7 @@
       },
       {
         "sector": "Commodities (Gold)",
-        "usd": 6228972.5
+        "usd": 6223842.0
       },
       {
         "sector": "Govt Bonds (EU)",
@@ -172,7 +172,7 @@
       },
       {
         "sector": "Bonds",
-        "usd": 273158.28
+        "usd": 273176.89
       }
     ],
     "context_not_deployment": {
@@ -2856,7 +2856,7 @@
         "token_supply": 59781659.09
       },
       "current": {
-        "supplied_usd": 59803910.79,
+        "supplied_usd": 59803976.57,
         "supply_apy_pct": 2.036,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -2879,7 +2879,7 @@
         "token_supply": 7535149.54
       },
       "current": {
-        "supplied_usd": 6095916.82,
+        "supplied_usd": 6095925.84,
         "supply_apy_pct": 2.739,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -2902,7 +2902,7 @@
         "token_supply": 184743464.31
       },
       "current": {
-        "supplied_usd": 150933618.42,
+        "supplied_usd": 150933801.57,
         "supply_apy_pct": 2.246,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -3558,18 +3558,18 @@
     "s12_cross_venue_current": {
       "as_of": "current (report generation)",
       "by_kind_usd": {
-        "lending": 518155142.38,
-        "dex": 98557175.85,
-        "elsewhere": 51316190876.82,
-        "wallet": 2562977939.78,
-        "other": 2852400769.78,
-        "entity": 3088903391.74,
-        "contract": 369381212.49
+        "lending": 517612701.13,
+        "dex": 99544953.39,
+        "elsewhere": 51313784741.46,
+        "wallet": 2560472398.98,
+        "other": 2847003021.0,
+        "entity": 3087761800.56,
+        "contract": 369059156.1
       },
-      "deployed_pct_of_tracked": 1.01,
+      "deployed_pct_of_tracked": 1.02,
       "morpho": {
-        "total_collateral_usd": 171588983.72,
-        "total_borrow_usd": 138741019.56,
+        "total_collateral_usd": 171592835.91,
+        "total_borrow_usd": 138752859.47,
         "avg_lltv_pct": 88.1,
         "borrowers": 307,
         "min_health_factor": 0.888,
@@ -3578,7 +3578,7 @@
     }
   },
   "section13_morpho_market_history_june": {
-    "note": "Morpho RWA-collateral markets over June, backfilled from the Morpho API historicalState (daily). LLTV is the current fixed value per market. Makes the report whole-dashboard for market state; Morpho flows/holders history is still unavailable for June.",
+    "note": "Morpho RWA-collateral markets over June, backfilled from the Morpho API historicalState (daily). LLTV is the current fixed value per market. This is Morpho market STATE; per-transaction flows are in section 14.",
     "per_market_june": [
       {
         "market": "syrupUSDC/PYUSD",
@@ -3843,6 +3843,5479 @@
         "total_borrow_usd": 136258638.94
       }
     ]
+  },
+  "section14_morpho_flows_june": {
+    "note": "Morpho RWA flows over June, backfilled from the Morpho marketTransactions API. This is the direct Horizon-parity analog of sections 1 (daily flows), 2 (top events) and 6 (active addresses). Flow types: collateral_deposit/withdraw = the RWA moving in/out as collateral (the composability flow, analog of Horizon supply/withdraw); borrow/repay = borrowing the loan asset against RWA; loan_supply/withdraw = lenders providing/removing loan-asset liquidity (no Horizon RWA-side equivalent). USD priced at current price, same basis as Horizon flows.",
+    "daily_flows_per_market": [
+      {
+        "date": "2026-06-01",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 5,
+          "usd": 2242.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 13849.95
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 5887.21
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 66896.87
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 19644.33
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 31715.79
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 864.71
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 72945.93
+        },
+        "repay": {
+          "count": 5,
+          "usd": 40819.89
+        },
+        "loan_supply": {
+          "count": 37,
+          "usd": 1370498.08
+        },
+        "loan_withdraw": {
+          "count": 19,
+          "usd": 930021.71
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 54,
+          "usd": 6213731.87
+        },
+        "loan_withdraw": {
+          "count": 50,
+          "usd": 5422261.34
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 600504.53
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 499876.21
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 11,
+          "usd": 953607.19
+        },
+        "loan_withdraw": {
+          "count": 8,
+          "usd": 250842.12
+        }
+      },
+      {
+        "date": "2026-06-01",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 4797119.82
+        },
+        "collateral_withdraw": {
+          "count": 9,
+          "usd": 5488073.45
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 4184455.82
+        },
+        "repay": {
+          "count": 10,
+          "usd": 4911263.89
+        },
+        "loan_supply": {
+          "count": 21,
+          "usd": 651504.87
+        },
+        "loan_withdraw": {
+          "count": 18,
+          "usd": 25917.51
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 399761.79
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 5,
+          "usd": 1532.74
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 2682.23
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 1001.95
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 20997.09
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 88158.95
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 9,
+          "usd": 7263.95
+        },
+        "collateral_withdraw": {
+          "count": 19,
+          "usd": 540692.09
+        },
+        "borrow": {
+          "count": 9,
+          "usd": 11003.65
+        },
+        "repay": {
+          "count": 16,
+          "usd": 146780.37
+        },
+        "loan_supply": {
+          "count": 31,
+          "usd": 1681725.2
+        },
+        "loan_withdraw": {
+          "count": 16,
+          "usd": 1696798.06
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 772320.77
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 459886.11
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 44,
+          "usd": 5291680.86
+        },
+        "loan_withdraw": {
+          "count": 45,
+          "usd": 4984056.65
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 84281.34
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 79980.19
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 9,
+          "usd": 748637.86
+        },
+        "loan_withdraw": {
+          "count": 10,
+          "usd": 904305.2
+        }
+      },
+      {
+        "date": "2026-06-02",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 10,
+          "usd": 4098412.15
+        },
+        "collateral_withdraw": {
+          "count": 6,
+          "usd": 2743468.53
+        },
+        "borrow": {
+          "count": 9,
+          "usd": 2836964.16
+        },
+        "repay": {
+          "count": 5,
+          "usd": 1475234.68
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 7936438.71
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 8230528.48
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 49769.91
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 6,
+          "usd": 10525.79
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 579144.75
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 10488.17
+        },
+        "repay": {
+          "count": 1,
+          "usd": 504926.33
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 12576.59
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 559983.94
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 1148.76
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 373.31
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 6,
+          "usd": 218193.66
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 211481.78
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 1246439.49
+        },
+        "collateral_withdraw": {
+          "count": 7,
+          "usd": 1321438.17
+        },
+        "borrow": {
+          "count": 8,
+          "usd": 967143.41
+        },
+        "repay": {
+          "count": 11,
+          "usd": 898338.47
+        },
+        "loan_supply": {
+          "count": 18,
+          "usd": 1851355.62
+        },
+        "loan_withdraw": {
+          "count": 16,
+          "usd": 2233184.47
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 621467.2
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 399900.96
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 56,
+          "usd": 27198232.37
+        },
+        "loan_withdraw": {
+          "count": 54,
+          "usd": 26888234.17
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 1264220.07
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 984475.72
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 17,
+          "usd": 1913584.66
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 1675389.21
+        }
+      },
+      {
+        "date": "2026-06-03",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 823613.05
+        },
+        "collateral_withdraw": {
+          "count": 7,
+          "usd": 3906327.22
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 720773.54
+        },
+        "repay": {
+          "count": 7,
+          "usd": 2737775.22
+        },
+        "loan_supply": {
+          "count": 15,
+          "usd": 3337552.01
+        },
+        "loan_withdraw": {
+          "count": 14,
+          "usd": 2132736.85
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 100349.21
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 12,
+          "usd": 2011.2
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 2283.35
+        },
+        "collateral_withdraw": {
+          "count": 5,
+          "usd": 3530.53
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 2002.31
+        },
+        "repay": {
+          "count": 4,
+          "usd": 2476.11
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 9895.21
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 9189.14
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 2265.75
+        },
+        "collateral_withdraw": {
+          "count": 5,
+          "usd": 138142.92
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 849.07
+        },
+        "repay": {
+          "count": 8,
+          "usd": 103889.3
+        },
+        "loan_supply": {
+          "count": 47,
+          "usd": 2860370.9
+        },
+        "loan_withdraw": {
+          "count": 31,
+          "usd": 2985766.48
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 60,
+          "usd": 12600214.07
+        },
+        "loan_withdraw": {
+          "count": 60,
+          "usd": 13629500.01
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 1641051.0
+        },
+        "loan_withdraw": {
+          "count": 19,
+          "usd": 752842.04
+        }
+      },
+      {
+        "date": "2026-06-04",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 7518722.19
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 6636891.05
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1682.05
+        },
+        "loan_supply": {
+          "count": 15,
+          "usd": 6486834.01
+        },
+        "loan_withdraw": {
+          "count": 7,
+          "usd": 2392264.82
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 0.01
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 34507.04
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 15,
+          "usd": 1070.76
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 11404.35
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 19925.08
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 87462.97
+        },
+        "collateral_withdraw": {
+          "count": 11,
+          "usd": 215793.24
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 87903.97
+        },
+        "repay": {
+          "count": 12,
+          "usd": 153824.91
+        },
+        "loan_supply": {
+          "count": 39,
+          "usd": 628268.56
+        },
+        "loan_withdraw": {
+          "count": 26,
+          "usd": 656708.8
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 621467.2
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 400051.56
+        },
+        "loan_supply": {
+          "count": 99,
+          "usd": 21271656.2
+        },
+        "loan_withdraw": {
+          "count": 96,
+          "usd": 21808315.06
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 8,
+          "usd": 389494.47
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 354652.3
+        }
+      },
+      {
+        "date": "2026-06-05",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 2574747.87
+        },
+        "collateral_withdraw": {
+          "count": 10,
+          "usd": 6677437.09
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 2331549.83
+        },
+        "repay": {
+          "count": 10,
+          "usd": 5969646.7
+        },
+        "loan_supply": {
+          "count": 12,
+          "usd": 2767664.44
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 3444795.21
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 2919.46
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2.47
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 26130.9
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 6,
+          "usd": 502.97
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 30.81
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 43116.61
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 16681.06
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 41724.78
+        },
+        "collateral_withdraw": {
+          "count": 18,
+          "usd": 488356.66
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 215.61
+        },
+        "repay": {
+          "count": 18,
+          "usd": 294430.12
+        },
+        "loan_supply": {
+          "count": 30,
+          "usd": 1089167.58
+        },
+        "loan_withdraw": {
+          "count": 26,
+          "usd": 1316576.87
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 31,
+          "usd": 11203880.97
+        },
+        "loan_withdraw": {
+          "count": 35,
+          "usd": 9601446.93
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 9,
+          "usd": 419891.1
+        },
+        "loan_withdraw": {
+          "count": 8,
+          "usd": 467019.77
+        }
+      },
+      {
+        "date": "2026-06-06",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 2896184.7
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 4898680.19
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 2969105.14
+        },
+        "repay": {
+          "count": 5,
+          "usd": 5757550.2
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 1231.44
+        },
+        "loan_withdraw": {
+          "count": 8,
+          "usd": 6667127.36
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 73915.56
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 144.41
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 99.95
+        },
+        "repay": {
+          "count": 1,
+          "usd": 5493.88
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 33116.48
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 49789.55
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 6,
+          "usd": 23531.47
+        },
+        "collateral_withdraw": {
+          "count": 7,
+          "usd": 168223.35
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 7687.38
+        },
+        "repay": {
+          "count": 5,
+          "usd": 66001.27
+        },
+        "loan_supply": {
+          "count": 16,
+          "usd": 1618243.86
+        },
+        "loan_withdraw": {
+          "count": 14,
+          "usd": 1047298.26
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 6,
+          "usd": 530703.95
+        },
+        "loan_withdraw": {
+          "count": 16,
+          "usd": 771582.82
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 260302.0
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 251620.13
+        }
+      },
+      {
+        "date": "2026-06-07",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 753738.64
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 3889645.82
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 676156.69
+        },
+        "repay": {
+          "count": 2,
+          "usd": 1959866.24
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 1150279.28
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 2190272.19
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 7,
+          "usd": 19332.55
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 2189.53
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 19990.09
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 25781.72
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 7,
+          "usd": 73926.48
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 11771.55
+        },
+        "repay": {
+          "count": 1,
+          "usd": 99.89
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 1810996.55
+        },
+        "loan_withdraw": {
+          "count": 25,
+          "usd": 2701143.15
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 399900.96
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 32,
+          "usd": 8708782.57
+        },
+        "loan_withdraw": {
+          "count": 38,
+          "usd": 8586716.36
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 12,
+          "usd": 510273.22
+        },
+        "loan_withdraw": {
+          "count": 8,
+          "usd": 359148.73
+        }
+      },
+      {
+        "date": "2026-06-08",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 2259281.31
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 2440906.86
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 2033009.89
+        },
+        "repay": {
+          "count": 3,
+          "usd": 2194363.38
+        },
+        "loan_supply": {
+          "count": 34,
+          "usd": 45448346.91
+        },
+        "loan_withdraw": {
+          "count": 32,
+          "usd": 45877176.49
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 6,
+          "usd": 29596.29
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 390.81
+        },
+        "collateral_withdraw": {
+          "count": 6,
+          "usd": 128459.55
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 149.84
+        },
+        "repay": {
+          "count": 6,
+          "usd": 53776.3
+        },
+        "loan_supply": {
+          "count": 40,
+          "usd": 2025147.08
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 1808116.97
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 27582.88
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 496.32
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 48,
+          "usd": 6956146.56
+        },
+        "loan_withdraw": {
+          "count": 49,
+          "usd": 7959159.82
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 8,
+          "usd": 65497.01
+        },
+        "loan_withdraw": {
+          "count": 8,
+          "usd": 181519.28
+        }
+      },
+      {
+        "date": "2026-06-09",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 782663.6
+        },
+        "collateral_withdraw": {
+          "count": 9,
+          "usd": 3305963.36
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 214967.26
+        },
+        "repay": {
+          "count": 9,
+          "usd": 2932673.79
+        },
+        "loan_supply": {
+          "count": 30,
+          "usd": 459799.07
+        },
+        "loan_withdraw": {
+          "count": 21,
+          "usd": 3003053.64
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 1515.97
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 912.06
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 21.91
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 20.06
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 9,
+          "usd": 301729.96
+        },
+        "collateral_withdraw": {
+          "count": 16,
+          "usd": 2957662.92
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 114676.09
+        },
+        "repay": {
+          "count": 16,
+          "usd": 1873621.39
+        },
+        "loan_supply": {
+          "count": 35,
+          "usd": 3586352.6
+        },
+        "loan_withdraw": {
+          "count": 28,
+          "usd": 5461535.05
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 334917.06
+        },
+        "loan_supply": {
+          "count": 44,
+          "usd": 2657501.8
+        },
+        "loan_withdraw": {
+          "count": 41,
+          "usd": 2818979.62
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 809038.78
+        },
+        "loan_withdraw": {
+          "count": 9,
+          "usd": 572433.53
+        }
+      },
+      {
+        "date": "2026-06-10",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 894840.08
+        },
+        "collateral_withdraw": {
+          "count": 5,
+          "usd": 3757453.99
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 783973.62
+        },
+        "repay": {
+          "count": 5,
+          "usd": 3374929.89
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 55582.34
+        },
+        "loan_withdraw": {
+          "count": 24,
+          "usd": 3138180.34
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 11440.61
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 11413.71
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 30442.33
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 1307.55
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 31984.86
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 36327.81
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 9,
+          "usd": 50185.57
+        },
+        "collateral_withdraw": {
+          "count": 6,
+          "usd": 120033.44
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 28768.57
+        },
+        "repay": {
+          "count": 9,
+          "usd": 117109.93
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 280594.22
+        },
+        "loan_withdraw": {
+          "count": 16,
+          "usd": 469645.82
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 32547.8
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 299925.72
+        },
+        "repay": {
+          "count": 1,
+          "usd": 25112.19
+        },
+        "loan_supply": {
+          "count": 35,
+          "usd": 1503523.51
+        },
+        "loan_withdraw": {
+          "count": 44,
+          "usd": 1304110.64
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 115886.84
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 89977.72
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 1639544.95
+        },
+        "loan_withdraw": {
+          "count": 19,
+          "usd": 754058.64
+        }
+      },
+      {
+        "date": "2026-06-11",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 4011567.91
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 3160996.54
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 3506402.94
+        },
+        "repay": {
+          "count": 4,
+          "usd": 3153113.3
+        },
+        "loan_supply": {
+          "count": 7,
+          "usd": 1680478.17
+        },
+        "loan_withdraw": {
+          "count": 12,
+          "usd": 1388138.9
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 7,
+          "usd": 553.66
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 3757.96
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 41424.39
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 18401.97
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 499.8
+        },
+        "repay": {
+          "count": 1,
+          "usd": 7011.12
+        },
+        "loan_supply": {
+          "count": 27,
+          "usd": 231738.5
+        },
+        "loan_withdraw": {
+          "count": 19,
+          "usd": 203062.67
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 2729232.08
+        },
+        "loan_supply": {
+          "count": 27,
+          "usd": 2746646.7
+        },
+        "loan_withdraw": {
+          "count": 34,
+          "usd": 5237223.14
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 52,
+          "usd": 4912200.08
+        },
+        "loan_withdraw": {
+          "count": 46,
+          "usd": 6064334.51
+        }
+      },
+      {
+        "date": "2026-06-12",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 1183652.39
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 49511.47
+        },
+        "repay": {
+          "count": 2,
+          "usd": 1052793.37
+        },
+        "loan_supply": {
+          "count": 17,
+          "usd": 123484.97
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 1149169.31
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 2122.59
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 724.08
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 3198.15
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 3268.96
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 820.69
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 42667.13
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 19052.31
+        },
+        "repay": {
+          "count": 1,
+          "usd": 449.93
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 259382.8
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 183063.28
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 1698879.98
+        },
+        "loan_withdraw": {
+          "count": 21,
+          "usd": 2080153.58
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 15,
+          "usd": 1840718.04
+        },
+        "loan_withdraw": {
+          "count": 13,
+          "usd": 1778183.04
+        }
+      },
+      {
+        "date": "2026-06-13",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 1282141.82
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 1140428.11
+        },
+        "loan_supply": {
+          "count": 26,
+          "usd": 4298.64
+        },
+        "loan_withdraw": {
+          "count": 38,
+          "usd": 634205.98
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 571.87
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 76765.64
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 119564.49
+        },
+        "loan_supply": {
+          "count": 14,
+          "usd": 154296.04
+        },
+        "loan_withdraw": {
+          "count": 17,
+          "usd": 285879.9
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 847864.12
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 674688.5
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 30,
+          "usd": 2513214.61
+        },
+        "loan_withdraw": {
+          "count": 29,
+          "usd": 1941180.0
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 17,
+          "usd": 915783.37
+        },
+        "loan_withdraw": {
+          "count": 5,
+          "usd": 736408.85
+        }
+      },
+      {
+        "date": "2026-06-14",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 6,
+          "usd": 24566.02
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 31803.26
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 6,
+          "usd": 201953.09
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 4812.79
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 8,
+          "usd": 11245.2
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 10196.5
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 10755.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 7976.81
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 172.93
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 2112.64
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 6792.63
+        },
+        "repay": {
+          "count": 1,
+          "usd": 1.37
+        },
+        "loan_supply": {
+          "count": 25,
+          "usd": 6307944.77
+        },
+        "loan_withdraw": {
+          "count": 20,
+          "usd": 1208699.62
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 38,
+          "usd": 1458814.52
+        },
+        "loan_withdraw": {
+          "count": 40,
+          "usd": 1415372.79
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 934789.98
+        },
+        "loan_withdraw": {
+          "count": 6,
+          "usd": 620593.05
+        }
+      },
+      {
+        "date": "2026-06-15",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 251179.9
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 212750.88
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 5,
+          "usd": 163334.36
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 50044.13
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 42442.95
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 155.11
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 3694.6
+        },
+        "collateral_withdraw": {
+          "count": 6,
+          "usd": 22626.91
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 3296.4
+        },
+        "repay": {
+          "count": 3,
+          "usd": 10054.87
+        },
+        "loan_supply": {
+          "count": 6,
+          "usd": 481118.43
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 511762.95
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 315716.51
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 194951.72
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 22,
+          "usd": 3084421.68
+        },
+        "loan_withdraw": {
+          "count": 18,
+          "usd": 2032328.16
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 16,
+          "usd": 704715.16
+        },
+        "loan_withdraw": {
+          "count": 12,
+          "usd": 1199252.96
+        }
+      },
+      {
+        "date": "2026-06-16",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 1040954.73
+        },
+        "collateral_withdraw": {
+          "count": 12,
+          "usd": 5248265.83
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 881451.84
+        },
+        "repay": {
+          "count": 10,
+          "usd": 4310941.21
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 1468.4
+        },
+        "loan_withdraw": {
+          "count": 6,
+          "usd": 4113446.5
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 2179.73
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 3122888.39
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 2613180.72
+        },
+        "loan_supply": {
+          "count": 7,
+          "usd": 232117.71
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 3130014.6
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 38597.02
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 84296.53
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 0.99
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 49378.55
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 1625746.76
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 2530230.75
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 2459390.93
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 3370423.56
+        },
+        "loan_withdraw": {
+          "count": 15,
+          "usd": 589797.22
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 200168.18
+        },
+        "collateral_withdraw": {
+          "count": 6,
+          "usd": 14268601.55
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 149962.86
+        },
+        "repay": {
+          "count": 6,
+          "usd": 11573524.69
+        },
+        "loan_supply": {
+          "count": 11,
+          "usd": 1123275.15
+        },
+        "loan_withdraw": {
+          "count": 28,
+          "usd": 13344315.63
+        }
+      },
+      {
+        "date": "2026-06-17",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 140796.14
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 4036706.83
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 119981.89
+        },
+        "repay": {
+          "count": 4,
+          "usd": 3518602.53
+        },
+        "loan_supply": {
+          "count": 11,
+          "usd": 75956152.97
+        },
+        "loan_withdraw": {
+          "count": 15,
+          "usd": 79159060.81
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 2842.86
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 9,
+          "usd": 338.95
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 1177.42
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 735.48
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 1379.28
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 5993.45
+        },
+        "repay": {
+          "count": 1,
+          "usd": 749.27
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 184.46
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 3011281.35
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 31,
+          "usd": 3144236.61
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 3085764.01
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "muBOND/USDC",
+        "collateral_asset": "muBOND",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 1001.51
+        }
+      },
+      {
+        "date": "2026-06-18",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 4008702.13
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 277299.11
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 3000695.35
+        },
+        "repay": {
+          "count": 4,
+          "usd": 264302.47
+        },
+        "loan_supply": {
+          "count": 16,
+          "usd": 4976976.77
+        },
+        "loan_withdraw": {
+          "count": 15,
+          "usd": 1640838.9
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 2140.82
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 201.29
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 450.74
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 49759.55
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 149.93
+        },
+        "repay": {
+          "count": 1,
+          "usd": 44943.72
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 29985.41
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 18814.6
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 12516.1
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 2837.42
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 585691.49
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 4618650.89
+        },
+        "loan_withdraw": {
+          "count": 40,
+          "usd": 5039930.27
+        }
+      },
+      {
+        "date": "2026-06-19",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 6366251.39
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 3,
+          "usd": 5716651.68
+        },
+        "loan_supply": {
+          "count": 14,
+          "usd": 4156.91
+        },
+        "loan_withdraw": {
+          "count": 15,
+          "usd": 6171607.42
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 354.77
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 59970.26
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 30.46
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 12178.77
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 23,
+          "usd": 2119950.59
+        },
+        "loan_withdraw": {
+          "count": 23,
+          "usd": 2515675.86
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 25,
+          "usd": 2592193.87
+        },
+        "loan_withdraw": {
+          "count": 41,
+          "usd": 2932140.62
+        }
+      },
+      {
+        "date": "2026-06-20",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 13,
+          "usd": 565359.9
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 99674.41
+        },
+        "borrow": {
+          "count": 14,
+          "usd": 526114.19
+        },
+        "repay": {
+          "count": 1,
+          "usd": 89388.2
+        },
+        "loan_supply": {
+          "count": 11,
+          "usd": 74002.48
+        },
+        "loan_withdraw": {
+          "count": 11,
+          "usd": 26172.91
+        }
+      },
+      {
+        "date": "2026-06-21",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 829.33
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 319.84
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 19993.11
+        }
+      },
+      {
+        "date": "2026-06-21",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 58822.64
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 216238.46
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 29967.26
+        },
+        "repay": {
+          "count": 3,
+          "usd": 44438.1
+        },
+        "loan_supply": {
+          "count": 17,
+          "usd": 393671.22
+        },
+        "loan_withdraw": {
+          "count": 10,
+          "usd": 462596.28
+        }
+      },
+      {
+        "date": "2026-06-21",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 1517054.2
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 1210657.05
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 22,
+          "usd": 2663212.78
+        },
+        "loan_withdraw": {
+          "count": 40,
+          "usd": 1279719.24
+        }
+      },
+      {
+        "date": "2026-06-21",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 944909.05
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 130236.71
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 838218.63
+        },
+        "repay": {
+          "count": 1,
+          "usd": 114983.17
+        },
+        "loan_supply": {
+          "count": 8,
+          "usd": 83508.1
+        },
+        "loan_withdraw": {
+          "count": 6,
+          "usd": 86752.18
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 611.8
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 74.4
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 289.97
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 1298.58
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 990735.97
+        },
+        "loan_withdraw": {
+          "count": 17,
+          "usd": 971661.4
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 5,
+          "usd": 2754269.55
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 46,
+          "usd": 6766806.35
+        },
+        "loan_withdraw": {
+          "count": 48,
+          "usd": 3501341.73
+        }
+      },
+      {
+        "date": "2026-06-22",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 9,
+          "usd": 8844600.9
+        },
+        "collateral_withdraw": {
+          "count": 16,
+          "usd": 12637507.22
+        },
+        "borrow": {
+          "count": 9,
+          "usd": 7650547.09
+        },
+        "repay": {
+          "count": 14,
+          "usd": 10856402.45
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 2058152.35
+        },
+        "loan_withdraw": {
+          "count": 14,
+          "usd": 5746491.29
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 5256.94
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 95.91
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 20373.13
+        },
+        "borrow": {
+          "count": 2,
+          "usd": 1999.01
+        },
+        "repay": {
+          "count": 1,
+          "usd": 8309.29
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 8,
+          "usd": 146818.53
+        },
+        "collateral_withdraw": {
+          "count": 8,
+          "usd": 7207.34
+        },
+        "borrow": {
+          "count": 8,
+          "usd": 99648.19
+        },
+        "repay": {
+          "count": 10,
+          "usd": 4516.28
+        },
+        "loan_supply": {
+          "count": 13,
+          "usd": 753434.89
+        },
+        "loan_withdraw": {
+          "count": 11,
+          "usd": 346598.95
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 10585428.48
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 4312257.35
+        },
+        "loan_supply": {
+          "count": 34,
+          "usd": 4798001.93
+        },
+        "loan_withdraw": {
+          "count": 52,
+          "usd": 9918911.72
+        }
+      },
+      {
+        "date": "2026-06-23",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 219841.04
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 160250.13
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 126990.9
+        },
+        "repay": {
+          "count": 1,
+          "usd": 144979.25
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 588812.96
+        },
+        "loan_withdraw": {
+          "count": 15,
+          "usd": 631379.14
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 24090.29
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 22827.41
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 25997.6
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 179.11
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 12.9
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 999.5
+        },
+        "repay": {
+          "count": 3,
+          "usd": 11.56
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 9036.44
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 5,
+          "usd": 20860.19
+        },
+        "collateral_withdraw": {
+          "count": 12,
+          "usd": 733485.66
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 2397.38
+        },
+        "repay": {
+          "count": 14,
+          "usd": 466117.62
+        },
+        "loan_supply": {
+          "count": 7,
+          "usd": 32359.05
+        },
+        "loan_withdraw": {
+          "count": 7,
+          "usd": 617530.7
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 15,
+          "usd": 1692008.65
+        },
+        "loan_withdraw": {
+          "count": 30,
+          "usd": 1430319.2
+        }
+      },
+      {
+        "date": "2026-06-24",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 127052.44
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 931686.78
+        },
+        "borrow": {
+          "count": 6,
+          "usd": 282316.75
+        },
+        "repay": {
+          "count": 4,
+          "usd": 691744.16
+        },
+        "loan_supply": {
+          "count": 20,
+          "usd": 1129123.83
+        },
+        "loan_withdraw": {
+          "count": 19,
+          "usd": 1573917.75
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 365.99
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 219092.57
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 131714.47
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 132397.77
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 1419.96
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 222322.6
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 404.56
+        },
+        "repay": {
+          "count": 2,
+          "usd": 132075.31
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 143122.98
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 36961.07
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 113628.35
+        },
+        "loan_supply": {
+          "count": 26,
+          "usd": 1986195.97
+        },
+        "loan_withdraw": {
+          "count": 57,
+          "usd": 2559474.93
+        }
+      },
+      {
+        "date": "2026-06-25",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 231900.19
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 370341.58
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 205797.0
+        },
+        "repay": {
+          "count": 2,
+          "usd": 327955.1
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 87534.84
+        },
+        "loan_withdraw": {
+          "count": 11,
+          "usd": 83213.36
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 3186.58
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 70120.09
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 10.01
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 5,
+          "usd": 859.96
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 40594.58
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 1401.64
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 258.69
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 694.24
+        },
+        "repay": {
+          "count": 2,
+          "usd": 887.18
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 10028.47
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 79980.19
+        },
+        "repay": {
+          "count": 2,
+          "usd": 563962.96
+        },
+        "loan_supply": {
+          "count": 24,
+          "usd": 2294689.41
+        },
+        "loan_withdraw": {
+          "count": 78,
+          "usd": 2843413.34
+        }
+      },
+      {
+        "date": "2026-06-26",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 12,
+          "usd": 6152102.57
+        },
+        "collateral_withdraw": {
+          "count": 5,
+          "usd": 575708.37
+        },
+        "borrow": {
+          "count": 30,
+          "usd": 5320466.91
+        },
+        "repay": {
+          "count": 7,
+          "usd": 500651.46
+        },
+        "loan_supply": {
+          "count": 87,
+          "usd": 7033465.49
+        },
+        "loan_withdraw": {
+          "count": 52,
+          "usd": 1574854.13
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 4,
+          "usd": 3740.96
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 133.23
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 35.8
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 1,
+          "usd": 0.11
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 54172.04
+        },
+        "collateral_withdraw": {
+          "count": 5,
+          "usd": 1413.77
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 17980.36
+        },
+        "repay": {
+          "count": 5,
+          "usd": 919.49
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 221225.34
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 297995.08
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 7,
+          "usd": 1322481.22
+        },
+        "loan_withdraw": {
+          "count": 47,
+          "usd": 1409327.4
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 760019.92
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 752938.35
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 669966.22
+        },
+        "repay": {
+          "count": 2,
+          "usd": 670435.42
+        },
+        "loan_supply": {
+          "count": 53,
+          "usd": 2687751.87
+        },
+        "loan_withdraw": {
+          "count": 36,
+          "usd": 733705.99
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 14,
+          "usd": 459696.95
+        },
+        "loan_withdraw": {
+          "count": 2,
+          "usd": 459388.88
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 1,
+          "usd": 5.39
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 3,
+          "usd": 950.29
+        },
+        "repay": {
+          "count": 2,
+          "usd": 370.78
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 107503.29
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 71917.93
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 20,
+          "usd": 4364082.34
+        },
+        "loan_withdraw": {
+          "count": 49,
+          "usd": 4031750.28
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 10,
+          "usd": 1574287.39
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 2342177.23
+        },
+        "borrow": {
+          "count": 10,
+          "usd": 1422668.34
+        },
+        "repay": {
+          "count": 4,
+          "usd": 2118546.73
+        },
+        "loan_supply": {
+          "count": 50,
+          "usd": 413651.33
+        },
+        "loan_withdraw": {
+          "count": 46,
+          "usd": 349906.74
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 3,
+          "usd": 8197.67
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 4,
+          "usd": 11744.24
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 11714.65
+        },
+        "loan_supply": {
+          "count": 8,
+          "usd": 4661.47
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 15595.63
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 3,
+          "usd": 761.1
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 1.94
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 199.78
+        },
+        "repay": {
+          "count": 2,
+          "usd": 25.5
+        },
+        "loan_supply": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 653038.28
+        },
+        "repay": {
+          "count": 1,
+          "usd": 799883.94
+        },
+        "loan_supply": {
+          "count": 28,
+          "usd": 7045159.14
+        },
+        "loan_withdraw": {
+          "count": 32,
+          "usd": 7277197.58
+        }
+      },
+      {
+        "date": "2026-06-29",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 3223969.06
+        },
+        "collateral_withdraw": {
+          "count": 2,
+          "usd": 97276.3
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 2856563.77
+        },
+        "repay": {
+          "count": 2,
+          "usd": 90006.44
+        },
+        "loan_supply": {
+          "count": 34,
+          "usd": 824535.88
+        },
+        "loan_withdraw": {
+          "count": 25,
+          "usd": 1257436.73
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "EUTBL/EURCV",
+        "collateral_asset": "EUTBL",
+        "collateral_deposit": {
+          "count": 2,
+          "usd": 17259.88
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 15180.23
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 10,
+          "usd": 71995.1
+        },
+        "loan_withdraw": {
+          "count": 1,
+          "usd": 51091.95
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "JAAA/USDC",
+        "collateral_asset": "JAAA",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 4,
+          "usd": 13.85
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 602184.73
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 604070.33
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "PAXG/PYUSD",
+        "collateral_asset": "PAXG",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 1,
+          "usd": 82.93
+        },
+        "borrow": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 1,
+          "usd": 23950.25
+        },
+        "loan_withdraw": {
+          "count": 4,
+          "usd": 46480.15
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "XAUt/tGBP",
+        "collateral_asset": "XAUt",
+        "collateral_deposit": {
+          "count": 4,
+          "usd": 8882.54
+        },
+        "collateral_withdraw": {
+          "count": 3,
+          "usd": 1406.06
+        },
+        "borrow": {
+          "count": 4,
+          "usd": 2886.85
+        },
+        "repay": {
+          "count": 3,
+          "usd": 599.81
+        },
+        "loan_supply": {
+          "count": 2,
+          "usd": 291408.36
+        },
+        "loan_withdraw": {
+          "count": 3,
+          "usd": 318752.29
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "mF-ONE/USDC",
+        "collateral_asset": "mF-ONE",
+        "collateral_deposit": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "collateral_withdraw": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "borrow": {
+          "count": 1,
+          "usd": 249938.1
+        },
+        "repay": {
+          "count": 0,
+          "usd": 0.0
+        },
+        "loan_supply": {
+          "count": 43,
+          "usd": 6131407.77
+        },
+        "loan_withdraw": {
+          "count": 53,
+          "usd": 6285926.33
+        }
+      },
+      {
+        "date": "2026-06-30",
+        "market": "syrupUSDC/USDC",
+        "collateral_asset": "syrupUSDC",
+        "collateral_deposit": {
+          "count": 16,
+          "usd": 7172237.71
+        },
+        "collateral_withdraw": {
+          "count": 9,
+          "usd": 578331.06
+        },
+        "borrow": {
+          "count": 14,
+          "usd": 4468256.78
+        },
+        "repay": {
+          "count": 9,
+          "usd": 631331.57
+        },
+        "loan_supply": {
+          "count": 27,
+          "usd": 4644049.22
+        },
+        "loan_withdraw": {
+          "count": 36,
+          "usd": 1130798.11
+        }
+      }
+    ],
+    "collateral_net_june": [
+      {
+        "collateral_asset": "EUTBL",
+        "market": "EUTBL/EURCV",
+        "collateral_deposit_usd": 31619.96,
+        "collateral_withdraw_usd": 24090.29,
+        "net_collateral_flow_usd": 7529.67,
+        "borrow_usd": 26596.41,
+        "repay_usd": 22827.41,
+        "loan_supply_usd": 536652.03,
+        "loan_withdraw_usd": 518835.41
+      },
+      {
+        "collateral_asset": "PAXG",
+        "market": "PAXG/PYUSD",
+        "collateral_deposit_usd": 6946.05,
+        "collateral_withdraw_usd": 320196.51,
+        "net_collateral_flow_usd": -313250.46,
+        "borrow_usd": 6679.34,
+        "repay_usd": 207865.98,
+        "loan_supply_usd": 555084.0,
+        "loan_withdraw_usd": 788720.71
+      },
+      {
+        "collateral_asset": "JAAA",
+        "market": "JAAA/USDC",
+        "collateral_deposit_usd": 10535.81,
+        "collateral_withdraw_usd": 3713777.39,
+        "net_collateral_flow_usd": -3703241.58,
+        "borrow_usd": 10488.17,
+        "repay_usd": 3129835.55,
+        "loan_supply_usd": 1339635.1,
+        "loan_withdraw_usd": 4779249.88
+      },
+      {
+        "collateral_asset": "mF-ONE",
+        "market": "mF-ONE/USDC",
+        "collateral_deposit_usd": 6604653.55,
+        "collateral_withdraw_usd": 11303987.44,
+        "net_collateral_flow_usd": -4699333.88,
+        "borrow_usd": 9837024.41,
+        "repay_usd": 9864736.98,
+        "loan_supply_usd": 168427582.71,
+        "loan_withdraw_usd": 168665634.94
+      },
+      {
+        "collateral_asset": "XAUt",
+        "market": "XAUt/tGBP",
+        "collateral_deposit_usd": 2309109.67,
+        "collateral_withdraw_usd": 7438424.87,
+        "net_collateral_flow_usd": -5129315.21,
+        "borrow_usd": 1544555.68,
+        "repay_usd": 4548989.06,
+        "loan_supply_usd": 31157702.42,
+        "loan_withdraw_usd": 34084981.05
+      },
+      {
+        "collateral_asset": "syrupUSDC",
+        "market": "syrupUSDC/USDC",
+        "collateral_deposit_usd": 66693370.43,
+        "collateral_withdraw_usd": 77339398.56,
+        "net_collateral_flow_usd": -10646028.13,
+        "borrow_usd": 55558351.23,
+        "repay_usd": 66708242.67,
+        "loan_supply_usd": 171032125.7,
+        "loan_withdraw_usd": 184608005.97
+      },
+      {
+        "collateral_asset": "muBOND",
+        "market": "muBOND/USDC",
+        "collateral_deposit_usd": 2265060.95,
+        "collateral_withdraw_usd": 14268601.55,
+        "net_collateral_flow_usd": -12003540.6,
+        "borrow_usd": 1804272.7,
+        "repay_usd": 11573524.69,
+        "loan_supply_usd": 19782404.0,
+        "loan_withdraw_usd": 30267920.48
+      }
+    ],
+    "top10_flow_events": [
+      {
+        "date": "2026-06-23",
+        "market": "mF-ONE/USDC",
+        "type": "collateral_withdraw",
+        "usd": 10585428.48,
+        "tx_hash": "0xb5aaf64138030ca990d2f48f3979a7756b6665b1d1dd4106e690b9250c197f00"
+      },
+      {
+        "date": "2026-06-17",
+        "market": "muBOND/USDC",
+        "type": "collateral_withdraw",
+        "usd": 4260192.69,
+        "tx_hash": "0x93419f94b35ec3946c80f405de9380b1433c758837570204f57936591dec0b3f"
+      },
+      {
+        "date": "2026-06-18",
+        "market": "syrupUSDC/RLUSD",
+        "type": "collateral_deposit",
+        "usd": 4008702.13,
+        "tx_hash": "0x09a9770f613f094c2d1110f54b1fc4cfaa44bd1df624144cbfcdc19adfb2f367"
+      },
+      {
+        "date": "2026-06-17",
+        "market": "muBOND/USDC",
+        "type": "repay",
+        "usd": 3375554.91,
+        "tx_hash": "0x93419f94b35ec3946c80f405de9380b1433c758837570204f57936591dec0b3f"
+      },
+      {
+        "date": "2026-06-22",
+        "market": "syrupUSDC/PYUSD",
+        "type": "collateral_deposit",
+        "usd": 3268522.91,
+        "tx_hash": "0xc684a35e3d0dee3a8853e0d299882a4081ddc1f4e96af127ad80e20fd79140c8"
+      },
+      {
+        "date": "2026-06-01",
+        "market": "syrupUSDC/RLUSD",
+        "type": "collateral_deposit",
+        "usd": 3192030.81,
+        "tx_hash": "0xbf0044c46b0d76317b9bcf11fb446ae5dd6533afcb09d552600b1f1d3b1e1548"
+      },
+      {
+        "date": "2026-06-30",
+        "market": "syrupUSDC/RLUSD",
+        "type": "collateral_deposit",
+        "usd": 3001586.17,
+        "tx_hash": "0x36aa1a12b5b5fd341f68d12c8ac3e08f7223cc959a89875b0afd6aade5a35ca9"
+      },
+      {
+        "date": "2026-06-18",
+        "market": "syrupUSDC/RLUSD",
+        "type": "borrow",
+        "usd": 3000695.35,
+        "tx_hash": "0x09a9770f613f094c2d1110f54b1fc4cfaa44bd1df624144cbfcdc19adfb2f367"
+      },
+      {
+        "date": "2026-06-29",
+        "market": "syrupUSDC/AUSD",
+        "type": "collateral_deposit",
+        "usd": 2954139.71,
+        "tx_hash": "0x076925a005c40809cf3bf4a078c0ee88101ff4caf49dcf4c89e4cf59df88aec4"
+      },
+      {
+        "date": "2026-06-22",
+        "market": "syrupUSDC/AUSD",
+        "type": "collateral_deposit",
+        "usd": 2904613.75,
+        "tx_hash": "0x5653e1b13ccfb0cf4d290866903aeabf47520486deaddcd8003ce51cb49c02c4"
+      }
+    ],
+    "daily_active_addresses": [
+      {
+        "date": "2026-06-01",
+        "active_addresses": 38
+      },
+      {
+        "date": "2026-06-02",
+        "active_addresses": 55
+      },
+      {
+        "date": "2026-06-03",
+        "active_addresses": 51
+      },
+      {
+        "date": "2026-06-04",
+        "active_addresses": 47
+      },
+      {
+        "date": "2026-06-05",
+        "active_addresses": 54
+      },
+      {
+        "date": "2026-06-06",
+        "active_addresses": 43
+      },
+      {
+        "date": "2026-06-07",
+        "active_addresses": 37
+      },
+      {
+        "date": "2026-06-08",
+        "active_addresses": 39
+      },
+      {
+        "date": "2026-06-09",
+        "active_addresses": 44
+      },
+      {
+        "date": "2026-06-10",
+        "active_addresses": 53
+      },
+      {
+        "date": "2026-06-11",
+        "active_addresses": 51
+      },
+      {
+        "date": "2026-06-12",
+        "active_addresses": 30
+      },
+      {
+        "date": "2026-06-13",
+        "active_addresses": 29
+      },
+      {
+        "date": "2026-06-14",
+        "active_addresses": 25
+      },
+      {
+        "date": "2026-06-15",
+        "active_addresses": 28
+      },
+      {
+        "date": "2026-06-16",
+        "active_addresses": 32
+      },
+      {
+        "date": "2026-06-17",
+        "active_addresses": 40
+      },
+      {
+        "date": "2026-06-18",
+        "active_addresses": 23
+      },
+      {
+        "date": "2026-06-19",
+        "active_addresses": 27
+      },
+      {
+        "date": "2026-06-20",
+        "active_addresses": 31
+      },
+      {
+        "date": "2026-06-21",
+        "active_addresses": 29
+      },
+      {
+        "date": "2026-06-22",
+        "active_addresses": 39
+      },
+      {
+        "date": "2026-06-23",
+        "active_addresses": 37
+      },
+      {
+        "date": "2026-06-24",
+        "active_addresses": 44
+      },
+      {
+        "date": "2026-06-25",
+        "active_addresses": 25
+      },
+      {
+        "date": "2026-06-26",
+        "active_addresses": 36
+      },
+      {
+        "date": "2026-06-27",
+        "active_addresses": 30
+      },
+      {
+        "date": "2026-06-28",
+        "active_addresses": 32
+      },
+      {
+        "date": "2026-06-29",
+        "active_addresses": 31
+      },
+      {
+        "date": "2026-06-30",
+        "active_addresses": 48
+      }
+    ],
+    "liquidations_june": {
+      "count": 9,
+      "seized_collateral_usd": 7841.28
+    }
   },
   "next_report_metrics": {
     "note": "Genuinely forward-only series (no historical source), recording from 2026-07-04 -> full time-series in the JULY report.",

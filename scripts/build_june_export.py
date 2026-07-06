@@ -21,8 +21,14 @@ def gql(q, _tries=4):
             if i == _tries - 1: raise
             time.sleep(1.5)
 
-def get(url):
-    return json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=120, context=CTX))
+def get(url, _tries=4):
+    import time
+    for i in range(_tries):
+        try:
+            return json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=120, context=CTX))
+        except Exception:
+            if i == _tries - 1: raise
+            time.sleep(1.5)
 
 def psql_json(q):
     out = subprocess.run(['psql', CONN, '-X', '-tA', '-c', q], capture_output=True, text=True, timeout=120)
@@ -296,11 +302,83 @@ section0 = {
               'The two venues host largely different assets: Horizon skews US Treasuries + JAAA; Morpho skews Private Credit (syrupUSDC/mF-ONE) + Gold.'],
 }
 
+# ==== SECTION 14: Morpho RWA flows for June (Horizon-parity via marketTransactions API) ====
+# Direct analog of sections 1/2/6 for Morpho. USD priced at current price (same basis as Horizon flows).
+# Morpho type -> our flow bucket. Collateral moves = the RWA composability flow; loan moves = lending/borrow side.
+MTX_MAP = {'SupplyCollateral': 'collateral_deposit', 'WithdrawCollateral': 'collateral_withdraw',
+           'Borrow': 'borrow', 'Repay': 'repay', 'Supply': 'loan_supply', 'Withdraw': 'loan_withdraw',
+           'Liquidation': 'liquidation'}
+FLOWS = ['collateral_deposit', 'collateral_withdraw', 'borrow', 'repay', 'loan_supply', 'loan_withdraw']
+# Paginate PER MARKET: a combined marketUniqueKey_in query breaks skip-pagination early (a mid-stream
+# short page silently drops rows). Per-market pagination is complete (matches the API countTotal).
+_mseen = set(); mtx = []
+for _m0 in cmk:
+    _mid = _m0.get('market_id')
+    if not _mid: continue
+    _skip = 0
+    while True:
+        q = ('{ marketTransactions(first:1000, skip:%d, where:{chainId_in:[1], marketUniqueKey_in:["%s"], timestamp_gte:%d, timestamp_lte:%d}) '
+             '{ items { type timestamp txHash logIndex user{address} '
+             'market{collateralAsset{symbol decimals priceUsd} loanAsset{symbol decimals priceUsd}} '
+             'data{ __typename ... on MarketTransactionCollateralTransferData{assets} ... on MarketTransactionTransferData{assets} '
+             '... on MarketTransactionLiquidationData{seizedAssets repaidAssets} } } } }' % (_skip, _mid, S, E))
+        try:
+            page = morpho_gql(q)['data']['marketTransactions']['items']
+        except Exception:
+            break
+        for i in page:
+            k = (i['txHash'], i['logIndex'])  # globally unique per event; guards any per-market skip overlap
+            if k in _mseen: continue
+            _mseen.add(k); mtx.append(i)
+        if len(page) < 1000: break
+        _skip += 1000
+print(f"June Morpho transactions (per-market): {len(mtx)} unique")
+
+def _mtx_usd(i):  # (usd, collateral_rwa_symbol) using current price, same basis as Horizon flows
+    ca = i['market']['collateralAsset']; la = i['market']['loanAsset']; dd = i['data']; ty = i['type']
+    coll = base_sym(ca['symbol'])
+    if ty == 'Liquidation':
+        sa = dd.get('seizedAssets')
+        return (int(sa) / 10 ** ca['decimals'] * (ca['priceUsd'] or 0)) if sa is not None else 0.0, coll
+    a = dd.get('assets')
+    if a is None: return 0.0, coll
+    if 'Collateral' in ty: return int(a) / 10 ** ca['decimals'] * (ca['priceUsd'] or 0), coll
+    return int(a) / 10 ** la['decimals'] * (la['priceUsd'] or 0), coll
+
+mdaily = {}; mnet = {}; mday_users = {}; mliq = {'count': 0, 'seized_usd': 0.0}; mkt_pair = {}
+for i in mtx:
+    ft = MTX_MAP.get(i['type']); usd, coll = _mtx_usd(i)
+    day = dstr(int(i['timestamp']))
+    mkt_pair[coll] = f"{coll}/{i['market']['loanAsset']['symbol']}"
+    mday_users.setdefault(day, set()).add(i['user']['address'].lower())
+    if ft == 'liquidation':
+        mliq['count'] += 1; mliq['seized_usd'] += usd; continue
+    d = mdaily.setdefault((day, coll), {f: {'count': 0, 'usd': 0.0} for f in FLOWS})
+    d[ft]['count'] += 1; d[ft]['usd'] += usd
+    n = mnet.setdefault(coll, {f: 0.0 for f in FLOWS}); n[ft] += usd
+
+sec14_daily = []
+for (day, coll), d in sorted(mdaily.items()):
+    sec14_daily.append({'date': day, 'market': mkt_pair.get(coll, coll), 'collateral_asset': coll,
+                        **{f: {'count': d[f]['count'], 'usd': c2(d[f]['usd'])} for f in FLOWS}})
+sec14_net = []
+for coll, n in sorted(mnet.items(), key=lambda x: -(x[1]['collateral_deposit'] - x[1]['collateral_withdraw'])):
+    sec14_net.append({'collateral_asset': coll, 'market': mkt_pair.get(coll, coll),
+                      'collateral_deposit_usd': c2(n['collateral_deposit']), 'collateral_withdraw_usd': c2(n['collateral_withdraw']),
+                      'net_collateral_flow_usd': c2(n['collateral_deposit'] - n['collateral_withdraw']),
+                      'borrow_usd': c2(n['borrow']), 'repay_usd': c2(n['repay']),
+                      'loan_supply_usd': c2(n['loan_supply']), 'loan_withdraw_usd': c2(n['loan_withdraw'])})
+# top-10 single flow events by USD (exclude loan-side lending noise; keep collateral moves + borrow/repay + liquidation)
+_ranked = sorted(((_mtx_usd(i)[0], i) for i in mtx if i['type'] not in ('Supply', 'Withdraw')), key=lambda x: -x[0])[:10]
+sec14_top = [{'date': dstr(int(i['timestamp'])), 'market': f"{base_sym(i['market']['collateralAsset']['symbol'])}/{i['market']['loanAsset']['symbol']}",
+              'type': MTX_MAP.get(i['type']), 'usd': c2(u), 'tx_hash': i['txHash']} for u, i in _ranked]
+sec14_active = [{'date': d, 'active_addresses': len(u)} for d, u in sorted(mday_users.items())]
+
 # ---- assemble ----
 doc = {
     'meta': {
         'report': 'RWA Terminal - June 2026 (Aave Horizon + Morpho)', 'period': {'start': '2026-06-01', 'end': '2026-06-30'},
-        'scope': 'Sections 1-11 are Aave Horizon (the event indexer covers Horizon only). Section 12 and 13 are cross-venue: s12 = current-state deployment across Horizon/Morpho/DEX/wallets, s13 = Morpho RWA-collateral market history for June (backfilled from the Morpho API). Morpho flows/holders history is not available for the period (Morpho is not in our event indexer).',
+        'scope': 'Sections 1-11 are Aave Horizon (the event indexer covers Horizon only). Sections 12-14 are cross-venue: s12 = current-state deployment across Horizon/Morpho/DEX/wallets; s13 = Morpho RWA-collateral market history for June (backfilled from the Morpho API historicalState); s14 = Morpho RWA flows for June (backfilled from the Morpho marketTransactions API) - the direct Horizon-parity analog of sections 1/2/6. Morpho per-token holder history over June is still unavailable (Morpho is not in our event indexer); only start-vs-end holder counts (current) are available for Morpho assets.',
         'generated_utc': dstr(int(datetime.now(timezone.utc).timestamp())),
         'sources': {'flows_and_holders': 'Envio HyperIndex (Horizon pool events)',
                     'market_and_asset_history': 'Neon Postgres (5-min cron snapshots)',
@@ -332,9 +410,17 @@ doc = {
         's12_cross_venue_current': supp_cross,
     },
     'section13_morpho_market_history_june': {
-        'note': 'Morpho RWA-collateral markets over June, backfilled from the Morpho API historicalState (daily). LLTV is the current fixed value per market. Makes the report whole-dashboard for market state; Morpho flows/holders history is still unavailable for June.',
+        'note': 'Morpho RWA-collateral markets over June, backfilled from the Morpho API historicalState (daily). LLTV is the current fixed value per market. This is Morpho market STATE; per-transaction flows are in section 14.',
         'per_market_june': morpho_per_market,
         'aggregate_daily': morpho_daily,
+    },
+    'section14_morpho_flows_june': {
+        'note': 'Morpho RWA flows over June, backfilled from the Morpho marketTransactions API. This is the direct Horizon-parity analog of sections 1 (daily flows), 2 (top events) and 6 (active addresses). Flow types: collateral_deposit/withdraw = the RWA moving in/out as collateral (the composability flow, analog of Horizon supply/withdraw); borrow/repay = borrowing the loan asset against RWA; loan_supply/withdraw = lenders providing/removing loan-asset liquidity (no Horizon RWA-side equivalent). USD priced at current price, same basis as Horizon flows.',
+        'daily_flows_per_market': sec14_daily,
+        'collateral_net_june': sec14_net,
+        'top10_flow_events': sec14_top,
+        'daily_active_addresses': sec14_active,
+        'liquidations_june': {'count': mliq['count'], 'seized_collateral_usd': c2(mliq['seized_usd'])},
     },
     'next_report_metrics': {
         'note': 'Genuinely forward-only series (no historical source), recording from 2026-07-04 -> full time-series in the JULY report.',
@@ -352,6 +438,7 @@ with open(OUT, 'w') as f:
 print("WROTE", OUT)
 print("sizes: s1_daily=%d s1_net=%d s2=%d s3=%d s4=%d s5=%d s6=%d" % (
     len(sec1_daily), len(sec1_reserve_net), len(sec2), len(sec3 or []), len(sec4), len(sec5), len(sec6)))
+print("s14: daily=%d net=%d top=%d active_days=%d liq=%d" % (len(sec14_daily), len(sec14_net), len(sec14_top), len(sec14_active), mliq['count']))
 print("sample sector net:", sec1_sector)
 print("sample top event:", sec2[0] if sec2 else None)
 print("sample s3[-1]:", (sec3 or [])[-1] if sec3 else None)
