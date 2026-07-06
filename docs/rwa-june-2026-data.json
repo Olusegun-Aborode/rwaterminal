@@ -22,12 +22,30 @@
       "Two different active-address metrics: section 3 active_addresses is cumulative distinct users since genesis (the terminal's headline); section 6 active_addresses is distinct users who acted on that specific day."
     ]
   },
+  "key_findings": {
+    "headline": "$356M of RWA is deployed as collateral across Aave Horizon and Morpho - 6.5% of a $5.5B addressable universe of Horizon-listed fund AUM. Cross-venue composability is currently thin: JAAA is the only asset used on both venues.",
+    "composability": [
+      "Deployed as collateral: Aave Horizon $184M + Morpho $172M = $356M. The $5.5B headline (section 3 rwa_aum) is fund AUM, i.e. the addressable universe, NOT deployment.",
+      "JAAA is the only cross-venue asset: $17.3M on Horizon + $4.7M (wJAAA) on Morpho. Every other asset lives on exactly one venue.",
+      "Venue specialisation: Horizon skews US Treasuries (USTB/USCC/VBILL) + JAAA; Morpho skews Private Credit (syrupUSDC/mF-ONE) + Gold (XAUt/PAXG)."
+    ],
+    "flows_june": [
+      "Morpho RWA collateral saw a net $36.5M outflow in June ($77.9M deposited, $114.4M withdrawn) - net deleveraging of RWA collateral positions.",
+      "Horizon June net flows: RWA reserves $-25.6M, stablecoin reserves $-54.9M. The largest single Horizon flows are stablecoin liquidity (GHO/RLUSD), not RWA.",
+      "Activity volume: 6393 Morpho RWA transactions vs 609 Horizon pool actions over the month."
+    ],
+    "risk_and_quality": [
+      "The two venues carry different risk models: Horizon = pooled, NAV-graded, per-asset LTV; Morpho = isolated markets with a fixed LLTV per market (section 13).",
+      "mGLOBAL (Midas Fasanara Global) was listed on Horizon in June at a 0.05%% LTV - a deliberately conservative, effectively supply-only listing of a new private-credit asset, not a data error.",
+      "Data quality: the 2026-06-29 rwa_aum spike ($40.65B, an issuer-API misread on USTB/USCC) was identified and corrected in both market and asset history."
+    ]
+  },
   "section0_cross_venue_reconciliation": {
     "lens": "RWA deployed as COLLATERAL in a lending venue (supplied on Horizon / collateral on Morpho). This is the composability metric.",
     "rwa_collateral_deployed_usd": {
       "aave_horizon": 184024059.75,
-      "morpho": 171592835.91,
-      "both_venues_total": 355616895.66
+      "morpho": 171545756.58,
+      "both_venues_total": 355569816.33
     },
     "cross_venue_assets": [
       "JAAA"
@@ -36,8 +54,8 @@
       {
         "asset": "syrupUSDC",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 138442892.58,
-        "total_deployed_usd": 138442892.58,
+        "morpho_collateral_usd": 138438817.62,
+        "total_deployed_usd": 138438817.62,
         "venues": [
           "Morpho"
         ],
@@ -87,8 +105,8 @@
       {
         "asset": "mF-ONE",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 19111790.21,
-        "total_deployed_usd": 19111790.21,
+        "morpho_collateral_usd": 19110054.97,
+        "total_deployed_usd": 19110054.97,
         "venues": [
           "Morpho"
         ],
@@ -107,8 +125,8 @@
       {
         "asset": "XAUt",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 6003760.51,
-        "total_deployed_usd": 6003760.51,
+        "morpho_collateral_usd": 5965156.08,
+        "total_deployed_usd": 5965156.08,
         "venues": [
           "Morpho"
         ],
@@ -117,8 +135,8 @@
       {
         "asset": "EUTBL",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 2878949.56,
-        "total_deployed_usd": 2878949.56,
+        "morpho_collateral_usd": 2877033.55,
+        "total_deployed_usd": 2877033.55,
         "venues": [
           "Morpho"
         ],
@@ -127,8 +145,8 @@
       {
         "asset": "muBOND",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 273176.89,
-        "total_deployed_usd": 273176.89,
+        "morpho_collateral_usd": 273156.03,
+        "total_deployed_usd": 273156.03,
         "venues": [
           "Morpho"
         ],
@@ -137,8 +155,8 @@
       {
         "asset": "PAXG",
         "horizon_collateral_usd": 0.0,
-        "morpho_collateral_usd": 220081.48,
-        "total_deployed_usd": 220081.48,
+        "morpho_collateral_usd": 219353.65,
+        "total_deployed_usd": 219353.65,
         "venues": [
           "Morpho"
         ],
@@ -148,7 +166,7 @@
     "by_sector_deployed_usd": [
       {
         "sector": "Private Credit",
-        "usd": 184951559.86
+        "usd": 184945749.66
       },
       {
         "sector": "US Treasuries",
@@ -164,15 +182,15 @@
       },
       {
         "sector": "Commodities (Gold)",
-        "usd": 6223842.0
+        "usd": 6184509.73
       },
       {
         "sector": "Govt Bonds (EU)",
-        "usd": 2878949.56
+        "usd": 2877033.55
       },
       {
         "sector": "Bonds",
-        "usd": 273176.89
+        "usd": 273156.03
       }
     ],
     "context_not_deployment": {
@@ -2856,7 +2874,7 @@
         "token_supply": 59781659.09
       },
       "current": {
-        "supplied_usd": 59803976.57,
+        "supplied_usd": 59804139.64,
         "supply_apy_pct": 2.036,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -2879,7 +2897,7 @@
         "token_supply": 7535149.54
       },
       "current": {
-        "supplied_usd": 6095925.84,
+        "supplied_usd": 6095948.2,
         "supply_apy_pct": 2.739,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -2902,7 +2920,7 @@
         "token_supply": 184743464.31
       },
       "current": {
-        "supplied_usd": 150933801.57,
+        "supplied_usd": 150934255.58,
         "supply_apy_pct": 2.246,
         "ltv_pct": 0,
         "liq_threshold_pct": 0,
@@ -3558,21 +3576,21 @@
     "s12_cross_venue_current": {
       "as_of": "current (report generation)",
       "by_kind_usd": {
-        "lending": 517612701.13,
-        "dex": 99544953.39,
-        "elsewhere": 51313784741.46,
-        "wallet": 2560472398.98,
-        "other": 2847003021.0,
-        "entity": 3087761800.56,
-        "contract": 369059156.1
+        "lending": 526456181.93,
+        "dex": 98869999.01,
+        "elsewhere": 51297075055.94,
+        "wallet": 2556647401.94,
+        "other": 2839276404.61,
+        "entity": 3085248762.78,
+        "contract": 368566594.95
       },
-      "deployed_pct_of_tracked": 1.02,
+      "deployed_pct_of_tracked": 1.03,
       "morpho": {
-        "total_collateral_usd": 171592835.91,
-        "total_borrow_usd": 138752859.47,
+        "total_collateral_usd": 171545756.58,
+        "total_borrow_usd": 138704245.38,
         "avg_lltv_pct": 88.1,
-        "borrowers": 307,
-        "min_health_factor": 0.888,
+        "borrowers": 306,
+        "min_health_factor": 0.885,
         "at_risk_positions": 21
       }
     }
@@ -3869,7 +3887,7 @@
         },
         "loan_supply": {
           "count": 5,
-          "usd": 2242.0
+          "usd": 2241.93
         },
         "loan_withdraw": {
           "count": 0,
@@ -3886,7 +3904,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 13849.95
+          "usd": 13820.92
         },
         "borrow": {
           "count": 0,
@@ -3894,15 +3912,15 @@
         },
         "repay": {
           "count": 1,
-          "usd": 5887.21
+          "usd": 5888.04
         },
         "loan_supply": {
           "count": 2,
-          "usd": 66896.87
+          "usd": 66906.3
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 19644.33
+          "usd": 19647.1
         }
       },
       {
@@ -3911,27 +3929,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 31715.79
+          "usd": 31622.82
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 864.71
+          "usd": 862.18
         },
         "borrow": {
           "count": 6,
-          "usd": 72945.93
+          "usd": 72951.26
         },
         "repay": {
           "count": 5,
-          "usd": 40819.89
+          "usd": 40822.87
         },
         "loan_supply": {
           "count": 37,
-          "usd": 1370498.08
+          "usd": 1370598.27
         },
         "loan_withdraw": {
           "count": 19,
-          "usd": 930021.71
+          "usd": 930089.7
         }
       },
       {
@@ -3956,11 +3974,11 @@
         },
         "loan_supply": {
           "count": 54,
-          "usd": 6213731.87
+          "usd": 6213520.81
         },
         "loan_withdraw": {
           "count": 50,
-          "usd": 5422261.34
+          "usd": 5422077.16
         }
       },
       {
@@ -3969,7 +3987,7 @@
         "collateral_asset": "muBOND",
         "collateral_deposit": {
           "count": 1,
-          "usd": 600504.53
+          "usd": 600458.69
         },
         "collateral_withdraw": {
           "count": 0,
@@ -3977,7 +3995,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 499876.21
+          "usd": 499859.23
         },
         "repay": {
           "count": 0,
@@ -3985,11 +4003,11 @@
         },
         "loan_supply": {
           "count": 11,
-          "usd": 953607.19
+          "usd": 953574.8
         },
         "loan_withdraw": {
           "count": 8,
-          "usd": 250842.12
+          "usd": 250833.59
         }
       },
       {
@@ -3998,27 +4016,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 4,
-          "usd": 4797119.82
+          "usd": 4796978.62
         },
         "collateral_withdraw": {
           "count": 9,
-          "usd": 5488073.45
+          "usd": 5487911.91
         },
         "borrow": {
           "count": 4,
-          "usd": 4184455.82
+          "usd": 4182724.28
         },
         "repay": {
           "count": 10,
-          "usd": 4911263.89
+          "usd": 4909231.61
         },
         "loan_supply": {
           "count": 21,
-          "usd": 651504.87
+          "usd": 651455.63
         },
         "loan_withdraw": {
           "count": 18,
-          "usd": 25917.51
+          "usd": 25916.63
         }
       },
       {
@@ -4043,7 +4061,7 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 399761.79
+          "usd": 399725.35
         },
         "loan_withdraw": {
           "count": 0,
@@ -4072,7 +4090,7 @@
         },
         "loan_supply": {
           "count": 5,
-          "usd": 1532.74
+          "usd": 1532.69
         },
         "loan_withdraw": {
           "count": 0,
@@ -4089,7 +4107,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 2682.23
+          "usd": 2676.61
         },
         "borrow": {
           "count": 0,
@@ -4097,15 +4115,15 @@
         },
         "repay": {
           "count": 2,
-          "usd": 1001.95
+          "usd": 1002.1
         },
         "loan_supply": {
           "count": 1,
-          "usd": 20997.09
+          "usd": 21000.05
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 88158.95
+          "usd": 88171.38
         }
       },
       {
@@ -4114,27 +4132,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 9,
-          "usd": 7263.95
+          "usd": 7242.65
         },
         "collateral_withdraw": {
           "count": 19,
-          "usd": 540692.09
+          "usd": 539107.14
         },
         "borrow": {
           "count": 9,
-          "usd": 11003.65
+          "usd": 11004.45
         },
         "repay": {
           "count": 16,
-          "usd": 146780.37
+          "usd": 146791.1
         },
         "loan_supply": {
           "count": 31,
-          "usd": 1681725.2
+          "usd": 1681848.15
         },
         "loan_withdraw": {
           "count": 16,
-          "usd": 1696798.06
+          "usd": 1696922.1
         }
       },
       {
@@ -4143,7 +4161,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 2,
-          "usd": 772320.77
+          "usd": 772250.65
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4151,7 +4169,7 @@
         },
         "borrow": {
           "count": 3,
-          "usd": 459886.11
+          "usd": 459870.49
         },
         "repay": {
           "count": 0,
@@ -4159,11 +4177,11 @@
         },
         "loan_supply": {
           "count": 44,
-          "usd": 5291680.86
+          "usd": 5291501.12
         },
         "loan_withdraw": {
           "count": 45,
-          "usd": 4984056.65
+          "usd": 4983887.35
         }
       },
       {
@@ -4172,7 +4190,7 @@
         "collateral_asset": "muBOND",
         "collateral_deposit": {
           "count": 1,
-          "usd": 84281.34
+          "usd": 84274.9
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4180,7 +4198,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 79980.19
+          "usd": 79977.48
         },
         "repay": {
           "count": 0,
@@ -4188,11 +4206,11 @@
         },
         "loan_supply": {
           "count": 9,
-          "usd": 748637.86
+          "usd": 748612.43
         },
         "loan_withdraw": {
           "count": 10,
-          "usd": 904305.2
+          "usd": 904274.48
         }
       },
       {
@@ -4201,27 +4219,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 10,
-          "usd": 4098412.15
+          "usd": 4098291.52
         },
         "collateral_withdraw": {
           "count": 6,
-          "usd": 2743468.53
+          "usd": 2743387.78
         },
         "borrow": {
           "count": 9,
-          "usd": 2836964.16
+          "usd": 2836103.75
         },
         "repay": {
           "count": 5,
-          "usd": 1475234.68
+          "usd": 1474624.22
         },
         "loan_supply": {
           "count": 13,
-          "usd": 7936438.71
+          "usd": 7933222.52
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 8230528.48
+          "usd": 8227177.98
         }
       },
       {
@@ -4246,7 +4264,7 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 49769.91
+          "usd": 49765.38
         },
         "loan_withdraw": {
           "count": 0,
@@ -4267,19 +4285,19 @@
         },
         "borrow": {
           "count": 6,
-          "usd": 10488.17
+          "usd": 10487.82
         },
         "repay": {
           "count": 1,
-          "usd": 504926.33
+          "usd": 504909.18
         },
         "loan_supply": {
           "count": 4,
-          "usd": 12576.59
+          "usd": 12576.16
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 559983.94
+          "usd": 559964.92
         }
       },
       {
@@ -4288,7 +4306,7 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 1,
-          "usd": 1148.76
+          "usd": 1146.35
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4296,7 +4314,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 373.31
+          "usd": 373.37
         },
         "repay": {
           "count": 0,
@@ -4304,11 +4322,11 @@
         },
         "loan_supply": {
           "count": 6,
-          "usd": 218193.66
+          "usd": 218224.43
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 211481.78
+          "usd": 211511.6
         }
       },
       {
@@ -4317,27 +4335,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 5,
-          "usd": 1246439.49
+          "usd": 1242785.76
         },
         "collateral_withdraw": {
           "count": 7,
-          "usd": 1321438.17
+          "usd": 1317564.58
         },
         "borrow": {
           "count": 8,
-          "usd": 967143.41
+          "usd": 967214.11
         },
         "repay": {
           "count": 11,
-          "usd": 898338.47
+          "usd": 898404.15
         },
         "loan_supply": {
           "count": 18,
-          "usd": 1851355.62
+          "usd": 1851490.96
         },
         "loan_withdraw": {
           "count": 16,
-          "usd": 2233184.47
+          "usd": 2233347.72
         }
       },
       {
@@ -4346,7 +4364,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 1,
-          "usd": 621467.2
+          "usd": 621410.78
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4354,7 +4372,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 399900.96
+          "usd": 399887.38
         },
         "repay": {
           "count": 0,
@@ -4362,11 +4380,11 @@
         },
         "loan_supply": {
           "count": 56,
-          "usd": 27198232.37
+          "usd": 27197308.51
         },
         "loan_withdraw": {
           "count": 54,
-          "usd": 26888234.17
+          "usd": 26887320.84
         }
       },
       {
@@ -4375,7 +4393,7 @@
         "collateral_asset": "muBOND",
         "collateral_deposit": {
           "count": 1,
-          "usd": 1264220.07
+          "usd": 1264123.56
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4383,7 +4401,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 984475.72
+          "usd": 984442.28
         },
         "repay": {
           "count": 0,
@@ -4391,11 +4409,11 @@
         },
         "loan_supply": {
           "count": 17,
-          "usd": 1913584.66
+          "usd": 1913519.66
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 1675389.21
+          "usd": 1675332.31
         }
       },
       {
@@ -4404,27 +4422,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 823613.05
+          "usd": 823588.8
         },
         "collateral_withdraw": {
           "count": 7,
-          "usd": 3906327.22
+          "usd": 3906212.24
         },
         "borrow": {
           "count": 2,
-          "usd": 720773.54
+          "usd": 720775.29
         },
         "repay": {
           "count": 7,
-          "usd": 2737775.22
+          "usd": 2737669.95
         },
         "loan_supply": {
           "count": 15,
-          "usd": 3337552.01
+          "usd": 3337246.09
         },
         "loan_withdraw": {
           "count": 14,
-          "usd": 2132736.85
+          "usd": 2132280.88
         }
       },
       {
@@ -4453,7 +4471,7 @@
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 100349.21
+          "usd": 100340.07
         }
       },
       {
@@ -4478,7 +4496,7 @@
         },
         "loan_supply": {
           "count": 12,
-          "usd": 2011.2
+          "usd": 2011.13
         },
         "loan_withdraw": {
           "count": 0,
@@ -4491,27 +4509,27 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 2,
-          "usd": 2283.35
+          "usd": 2278.56
         },
         "collateral_withdraw": {
           "count": 5,
-          "usd": 3530.53
+          "usd": 3523.13
         },
         "borrow": {
           "count": 2,
-          "usd": 2002.31
+          "usd": 2002.59
         },
         "repay": {
           "count": 4,
-          "usd": 2476.11
+          "usd": 2476.46
         },
         "loan_supply": {
           "count": 2,
-          "usd": 9895.21
+          "usd": 9896.61
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 9189.14
+          "usd": 9190.43
         }
       },
       {
@@ -4520,27 +4538,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 2265.75
+          "usd": 2259.11
         },
         "collateral_withdraw": {
           "count": 5,
-          "usd": 138142.92
+          "usd": 137737.97
         },
         "borrow": {
           "count": 2,
-          "usd": 849.07
+          "usd": 849.13
         },
         "repay": {
           "count": 8,
-          "usd": 103889.3
+          "usd": 103896.89
         },
         "loan_supply": {
           "count": 47,
-          "usd": 2860370.9
+          "usd": 2860580.01
         },
         "loan_withdraw": {
           "count": 31,
-          "usd": 2985766.48
+          "usd": 2985984.76
         }
       },
       {
@@ -4565,11 +4583,11 @@
         },
         "loan_supply": {
           "count": 60,
-          "usd": 12600214.07
+          "usd": 12599786.07
         },
         "loan_withdraw": {
           "count": 60,
-          "usd": 13629500.01
+          "usd": 13629037.05
         }
       },
       {
@@ -4594,11 +4612,11 @@
         },
         "loan_supply": {
           "count": 10,
-          "usd": 1641051.0
+          "usd": 1640995.26
         },
         "loan_withdraw": {
           "count": 19,
-          "usd": 752842.04
+          "usd": 752816.47
         }
       },
       {
@@ -4607,7 +4625,7 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 5,
-          "usd": 7518722.19
+          "usd": 7518500.89
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4615,19 +4633,19 @@
         },
         "borrow": {
           "count": 5,
-          "usd": 6636891.05
+          "usd": 6635628.13
         },
         "repay": {
           "count": 1,
-          "usd": 1682.05
+          "usd": 1682.28
         },
         "loan_supply": {
           "count": 15,
-          "usd": 6486834.01
+          "usd": 6485096.39
         },
         "loan_withdraw": {
           "count": 7,
-          "usd": 2392264.82
+          "usd": 2392082.24
         }
       },
       {
@@ -4656,7 +4674,7 @@
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 34507.04
+          "usd": 34503.9
         }
       },
       {
@@ -4681,7 +4699,7 @@
         },
         "loan_supply": {
           "count": 15,
-          "usd": 1070.76
+          "usd": 1070.72
         },
         "loan_withdraw": {
           "count": 0,
@@ -4710,11 +4728,11 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 11404.35
+          "usd": 11405.95
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 19925.08
+          "usd": 19927.89
         }
       },
       {
@@ -4723,27 +4741,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 4,
-          "usd": 87462.97
+          "usd": 87206.59
         },
         "collateral_withdraw": {
           "count": 11,
-          "usd": 215793.24
+          "usd": 215160.68
         },
         "borrow": {
           "count": 4,
-          "usd": 87903.97
+          "usd": 87910.39
         },
         "repay": {
           "count": 12,
-          "usd": 153824.91
+          "usd": 153836.16
         },
         "loan_supply": {
           "count": 39,
-          "usd": 628268.56
+          "usd": 628314.49
         },
         "loan_withdraw": {
           "count": 26,
-          "usd": 656708.8
+          "usd": 656756.81
         }
       },
       {
@@ -4756,7 +4774,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 621467.2
+          "usd": 621410.78
         },
         "borrow": {
           "count": 0,
@@ -4764,15 +4782,15 @@
         },
         "repay": {
           "count": 1,
-          "usd": 400051.56
+          "usd": 400037.97
         },
         "loan_supply": {
           "count": 99,
-          "usd": 21271656.2
+          "usd": 21270933.65
         },
         "loan_withdraw": {
           "count": 96,
-          "usd": 21808315.06
+          "usd": 21807574.28
         }
       },
       {
@@ -4797,11 +4815,11 @@
         },
         "loan_supply": {
           "count": 8,
-          "usd": 389494.47
+          "usd": 389481.24
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 354652.3
+          "usd": 354640.26
         }
       },
       {
@@ -4810,27 +4828,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 5,
-          "usd": 2574747.87
+          "usd": 2574672.08
         },
         "collateral_withdraw": {
           "count": 10,
-          "usd": 6677437.09
+          "usd": 6677240.54
         },
         "borrow": {
           "count": 5,
-          "usd": 2331549.83
+          "usd": 2330585.02
         },
         "repay": {
           "count": 10,
-          "usd": 5969646.7
+          "usd": 5968288.76
         },
         "loan_supply": {
           "count": 12,
-          "usd": 2767664.44
+          "usd": 2766796.71
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 3444795.21
+          "usd": 3443370.29
         }
       },
       {
@@ -4839,7 +4857,7 @@
         "collateral_asset": "EUTBL",
         "collateral_deposit": {
           "count": 1,
-          "usd": 2919.46
+          "usd": 2917.52
         },
         "collateral_withdraw": {
           "count": 0,
@@ -4859,7 +4877,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 26130.9
+          "usd": 26128.52
         }
       },
       {
@@ -4884,7 +4902,7 @@
         },
         "loan_supply": {
           "count": 6,
-          "usd": 502.97
+          "usd": 502.95
         },
         "loan_withdraw": {
           "count": 0,
@@ -4909,15 +4927,15 @@
         },
         "repay": {
           "count": 1,
-          "usd": 30.81
+          "usd": 30.82
         },
         "loan_supply": {
           "count": 3,
-          "usd": 43116.61
+          "usd": 43122.69
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 16681.06
+          "usd": 16683.42
         }
       },
       {
@@ -4926,27 +4944,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 5,
-          "usd": 41724.78
+          "usd": 41602.47
         },
         "collateral_withdraw": {
           "count": 18,
-          "usd": 488356.66
+          "usd": 486925.12
         },
         "borrow": {
           "count": 3,
-          "usd": 215.61
+          "usd": 215.63
         },
         "repay": {
           "count": 18,
-          "usd": 294430.12
+          "usd": 294451.64
         },
         "loan_supply": {
           "count": 30,
-          "usd": 1089167.58
+          "usd": 1089247.21
         },
         "loan_withdraw": {
           "count": 26,
-          "usd": 1316576.87
+          "usd": 1316673.12
         }
       },
       {
@@ -4971,11 +4989,11 @@
         },
         "loan_supply": {
           "count": 31,
-          "usd": 11203880.97
+          "usd": 11203500.4
         },
         "loan_withdraw": {
           "count": 35,
-          "usd": 9601446.93
+          "usd": 9601120.79
         }
       },
       {
@@ -5000,11 +5018,11 @@
         },
         "loan_supply": {
           "count": 9,
-          "usd": 419891.1
+          "usd": 419876.83
         },
         "loan_withdraw": {
           "count": 8,
-          "usd": 467019.77
+          "usd": 467003.91
         }
       },
       {
@@ -5013,27 +5031,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 2896184.7
+          "usd": 2896099.45
         },
         "collateral_withdraw": {
           "count": 4,
-          "usd": 4898680.19
+          "usd": 4898536.0
         },
         "borrow": {
           "count": 3,
-          "usd": 2969105.14
+          "usd": 2969141.42
         },
         "repay": {
           "count": 5,
-          "usd": 5757550.2
+          "usd": 5755167.69
         },
         "loan_supply": {
           "count": 2,
-          "usd": 1231.44
+          "usd": 1231.34
         },
         "loan_withdraw": {
           "count": 8,
-          "usd": 6667127.36
+          "usd": 6664370.22
         }
       },
       {
@@ -5062,7 +5080,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 73915.56
+          "usd": 73908.82
         }
       },
       {
@@ -5071,7 +5089,7 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 1,
-          "usd": 144.41
+          "usd": 144.11
         },
         "collateral_withdraw": {
           "count": 0,
@@ -5079,19 +5097,19 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 99.95
+          "usd": 99.96
         },
         "repay": {
           "count": 1,
-          "usd": 5493.88
+          "usd": 5494.65
         },
         "loan_supply": {
           "count": 2,
-          "usd": 33116.48
+          "usd": 33121.15
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 49789.55
+          "usd": 49796.57
         }
       },
       {
@@ -5100,27 +5118,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 6,
-          "usd": 23531.47
+          "usd": 23462.5
         },
         "collateral_withdraw": {
           "count": 7,
-          "usd": 168223.35
+          "usd": 167730.23
         },
         "borrow": {
           "count": 4,
-          "usd": 7687.38
+          "usd": 7687.94
         },
         "repay": {
           "count": 5,
-          "usd": 66001.27
+          "usd": 66006.1
         },
         "loan_supply": {
           "count": 16,
-          "usd": 1618243.86
+          "usd": 1618362.16
         },
         "loan_withdraw": {
           "count": 14,
-          "usd": 1047298.26
+          "usd": 1047374.82
         }
       },
       {
@@ -5145,11 +5163,11 @@
         },
         "loan_supply": {
           "count": 6,
-          "usd": 530703.95
+          "usd": 530685.92
         },
         "loan_withdraw": {
           "count": 16,
-          "usd": 771582.82
+          "usd": 771556.61
         }
       },
       {
@@ -5174,11 +5192,11 @@
         },
         "loan_supply": {
           "count": 13,
-          "usd": 260302.0
+          "usd": 260293.16
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 251620.13
+          "usd": 251611.58
         }
       },
       {
@@ -5187,27 +5205,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 2,
-          "usd": 753738.64
+          "usd": 753716.46
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 3889645.82
+          "usd": 3889531.33
         },
         "borrow": {
           "count": 2,
-          "usd": 676156.69
+          "usd": 675876.89
         },
         "repay": {
           "count": 2,
-          "usd": 1959866.24
+          "usd": 1959055.23
         },
         "loan_supply": {
           "count": 10,
-          "usd": 1150279.28
+          "usd": 1149962.84
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 2190272.19
+          "usd": 2189480.43
         }
       },
       {
@@ -5236,7 +5254,7 @@
         },
         "loan_withdraw": {
           "count": 7,
-          "usd": 19332.55
+          "usd": 19330.79
         }
       },
       {
@@ -5261,7 +5279,7 @@
         },
         "loan_supply": {
           "count": 2,
-          "usd": 2189.53
+          "usd": 2189.46
         },
         "loan_withdraw": {
           "count": 0,
@@ -5290,11 +5308,11 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 19990.09
+          "usd": 19992.9
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 25781.72
+          "usd": 25785.36
         }
       },
       {
@@ -5303,7 +5321,7 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 7,
-          "usd": 73926.48
+          "usd": 73709.78
         },
         "collateral_withdraw": {
           "count": 0,
@@ -5311,19 +5329,19 @@
         },
         "borrow": {
           "count": 5,
-          "usd": 11771.55
+          "usd": 11772.41
         },
         "repay": {
           "count": 1,
-          "usd": 99.89
+          "usd": 99.9
         },
         "loan_supply": {
           "count": 28,
-          "usd": 1810996.55
+          "usd": 1811128.94
         },
         "loan_withdraw": {
           "count": 25,
-          "usd": 2701143.15
+          "usd": 2701340.62
         }
       },
       {
@@ -5340,7 +5358,7 @@
         },
         "borrow": {
           "count": 2,
-          "usd": 399900.96
+          "usd": 399887.38
         },
         "repay": {
           "count": 0,
@@ -5348,11 +5366,11 @@
         },
         "loan_supply": {
           "count": 32,
-          "usd": 8708782.57
+          "usd": 8708486.76
         },
         "loan_withdraw": {
           "count": 38,
-          "usd": 8586716.36
+          "usd": 8586424.68
         }
       },
       {
@@ -5377,11 +5395,11 @@
         },
         "loan_supply": {
           "count": 12,
-          "usd": 510273.22
+          "usd": 510255.88
         },
         "loan_withdraw": {
           "count": 8,
-          "usd": 359148.73
+          "usd": 359136.53
         }
       },
       {
@@ -5390,27 +5408,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 2,
-          "usd": 2259281.31
+          "usd": 2259214.81
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 2440906.86
+          "usd": 2440835.02
         },
         "borrow": {
           "count": 2,
-          "usd": 2033009.89
+          "usd": 2032214.84
         },
         "repay": {
           "count": 3,
-          "usd": 2194363.38
+          "usd": 2193455.34
         },
         "loan_supply": {
           "count": 34,
-          "usd": 45448346.91
+          "usd": 45429540.65
         },
         "loan_withdraw": {
           "count": 32,
-          "usd": 45877176.49
+          "usd": 45858194.34
         }
       },
       {
@@ -5439,7 +5457,7 @@
         },
         "loan_withdraw": {
           "count": 6,
-          "usd": 29596.29
+          "usd": 29593.59
         }
       },
       {
@@ -5448,27 +5466,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 2,
-          "usd": 390.81
+          "usd": 389.66
         },
         "collateral_withdraw": {
           "count": 6,
-          "usd": 128459.55
+          "usd": 128082.99
         },
         "borrow": {
           "count": 1,
-          "usd": 149.84
+          "usd": 149.85
         },
         "repay": {
           "count": 6,
-          "usd": 53776.3
+          "usd": 53780.23
         },
         "loan_supply": {
           "count": 40,
-          "usd": 2025147.08
+          "usd": 2025295.13
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 1808116.97
+          "usd": 1808249.15
         }
       },
       {
@@ -5481,11 +5499,11 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 27582.88
+          "usd": 27580.38
         },
         "borrow": {
           "count": 1,
-          "usd": 496.32
+          "usd": 496.3
         },
         "repay": {
           "count": 0,
@@ -5493,11 +5511,11 @@
         },
         "loan_supply": {
           "count": 48,
-          "usd": 6956146.56
+          "usd": 6955910.27
         },
         "loan_withdraw": {
           "count": 49,
-          "usd": 7959159.82
+          "usd": 7958889.46
         }
       },
       {
@@ -5522,11 +5540,11 @@
         },
         "loan_supply": {
           "count": 8,
-          "usd": 65497.01
+          "usd": 65494.78
         },
         "loan_withdraw": {
           "count": 8,
-          "usd": 181519.28
+          "usd": 181513.12
         }
       },
       {
@@ -5535,27 +5553,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 2,
-          "usd": 782663.6
+          "usd": 782640.56
         },
         "collateral_withdraw": {
           "count": 9,
-          "usd": 3305963.36
+          "usd": 3305866.05
         },
         "borrow": {
           "count": 1,
-          "usd": 214967.26
+          "usd": 214950.85
         },
         "repay": {
           "count": 9,
-          "usd": 2932673.79
+          "usd": 2932022.82
         },
         "loan_supply": {
           "count": 30,
-          "usd": 459799.07
+          "usd": 459764.05
         },
         "loan_withdraw": {
           "count": 21,
-          "usd": 3003053.64
+          "usd": 3002352.4
         }
       },
       {
@@ -5580,7 +5598,7 @@
         },
         "loan_supply": {
           "count": 2,
-          "usd": 1515.97
+          "usd": 1515.92
         },
         "loan_withdraw": {
           "count": 0,
@@ -5593,11 +5611,11 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 2,
-          "usd": 912.06
+          "usd": 910.14
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 21.91
+          "usd": 21.87
         },
         "borrow": {
           "count": 0,
@@ -5605,7 +5623,7 @@
         },
         "repay": {
           "count": 3,
-          "usd": 20.06
+          "usd": 20.07
         },
         "loan_supply": {
           "count": 0,
@@ -5622,27 +5640,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 9,
-          "usd": 301729.96
+          "usd": 300845.49
         },
         "collateral_withdraw": {
           "count": 16,
-          "usd": 2957662.92
+          "usd": 2948993.01
         },
         "borrow": {
           "count": 6,
-          "usd": 114676.09
+          "usd": 114684.47
         },
         "repay": {
           "count": 16,
-          "usd": 1873621.39
+          "usd": 1873758.36
         },
         "loan_supply": {
           "count": 35,
-          "usd": 3586352.6
+          "usd": 3586614.78
         },
         "loan_withdraw": {
           "count": 28,
-          "usd": 5461535.05
+          "usd": 5461934.32
         }
       },
       {
@@ -5663,15 +5681,15 @@
         },
         "repay": {
           "count": 1,
-          "usd": 334917.06
+          "usd": 334905.68
         },
         "loan_supply": {
           "count": 44,
-          "usd": 2657501.8
+          "usd": 2657411.53
         },
         "loan_withdraw": {
           "count": 41,
-          "usd": 2818979.62
+          "usd": 2818883.86
         }
       },
       {
@@ -5696,11 +5714,11 @@
         },
         "loan_supply": {
           "count": 10,
-          "usd": 809038.78
+          "usd": 809011.3
         },
         "loan_withdraw": {
           "count": 9,
-          "usd": 572433.53
+          "usd": 572414.08
         }
       },
       {
@@ -5709,27 +5727,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 2,
-          "usd": 894840.08
+          "usd": 894813.74
         },
         "collateral_withdraw": {
           "count": 5,
-          "usd": 3757453.99
+          "usd": 3757343.39
         },
         "borrow": {
           "count": 2,
-          "usd": 783973.62
+          "usd": 783913.77
         },
         "repay": {
           "count": 5,
-          "usd": 3374929.89
+          "usd": 3373732.55
         },
         "loan_supply": {
           "count": 28,
-          "usd": 55582.34
+          "usd": 55578.99
         },
         "loan_withdraw": {
           "count": 24,
-          "usd": 3138180.34
+          "usd": 3136889.68
         }
       },
       {
@@ -5738,7 +5756,7 @@
         "collateral_asset": "EUTBL",
         "collateral_deposit": {
           "count": 1,
-          "usd": 11440.61
+          "usd": 11433.0
         },
         "collateral_withdraw": {
           "count": 0,
@@ -5746,7 +5764,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 11413.71
+          "usd": 11412.67
         },
         "repay": {
           "count": 0,
@@ -5758,7 +5776,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 30442.33
+          "usd": 30439.56
         }
       },
       {
@@ -5783,7 +5801,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 1307.55
+          "usd": 1307.51
         },
         "loan_withdraw": {
           "count": 0,
@@ -5812,11 +5830,11 @@
         },
         "loan_supply": {
           "count": 2,
-          "usd": 31984.86
+          "usd": 31989.37
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 36327.81
+          "usd": 36332.94
         }
       },
       {
@@ -5825,27 +5843,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 9,
-          "usd": 50185.57
+          "usd": 50038.46
         },
         "collateral_withdraw": {
           "count": 6,
-          "usd": 120033.44
+          "usd": 119681.59
         },
         "borrow": {
           "count": 5,
-          "usd": 28768.57
+          "usd": 28770.67
         },
         "repay": {
           "count": 9,
-          "usd": 117109.93
+          "usd": 117118.5
         },
         "loan_supply": {
           "count": 13,
-          "usd": 280594.22
+          "usd": 280614.74
         },
         "loan_withdraw": {
           "count": 16,
-          "usd": 469645.82
+          "usd": 469680.15
         }
       },
       {
@@ -5858,23 +5876,23 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 32547.8
+          "usd": 32544.85
         },
         "borrow": {
           "count": 1,
-          "usd": 299925.72
+          "usd": 299915.54
         },
         "repay": {
           "count": 1,
-          "usd": 25112.19
+          "usd": 25111.34
         },
         "loan_supply": {
           "count": 35,
-          "usd": 1503523.51
+          "usd": 1503472.43
         },
         "loan_withdraw": {
           "count": 44,
-          "usd": 1304110.64
+          "usd": 1304066.34
         }
       },
       {
@@ -5883,7 +5901,7 @@
         "collateral_asset": "muBOND",
         "collateral_deposit": {
           "count": 1,
-          "usd": 115886.84
+          "usd": 115877.99
         },
         "collateral_withdraw": {
           "count": 0,
@@ -5891,7 +5909,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 89977.72
+          "usd": 89974.66
         },
         "repay": {
           "count": 0,
@@ -5899,11 +5917,11 @@
         },
         "loan_supply": {
           "count": 28,
-          "usd": 1639544.95
+          "usd": 1639489.25
         },
         "loan_withdraw": {
           "count": 19,
-          "usd": 754058.64
+          "usd": 754033.03
         }
       },
       {
@@ -5912,27 +5930,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 5,
-          "usd": 4011567.91
+          "usd": 4011449.84
         },
         "collateral_withdraw": {
           "count": 4,
-          "usd": 3160996.54
+          "usd": 3160903.5
         },
         "borrow": {
           "count": 6,
-          "usd": 3506402.94
+          "usd": 3504960.4
         },
         "repay": {
           "count": 4,
-          "usd": 3153113.3
+          "usd": 3151808.52
         },
         "loan_supply": {
           "count": 7,
-          "usd": 1680478.17
+          "usd": 1679783.08
         },
         "loan_withdraw": {
           "count": 12,
-          "usd": 1388138.9
+          "usd": 1387564.76
         }
       },
       {
@@ -5957,7 +5975,7 @@
         },
         "loan_supply": {
           "count": 7,
-          "usd": 553.66
+          "usd": 553.64
         },
         "loan_withdraw": {
           "count": 0,
@@ -5986,7 +6004,7 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 3757.96
+          "usd": 3758.49
         },
         "loan_withdraw": {
           "count": 0,
@@ -5999,27 +6017,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 1,
-          "usd": 41424.39
+          "usd": 41302.96
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 18401.97
+          "usd": 18348.03
         },
         "borrow": {
           "count": 2,
-          "usd": 499.8
+          "usd": 499.84
         },
         "repay": {
           "count": 1,
-          "usd": 7011.12
+          "usd": 7011.63
         },
         "loan_supply": {
           "count": 27,
-          "usd": 231738.5
+          "usd": 231745.37
         },
         "loan_withdraw": {
           "count": 19,
-          "usd": 203062.67
+          "usd": 203077.52
         }
       },
       {
@@ -6040,15 +6058,15 @@
         },
         "repay": {
           "count": 2,
-          "usd": 2729232.08
+          "usd": 2729139.38
         },
         "loan_supply": {
           "count": 27,
-          "usd": 2746646.7
+          "usd": 2746553.41
         },
         "loan_withdraw": {
           "count": 34,
-          "usd": 5237223.14
+          "usd": 5237045.25
         }
       },
       {
@@ -6073,11 +6091,11 @@
         },
         "loan_supply": {
           "count": 52,
-          "usd": 4912200.08
+          "usd": 4912033.22
         },
         "loan_withdraw": {
           "count": 46,
-          "usd": 6064334.51
+          "usd": 6064128.52
         }
       },
       {
@@ -6090,23 +6108,23 @@
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 1183652.39
+          "usd": 1183617.55
         },
         "borrow": {
           "count": 1,
-          "usd": 49511.47
+          "usd": 49490.99
         },
         "repay": {
           "count": 2,
-          "usd": 1052793.37
+          "usd": 1052391.45
         },
         "loan_supply": {
           "count": 17,
-          "usd": 123484.97
+          "usd": 123475.48
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 1149169.31
+          "usd": 1148755.46
         }
       },
       {
@@ -6135,7 +6153,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 2122.59
+          "usd": 2122.4
         }
       },
       {
@@ -6160,7 +6178,7 @@
         },
         "loan_supply": {
           "count": 2,
-          "usd": 724.08
+          "usd": 724.06
         },
         "loan_withdraw": {
           "count": 0,
@@ -6189,11 +6207,11 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 3198.15
+          "usd": 3198.6
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 3268.96
+          "usd": 3269.42
         }
       },
       {
@@ -6202,27 +6220,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 1,
-          "usd": 820.69
+          "usd": 818.29
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 42667.13
+          "usd": 42542.05
         },
         "borrow": {
           "count": 3,
-          "usd": 19052.31
+          "usd": 19043.63
         },
         "repay": {
           "count": 1,
-          "usd": 449.93
+          "usd": 449.96
         },
         "loan_supply": {
           "count": 13,
-          "usd": 259382.8
+          "usd": 259358.11
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 183063.28
+          "usd": 183076.66
         }
       },
       {
@@ -6247,11 +6265,11 @@
         },
         "loan_supply": {
           "count": 13,
-          "usd": 1698879.98
+          "usd": 1698822.28
         },
         "loan_withdraw": {
           "count": 21,
-          "usd": 2080153.58
+          "usd": 2080082.92
         }
       },
       {
@@ -6276,11 +6294,11 @@
         },
         "loan_supply": {
           "count": 15,
-          "usd": 1840718.04
+          "usd": 1840655.51
         },
         "loan_withdraw": {
           "count": 13,
-          "usd": 1778183.04
+          "usd": 1778122.64
         }
       },
       {
@@ -6293,7 +6311,7 @@
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 1282141.82
+          "usd": 1282104.08
         },
         "borrow": {
           "count": 0,
@@ -6301,15 +6319,15 @@
         },
         "repay": {
           "count": 3,
-          "usd": 1140428.11
+          "usd": 1140136.47
         },
         "loan_supply": {
           "count": 26,
-          "usd": 4298.64
+          "usd": 4298.5
         },
         "loan_withdraw": {
           "count": 38,
-          "usd": 634205.98
+          "usd": 633945.41
         }
       },
       {
@@ -6334,7 +6352,7 @@
         },
         "loan_supply": {
           "count": 4,
-          "usd": 571.87
+          "usd": 571.85
         },
         "loan_withdraw": {
           "count": 0,
@@ -6351,7 +6369,7 @@
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 76765.64
+          "usd": 76540.62
         },
         "borrow": {
           "count": 0,
@@ -6359,15 +6377,15 @@
         },
         "repay": {
           "count": 4,
-          "usd": 119564.49
+          "usd": 119573.23
         },
         "loan_supply": {
           "count": 14,
-          "usd": 154296.04
+          "usd": 154307.32
         },
         "loan_withdraw": {
           "count": 17,
-          "usd": 285879.9
+          "usd": 285900.8
         }
       },
       {
@@ -6376,7 +6394,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 1,
-          "usd": 847864.12
+          "usd": 847787.14
         },
         "collateral_withdraw": {
           "count": 0,
@@ -6384,7 +6402,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 674688.5
+          "usd": 674665.58
         },
         "repay": {
           "count": 0,
@@ -6392,11 +6410,11 @@
         },
         "loan_supply": {
           "count": 30,
-          "usd": 2513214.61
+          "usd": 2513129.24
         },
         "loan_withdraw": {
           "count": 29,
-          "usd": 1941180.0
+          "usd": 1941114.06
         }
       },
       {
@@ -6421,11 +6439,11 @@
         },
         "loan_supply": {
           "count": 17,
-          "usd": 915783.37
+          "usd": 915752.26
         },
         "loan_withdraw": {
           "count": 5,
-          "usd": 736408.85
+          "usd": 736383.83
         }
       },
       {
@@ -6434,7 +6452,7 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 6,
-          "usd": 24566.02
+          "usd": 24565.29
         },
         "collateral_withdraw": {
           "count": 0,
@@ -6442,7 +6460,7 @@
         },
         "borrow": {
           "count": 6,
-          "usd": 31803.26
+          "usd": 31805.22
         },
         "repay": {
           "count": 0,
@@ -6450,11 +6468,11 @@
         },
         "loan_supply": {
           "count": 6,
-          "usd": 201953.09
+          "usd": 201937.71
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 4812.79
+          "usd": 4810.81
         }
       },
       {
@@ -6479,11 +6497,11 @@
         },
         "loan_supply": {
           "count": 8,
-          "usd": 11245.2
+          "usd": 11244.82
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 10196.5
+          "usd": 10196.15
         }
       },
       {
@@ -6496,7 +6514,7 @@
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 10755.0
+          "usd": 10732.46
         },
         "borrow": {
           "count": 0,
@@ -6504,7 +6522,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 7976.81
+          "usd": 7977.94
         },
         "loan_supply": {
           "count": 0,
@@ -6521,15 +6539,15 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 2,
-          "usd": 172.93
+          "usd": 172.42
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 2112.64
+          "usd": 2106.45
         },
         "borrow": {
           "count": 4,
-          "usd": 6792.63
+          "usd": 6789.52
         },
         "repay": {
           "count": 1,
@@ -6537,11 +6555,11 @@
         },
         "loan_supply": {
           "count": 25,
-          "usd": 6307944.77
+          "usd": 6305671.2
         },
         "loan_withdraw": {
           "count": 20,
-          "usd": 1208699.62
+          "usd": 1208553.41
         }
       },
       {
@@ -6566,11 +6584,11 @@
         },
         "loan_supply": {
           "count": 38,
-          "usd": 1458814.52
+          "usd": 1458764.97
         },
         "loan_withdraw": {
           "count": 40,
-          "usd": 1415372.79
+          "usd": 1415324.71
         }
       },
       {
@@ -6595,11 +6613,11 @@
         },
         "loan_supply": {
           "count": 10,
-          "usd": 934789.98
+          "usd": 934758.23
         },
         "loan_withdraw": {
           "count": 6,
-          "usd": 620593.05
+          "usd": 620571.97
         }
       },
       {
@@ -6608,7 +6626,7 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 1,
-          "usd": 251179.9
+          "usd": 251172.51
         },
         "collateral_withdraw": {
           "count": 0,
@@ -6616,7 +6634,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 212750.88
+          "usd": 212662.84
         },
         "repay": {
           "count": 0,
@@ -6624,11 +6642,11 @@
         },
         "loan_supply": {
           "count": 5,
-          "usd": 163334.36
+          "usd": 163266.78
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 50044.13
+          "usd": 50040.31
         }
       },
       {
@@ -6657,7 +6675,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 42442.95
+          "usd": 42439.08
         }
       },
       {
@@ -6682,7 +6700,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 155.11
+          "usd": 155.1
         },
         "loan_withdraw": {
           "count": 0,
@@ -6695,27 +6713,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 5,
-          "usd": 3694.6
+          "usd": 3683.77
         },
         "collateral_withdraw": {
           "count": 6,
-          "usd": 22626.91
+          "usd": 22560.58
         },
         "borrow": {
           "count": 2,
-          "usd": 3296.4
+          "usd": 3296.64
         },
         "repay": {
           "count": 3,
-          "usd": 10054.87
+          "usd": 10055.6
         },
         "loan_supply": {
           "count": 6,
-          "usd": 481118.43
+          "usd": 481153.59
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 511762.95
+          "usd": 511800.37
         }
       },
       {
@@ -6724,7 +6742,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 3,
-          "usd": 315716.51
+          "usd": 315687.85
         },
         "collateral_withdraw": {
           "count": 0,
@@ -6732,7 +6750,7 @@
         },
         "borrow": {
           "count": 2,
-          "usd": 194951.72
+          "usd": 194945.1
         },
         "repay": {
           "count": 0,
@@ -6740,11 +6758,11 @@
         },
         "loan_supply": {
           "count": 22,
-          "usd": 3084421.68
+          "usd": 3084316.91
         },
         "loan_withdraw": {
           "count": 18,
-          "usd": 2032328.16
+          "usd": 2032259.13
         }
       },
       {
@@ -6769,11 +6787,11 @@
         },
         "loan_supply": {
           "count": 16,
-          "usd": 704715.16
+          "usd": 704691.22
         },
         "loan_withdraw": {
           "count": 12,
-          "usd": 1199252.96
+          "usd": 1199212.22
         }
       },
       {
@@ -6782,27 +6800,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 1040954.73
+          "usd": 1040924.09
         },
         "collateral_withdraw": {
           "count": 12,
-          "usd": 5248265.83
+          "usd": 5248111.35
         },
         "borrow": {
           "count": 3,
-          "usd": 881451.84
+          "usd": 881474.37
         },
         "repay": {
           "count": 10,
-          "usd": 4310941.21
+          "usd": 4309386.56
         },
         "loan_supply": {
           "count": 2,
-          "usd": 1468.4
+          "usd": 1468.34
         },
         "loan_withdraw": {
           "count": 6,
-          "usd": 4113446.5
+          "usd": 4111744.34
         }
       },
       {
@@ -6831,7 +6849,7 @@
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 2179.73
+          "usd": 2179.53
         }
       },
       {
@@ -6852,15 +6870,15 @@
         },
         "repay": {
           "count": 2,
-          "usd": 2613180.72
+          "usd": 2613091.95
         },
         "loan_supply": {
           "count": 7,
-          "usd": 232117.71
+          "usd": 232109.83
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 3130014.6
+          "usd": 3129908.28
         }
       },
       {
@@ -6885,7 +6903,7 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 38597.02
+          "usd": 38602.46
         },
         "loan_withdraw": {
           "count": 0,
@@ -6898,15 +6916,15 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 84296.53
+          "usd": 84049.43
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 0.99
+          "usd": 0.98
         },
         "borrow": {
           "count": 2,
-          "usd": 49378.55
+          "usd": 49355.45
         },
         "repay": {
           "count": 0,
@@ -6918,7 +6936,7 @@
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 1625746.76
+          "usd": 1624987.02
         }
       },
       {
@@ -6927,7 +6945,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 1,
-          "usd": 2530230.75
+          "usd": 2530001.02
         },
         "collateral_withdraw": {
           "count": 0,
@@ -6935,7 +6953,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 2459390.93
+          "usd": 2459307.39
         },
         "repay": {
           "count": 0,
@@ -6943,11 +6961,11 @@
         },
         "loan_supply": {
           "count": 13,
-          "usd": 3370423.56
+          "usd": 3370309.07
         },
         "loan_withdraw": {
           "count": 15,
-          "usd": 589797.22
+          "usd": 589777.19
         }
       },
       {
@@ -6956,27 +6974,27 @@
         "collateral_asset": "muBOND",
         "collateral_deposit": {
           "count": 1,
-          "usd": 200168.18
+          "usd": 200152.9
         },
         "collateral_withdraw": {
           "count": 6,
-          "usd": 14268601.55
+          "usd": 14267512.36
         },
         "borrow": {
           "count": 1,
-          "usd": 149962.86
+          "usd": 149957.77
         },
         "repay": {
           "count": 6,
-          "usd": 11573524.69
+          "usd": 11573131.56
         },
         "loan_supply": {
           "count": 11,
-          "usd": 1123275.15
+          "usd": 1123237.0
         },
         "loan_withdraw": {
           "count": 28,
-          "usd": 13344315.63
+          "usd": 13343862.36
         }
       },
       {
@@ -6985,27 +7003,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 1,
-          "usd": 140796.14
+          "usd": 140792.0
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 4036706.83
+          "usd": 4036588.01
         },
         "borrow": {
           "count": 1,
-          "usd": 119981.89
+          "usd": 119972.73
         },
         "repay": {
           "count": 4,
-          "usd": 3518602.53
+          "usd": 3517156.57
         },
         "loan_supply": {
           "count": 11,
-          "usd": 75956152.97
+          "usd": 75966863.08
         },
         "loan_withdraw": {
           "count": 15,
-          "usd": 79159060.81
+          "usd": 79168041.08
         }
       },
       {
@@ -7034,7 +7052,7 @@
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 2842.86
+          "usd": 2842.6
         }
       },
       {
@@ -7059,7 +7077,7 @@
         },
         "loan_supply": {
           "count": 9,
-          "usd": 338.95
+          "usd": 338.94
         },
         "loan_withdraw": {
           "count": 0,
@@ -7072,7 +7090,7 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 1,
-          "usd": 1177.42
+          "usd": 1174.95
         },
         "collateral_withdraw": {
           "count": 0,
@@ -7080,7 +7098,7 @@
         },
         "borrow": {
           "count": 2,
-          "usd": 735.48
+          "usd": 735.59
         },
         "repay": {
           "count": 0,
@@ -7105,23 +7123,23 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 1379.28
+          "usd": 1375.24
         },
         "borrow": {
           "count": 3,
-          "usd": 5993.45
+          "usd": 5993.89
         },
         "repay": {
           "count": 1,
-          "usd": 749.27
+          "usd": 749.32
         },
         "loan_supply": {
           "count": 1,
-          "usd": 184.46
+          "usd": 184.37
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 3011281.35
+          "usd": 3009872.39
         }
       },
       {
@@ -7146,11 +7164,11 @@
         },
         "loan_supply": {
           "count": 31,
-          "usd": 3144236.61
+          "usd": 3144129.81
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 3085764.01
+          "usd": 3085659.19
         }
       },
       {
@@ -7179,7 +7197,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 1001.51
+          "usd": 1001.48
         }
       },
       {
@@ -7188,27 +7206,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 1,
-          "usd": 4008702.13
+          "usd": 4008584.14
         },
         "collateral_withdraw": {
           "count": 4,
-          "usd": 277299.11
+          "usd": 277290.95
         },
         "borrow": {
           "count": 1,
-          "usd": 3000695.35
+          "usd": 2999453.65
         },
         "repay": {
           "count": 4,
-          "usd": 264302.47
+          "usd": 264193.1
         },
         "loan_supply": {
           "count": 16,
-          "usd": 4976976.77
+          "usd": 4975825.81
         },
         "loan_withdraw": {
           "count": 15,
-          "usd": 1640838.9
+          "usd": 1640913.9
         }
       },
       {
@@ -7237,7 +7255,7 @@
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 2140.82
+          "usd": 2140.63
         }
       },
       {
@@ -7262,7 +7280,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 201.29
+          "usd": 201.28
         },
         "loan_withdraw": {
           "count": 0,
@@ -7275,23 +7293,23 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 1,
-          "usd": 450.74
+          "usd": 449.79
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 49759.55
+          "usd": 49655.24
         },
         "borrow": {
           "count": 1,
-          "usd": 149.93
+          "usd": 149.95
         },
         "repay": {
           "count": 1,
-          "usd": 44943.72
+          "usd": 44950.05
         },
         "loan_supply": {
           "count": 1,
-          "usd": 29985.41
+          "usd": 29989.63
         },
         "loan_withdraw": {
           "count": 0,
@@ -7304,7 +7322,7 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 4,
-          "usd": 18814.6
+          "usd": 18759.45
         },
         "collateral_withdraw": {
           "count": 0,
@@ -7316,7 +7334,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 12516.1
+          "usd": 12517.02
         },
         "loan_supply": {
           "count": 0,
@@ -7324,7 +7342,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 2837.42
+          "usd": 2836.09
         }
       },
       {
@@ -7345,15 +7363,15 @@
         },
         "repay": {
           "count": 1,
-          "usd": 585691.49
+          "usd": 585671.6
         },
         "loan_supply": {
           "count": 28,
-          "usd": 4618650.89
+          "usd": 4618494.01
         },
         "loan_withdraw": {
           "count": 40,
-          "usd": 5039930.27
+          "usd": 5039759.08
         }
       },
       {
@@ -7366,7 +7384,7 @@
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 6366251.39
+          "usd": 6366064.01
         },
         "borrow": {
           "count": 0,
@@ -7374,15 +7392,15 @@
         },
         "repay": {
           "count": 3,
-          "usd": 5716651.68
+          "usd": 5714286.09
         },
         "loan_supply": {
           "count": 14,
-          "usd": 4156.91
+          "usd": 4155.19
         },
         "loan_withdraw": {
           "count": 15,
-          "usd": 6171607.42
+          "usd": 6169073.04
         }
       },
       {
@@ -7407,7 +7425,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 354.77
+          "usd": 354.76
         },
         "loan_withdraw": {
           "count": 0,
@@ -7440,7 +7458,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 59970.26
+          "usd": 59978.71
         }
       },
       {
@@ -7449,11 +7467,11 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 1,
-          "usd": 30.46
+          "usd": 30.37
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 12178.77
+          "usd": 12143.07
         },
         "borrow": {
           "count": 0,
@@ -7465,11 +7483,11 @@
         },
         "loan_supply": {
           "count": 23,
-          "usd": 2119950.59
+          "usd": 2120105.57
         },
         "loan_withdraw": {
           "count": 23,
-          "usd": 2515675.86
+          "usd": 2515859.77
         }
       },
       {
@@ -7494,11 +7512,11 @@
         },
         "loan_supply": {
           "count": 25,
-          "usd": 2592193.87
+          "usd": 2592105.82
         },
         "loan_withdraw": {
           "count": 41,
-          "usd": 2932140.62
+          "usd": 2932041.02
         }
       },
       {
@@ -7507,27 +7525,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 13,
-          "usd": 565359.9
+          "usd": 565343.26
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 99674.41
+          "usd": 99671.47
         },
         "borrow": {
           "count": 14,
-          "usd": 526114.19
+          "usd": 526069.57
         },
         "repay": {
           "count": 1,
-          "usd": 89388.2
+          "usd": 89381.38
         },
         "loan_supply": {
           "count": 11,
-          "usd": 74002.48
+          "usd": 73999.52
         },
         "loan_withdraw": {
           "count": 11,
-          "usd": 26172.91
+          "usd": 26162.09
         }
       },
       {
@@ -7536,7 +7554,7 @@
         "collateral_asset": "PAXG",
         "collateral_deposit": {
           "count": 1,
-          "usd": 829.33
+          "usd": 827.59
         },
         "collateral_withdraw": {
           "count": 0,
@@ -7544,7 +7562,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 319.84
+          "usd": 319.89
         },
         "repay": {
           "count": 0,
@@ -7556,7 +7574,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 19993.11
+          "usd": 19995.93
         }
       },
       {
@@ -7565,27 +7583,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 2,
-          "usd": 58822.64
+          "usd": 58650.21
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 216238.46
+          "usd": 215604.6
         },
         "borrow": {
           "count": 1,
-          "usd": 29967.26
+          "usd": 29969.45
         },
         "repay": {
           "count": 3,
-          "usd": 44438.1
+          "usd": 44441.35
         },
         "loan_supply": {
           "count": 17,
-          "usd": 393671.22
+          "usd": 393700.0
         },
         "loan_withdraw": {
           "count": 10,
-          "usd": 462596.28
+          "usd": 462630.1
         }
       },
       {
@@ -7594,7 +7612,7 @@
         "collateral_asset": "mF-ONE",
         "collateral_deposit": {
           "count": 1,
-          "usd": 1517054.2
+          "usd": 1516916.46
         },
         "collateral_withdraw": {
           "count": 0,
@@ -7602,7 +7620,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 1210657.05
+          "usd": 1210615.93
         },
         "repay": {
           "count": 0,
@@ -7610,11 +7628,11 @@
         },
         "loan_supply": {
           "count": 22,
-          "usd": 2663212.78
+          "usd": 2663122.32
         },
         "loan_withdraw": {
           "count": 40,
-          "usd": 1279719.24
+          "usd": 1279675.77
         }
       },
       {
@@ -7623,27 +7641,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 5,
-          "usd": 944909.05
+          "usd": 944881.24
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 130236.71
+          "usd": 130232.87
         },
         "borrow": {
           "count": 5,
-          "usd": 838218.63
+          "usd": 838139.58
         },
         "repay": {
           "count": 1,
-          "usd": 114983.17
+          "usd": 114974.39
         },
         "loan_supply": {
           "count": 8,
-          "usd": 83508.1
+          "usd": 83501.73
         },
         "loan_withdraw": {
           "count": 6,
-          "usd": 86752.18
+          "usd": 86739.99
         }
       },
       {
@@ -7668,7 +7686,7 @@
         },
         "loan_supply": {
           "count": 4,
-          "usd": 611.8
+          "usd": 611.77
         },
         "loan_withdraw": {
           "count": 0,
@@ -7681,15 +7699,15 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 2,
-          "usd": 74.4
+          "usd": 74.18
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 289.97
+          "usd": 289.12
         },
         "borrow": {
           "count": 1,
-          "usd": 1298.58
+          "usd": 1298.68
         },
         "repay": {
           "count": 0,
@@ -7697,11 +7715,11 @@
         },
         "loan_supply": {
           "count": 28,
-          "usd": 990735.97
+          "usd": 990808.4
         },
         "loan_withdraw": {
           "count": 17,
-          "usd": 971661.4
+          "usd": 971732.44
         }
       },
       {
@@ -7718,7 +7736,7 @@
         },
         "borrow": {
           "count": 5,
-          "usd": 2754269.55
+          "usd": 2754176.0
         },
         "repay": {
           "count": 0,
@@ -7726,11 +7744,11 @@
         },
         "loan_supply": {
           "count": 46,
-          "usd": 6766806.35
+          "usd": 6766576.5
         },
         "loan_withdraw": {
           "count": 48,
-          "usd": 3501341.73
+          "usd": 3501222.79
         }
       },
       {
@@ -7739,27 +7757,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 9,
-          "usd": 8844600.9
+          "usd": 8844340.57
         },
         "collateral_withdraw": {
           "count": 16,
-          "usd": 12637507.22
+          "usd": 12637135.24
         },
         "borrow": {
           "count": 9,
-          "usd": 7650547.09
+          "usd": 7650572.5
         },
         "repay": {
           "count": 14,
-          "usd": 10856402.45
+          "usd": 10854917.47
         },
         "loan_supply": {
           "count": 10,
-          "usd": 2058152.35
+          "usd": 2057995.26
         },
         "loan_withdraw": {
           "count": 14,
-          "usd": 5746491.29
+          "usd": 5744799.15
         }
       },
       {
@@ -7788,7 +7806,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 5256.94
+          "usd": 5256.46
         }
       },
       {
@@ -7830,15 +7848,15 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 20373.13
+          "usd": 20330.43
         },
         "borrow": {
           "count": 2,
-          "usd": 1999.01
+          "usd": 1999.29
         },
         "repay": {
           "count": 1,
-          "usd": 8309.29
+          "usd": 8310.46
         },
         "loan_supply": {
           "count": 0,
@@ -7855,27 +7873,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 8,
-          "usd": 146818.53
+          "usd": 146388.15
         },
         "collateral_withdraw": {
           "count": 8,
-          "usd": 7207.34
+          "usd": 7186.22
         },
         "borrow": {
           "count": 8,
-          "usd": 99648.19
+          "usd": 99655.47
         },
         "repay": {
           "count": 10,
-          "usd": 4516.28
+          "usd": 4516.61
         },
         "loan_supply": {
           "count": 13,
-          "usd": 753434.89
+          "usd": 753489.97
         },
         "loan_withdraw": {
           "count": 11,
-          "usd": 346598.95
+          "usd": 346624.28
         }
       },
       {
@@ -7888,7 +7906,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 10585428.48
+          "usd": 10584467.38
         },
         "borrow": {
           "count": 0,
@@ -7896,15 +7914,15 @@
         },
         "repay": {
           "count": 2,
-          "usd": 4312257.35
+          "usd": 4312110.88
         },
         "loan_supply": {
           "count": 34,
-          "usd": 4798001.93
+          "usd": 4797838.96
         },
         "loan_withdraw": {
           "count": 52,
-          "usd": 9918911.72
+          "usd": 9918574.8
         }
       },
       {
@@ -7913,27 +7931,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 219841.04
+          "usd": 219834.57
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 160250.13
+          "usd": 160245.41
         },
         "borrow": {
           "count": 3,
-          "usd": 126990.9
+          "usd": 126959.58
         },
         "repay": {
           "count": 1,
-          "usd": 144979.25
+          "usd": 144968.18
         },
         "loan_supply": {
           "count": 10,
-          "usd": 588812.96
+          "usd": 588895.81
         },
         "loan_withdraw": {
           "count": 15,
-          "usd": 631379.14
+          "usd": 631467.22
         }
       },
       {
@@ -7946,7 +7964,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 24090.29
+          "usd": 24074.26
         },
         "borrow": {
           "count": 0,
@@ -7954,7 +7972,7 @@
         },
         "repay": {
           "count": 1,
-          "usd": 22827.41
+          "usd": 22825.33
         },
         "loan_supply": {
           "count": 0,
@@ -7962,7 +7980,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 25997.6
+          "usd": 25995.23
         }
       },
       {
@@ -8004,11 +8022,11 @@
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 12.9
+          "usd": 12.87
         },
         "borrow": {
           "count": 1,
-          "usd": 999.5
+          "usd": 999.65
         },
         "repay": {
           "count": 3,
@@ -8020,7 +8038,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 9036.44
+          "usd": 9037.72
         }
       },
       {
@@ -8029,27 +8047,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 5,
-          "usd": 20860.19
+          "usd": 20799.04
         },
         "collateral_withdraw": {
           "count": 12,
-          "usd": 733485.66
+          "usd": 731335.56
         },
         "borrow": {
           "count": 3,
-          "usd": 2397.38
+          "usd": 2397.56
         },
         "repay": {
           "count": 14,
-          "usd": 466117.62
+          "usd": 466151.7
         },
         "loan_supply": {
           "count": 7,
-          "usd": 32359.05
+          "usd": 32361.42
         },
         "loan_withdraw": {
           "count": 7,
-          "usd": 617530.7
+          "usd": 617575.84
         }
       },
       {
@@ -8074,11 +8092,11 @@
         },
         "loan_supply": {
           "count": 15,
-          "usd": 1692008.65
+          "usd": 1691951.18
         },
         "loan_withdraw": {
           "count": 30,
-          "usd": 1430319.2
+          "usd": 1430270.62
         }
       },
       {
@@ -8087,27 +8105,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 4,
-          "usd": 127052.44
+          "usd": 127048.7
         },
         "collateral_withdraw": {
           "count": 4,
-          "usd": 931686.78
+          "usd": 931659.36
         },
         "borrow": {
           "count": 6,
-          "usd": 282316.75
+          "usd": 282320.0
         },
         "repay": {
           "count": 4,
-          "usd": 691744.16
+          "usd": 691738.39
         },
         "loan_supply": {
           "count": 20,
-          "usd": 1129123.83
+          "usd": 1129080.78
         },
         "loan_withdraw": {
           "count": 19,
-          "usd": 1573917.75
+          "usd": 1573842.45
         }
       },
       {
@@ -8136,7 +8154,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 365.99
+          "usd": 365.96
         }
       },
       {
@@ -8149,7 +8167,7 @@
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 219092.57
+          "usd": 218633.29
         },
         "borrow": {
           "count": 0,
@@ -8157,7 +8175,7 @@
         },
         "repay": {
           "count": 2,
-          "usd": 131714.47
+          "usd": 131733.05
         },
         "loan_supply": {
           "count": 0,
@@ -8165,7 +8183,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 132397.77
+          "usd": 132416.44
         }
       },
       {
@@ -8174,19 +8192,19 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 1419.96
+          "usd": 1415.8
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 222322.6
+          "usd": 221670.89
         },
         "borrow": {
           "count": 1,
-          "usd": 404.56
+          "usd": 404.59
         },
         "repay": {
           "count": 2,
-          "usd": 132075.31
+          "usd": 132084.97
         },
         "loan_supply": {
           "count": 0,
@@ -8194,7 +8212,7 @@
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 143122.98
+          "usd": 143133.44
         }
       },
       {
@@ -8207,7 +8225,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 36961.07
+          "usd": 36957.71
         },
         "borrow": {
           "count": 0,
@@ -8215,15 +8233,15 @@
         },
         "repay": {
           "count": 2,
-          "usd": 113628.35
+          "usd": 113624.49
         },
         "loan_supply": {
           "count": 26,
-          "usd": 1986195.97
+          "usd": 1986128.5
         },
         "loan_withdraw": {
           "count": 57,
-          "usd": 2559474.93
+          "usd": 2559387.99
         }
       },
       {
@@ -8232,27 +8250,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 231900.19
+          "usd": 231893.37
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 370341.58
+          "usd": 370330.68
         },
         "borrow": {
           "count": 3,
-          "usd": 205797.0
+          "usd": 205820.7
         },
         "repay": {
           "count": 2,
-          "usd": 327955.1
+          "usd": 327930.07
         },
         "loan_supply": {
           "count": 4,
-          "usd": 87534.84
+          "usd": 87545.28
         },
         "loan_withdraw": {
           "count": 11,
-          "usd": 83213.36
+          "usd": 83224.94
         }
       },
       {
@@ -8277,11 +8295,11 @@
         },
         "loan_supply": {
           "count": 4,
-          "usd": 3186.58
+          "usd": 3186.29
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 70120.09
+          "usd": 70113.69
         }
       },
       {
@@ -8306,7 +8324,7 @@
         },
         "loan_supply": {
           "count": 5,
-          "usd": 859.96
+          "usd": 859.93
         },
         "loan_withdraw": {
           "count": 0,
@@ -8339,7 +8357,7 @@
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 40594.58
+          "usd": 40600.31
         }
       },
       {
@@ -8348,23 +8366,23 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 1401.64
+          "usd": 1397.53
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 258.69
+          "usd": 257.93
         },
         "borrow": {
           "count": 4,
-          "usd": 694.24
+          "usd": 694.29
         },
         "repay": {
           "count": 2,
-          "usd": 887.18
+          "usd": 887.25
         },
         "loan_supply": {
           "count": 2,
-          "usd": 10028.47
+          "usd": 10029.18
         },
         "loan_withdraw": {
           "count": 0,
@@ -8385,19 +8403,19 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 79980.19
+          "usd": 79977.48
         },
         "repay": {
           "count": 2,
-          "usd": 563962.96
+          "usd": 563943.8
         },
         "loan_supply": {
           "count": 24,
-          "usd": 2294689.41
+          "usd": 2294611.46
         },
         "loan_withdraw": {
           "count": 78,
-          "usd": 2843413.34
+          "usd": 2843316.75
         }
       },
       {
@@ -8406,27 +8424,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 12,
-          "usd": 6152102.57
+          "usd": 6151921.49
         },
         "collateral_withdraw": {
           "count": 5,
-          "usd": 575708.37
+          "usd": 575691.43
         },
         "borrow": {
           "count": 30,
-          "usd": 5320466.91
+          "usd": 5318402.22
         },
         "repay": {
           "count": 7,
-          "usd": 500651.46
+          "usd": 500665.94
         },
         "loan_supply": {
           "count": 87,
-          "usd": 7033465.49
+          "usd": 7031315.5
         },
         "loan_withdraw": {
           "count": 52,
-          "usd": 1574854.13
+          "usd": 1574983.45
         }
       },
       {
@@ -8451,7 +8469,7 @@
         },
         "loan_supply": {
           "count": 4,
-          "usd": 3740.96
+          "usd": 3740.62
         },
         "loan_withdraw": {
           "count": 0,
@@ -8480,7 +8498,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 133.23
+          "usd": 133.22
         },
         "loan_withdraw": {
           "count": 0,
@@ -8497,7 +8515,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 35.8
+          "usd": 35.72
         },
         "borrow": {
           "count": 0,
@@ -8522,27 +8540,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 2,
-          "usd": 54172.04
+          "usd": 54013.25
         },
         "collateral_withdraw": {
           "count": 5,
-          "usd": 1413.77
+          "usd": 1409.62
         },
         "borrow": {
           "count": 1,
-          "usd": 17980.36
+          "usd": 17981.67
         },
         "repay": {
           "count": 5,
-          "usd": 919.49
+          "usd": 919.56
         },
         "loan_supply": {
           "count": 2,
-          "usd": 221225.34
+          "usd": 221241.51
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 297995.08
+          "usd": 298016.87
         }
       },
       {
@@ -8567,11 +8585,11 @@
         },
         "loan_supply": {
           "count": 7,
-          "usd": 1322481.22
+          "usd": 1322436.3
         },
         "loan_withdraw": {
           "count": 47,
-          "usd": 1409327.4
+          "usd": 1409279.52
         }
       },
       {
@@ -8580,27 +8598,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 3,
-          "usd": 760019.92
+          "usd": 759997.55
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 752938.35
+          "usd": 752916.19
         },
         "borrow": {
           "count": 3,
-          "usd": 669966.22
+          "usd": 669962.24
         },
         "repay": {
           "count": 2,
-          "usd": 670435.42
+          "usd": 670323.33
         },
         "loan_supply": {
           "count": 53,
-          "usd": 2687751.87
+          "usd": 2687547.63
         },
         "loan_withdraw": {
           "count": 36,
-          "usd": 733705.99
+          "usd": 733655.34
         }
       },
       {
@@ -8625,11 +8643,11 @@
         },
         "loan_supply": {
           "count": 14,
-          "usd": 459696.95
+          "usd": 459681.33
         },
         "loan_withdraw": {
           "count": 2,
-          "usd": 459388.88
+          "usd": 459373.28
         }
       },
       {
@@ -8638,7 +8656,7 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 1,
-          "usd": 5.39
+          "usd": 5.37
         },
         "collateral_withdraw": {
           "count": 0,
@@ -8646,19 +8664,19 @@
         },
         "borrow": {
           "count": 3,
-          "usd": 950.29
+          "usd": 950.36
         },
         "repay": {
           "count": 2,
-          "usd": 370.78
+          "usd": 370.81
         },
         "loan_supply": {
           "count": 1,
-          "usd": 107503.29
+          "usd": 107511.15
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 71917.93
+          "usd": 71923.19
         }
       },
       {
@@ -8683,11 +8701,11 @@
         },
         "loan_supply": {
           "count": 20,
-          "usd": 4364082.34
+          "usd": 4363934.1
         },
         "loan_withdraw": {
           "count": 49,
-          "usd": 4031750.28
+          "usd": 4031613.33
         }
       },
       {
@@ -8696,27 +8714,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 10,
-          "usd": 1574287.39
+          "usd": 1574241.05
         },
         "collateral_withdraw": {
           "count": 4,
-          "usd": 2342177.23
+          "usd": 2342108.29
         },
         "borrow": {
           "count": 10,
-          "usd": 1422668.34
+          "usd": 1422559.74
         },
         "repay": {
           "count": 4,
-          "usd": 2118546.73
+          "usd": 2118502.13
         },
         "loan_supply": {
           "count": 50,
-          "usd": 413651.33
+          "usd": 413626.58
         },
         "loan_withdraw": {
           "count": 46,
-          "usd": 349906.74
+          "usd": 349882.14
         }
       },
       {
@@ -8741,7 +8759,7 @@
         },
         "loan_supply": {
           "count": 3,
-          "usd": 8197.67
+          "usd": 8196.92
         },
         "loan_withdraw": {
           "count": 0,
@@ -8766,15 +8784,15 @@
         },
         "repay": {
           "count": 4,
-          "usd": 11714.65
+          "usd": 11714.25
         },
         "loan_supply": {
           "count": 8,
-          "usd": 4661.47
+          "usd": 4661.31
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 15595.63
+          "usd": 15595.1
         }
       },
       {
@@ -8783,19 +8801,19 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 3,
-          "usd": 761.1
+          "usd": 758.87
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 1.94
+          "usd": 1.93
         },
         "borrow": {
           "count": 1,
-          "usd": 199.78
+          "usd": 199.8
         },
         "repay": {
           "count": 2,
-          "usd": 25.5
+          "usd": 25.51
         },
         "loan_supply": {
           "count": 0,
@@ -8820,19 +8838,19 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 653038.28
+          "usd": 653016.09
         },
         "repay": {
           "count": 1,
-          "usd": 799883.94
+          "usd": 799856.77
         },
         "loan_supply": {
           "count": 28,
-          "usd": 7045159.14
+          "usd": 7044919.83
         },
         "loan_withdraw": {
           "count": 32,
-          "usd": 7277197.58
+          "usd": 7276950.39
         }
       },
       {
@@ -8841,27 +8859,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 4,
-          "usd": 3223969.06
+          "usd": 3223874.16
         },
         "collateral_withdraw": {
           "count": 2,
-          "usd": 97276.3
+          "usd": 97273.44
         },
         "borrow": {
           "count": 4,
-          "usd": 2856563.77
+          "usd": 2856355.38
         },
         "repay": {
           "count": 2,
-          "usd": 90006.44
+          "usd": 89999.57
         },
         "loan_supply": {
           "count": 34,
-          "usd": 824535.88
+          "usd": 824473.21
         },
         "loan_withdraw": {
           "count": 25,
-          "usd": 1257436.73
+          "usd": 1257361.46
         }
       },
       {
@@ -8870,7 +8888,7 @@
         "collateral_asset": "EUTBL",
         "collateral_deposit": {
           "count": 2,
-          "usd": 17259.88
+          "usd": 17248.4
         },
         "collateral_withdraw": {
           "count": 0,
@@ -8878,7 +8896,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 15180.23
+          "usd": 15178.85
         },
         "repay": {
           "count": 0,
@@ -8886,11 +8904,11 @@
         },
         "loan_supply": {
           "count": 10,
-          "usd": 71995.1
+          "usd": 71988.54
         },
         "loan_withdraw": {
           "count": 1,
-          "usd": 51091.95
+          "usd": 51087.3
         }
       },
       {
@@ -8915,11 +8933,11 @@
         },
         "loan_supply": {
           "count": 2,
-          "usd": 602184.73
+          "usd": 602164.27
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 604070.33
+          "usd": 604049.81
         }
       },
       {
@@ -8932,7 +8950,7 @@
         },
         "collateral_withdraw": {
           "count": 1,
-          "usd": 82.93
+          "usd": 82.76
         },
         "borrow": {
           "count": 0,
@@ -8944,11 +8962,11 @@
         },
         "loan_supply": {
           "count": 1,
-          "usd": 23950.25
+          "usd": 23953.63
         },
         "loan_withdraw": {
           "count": 4,
-          "usd": 46480.15
+          "usd": 46486.71
         }
       },
       {
@@ -8957,27 +8975,27 @@
         "collateral_asset": "XAUt",
         "collateral_deposit": {
           "count": 4,
-          "usd": 8882.54
+          "usd": 8856.5
         },
         "collateral_withdraw": {
           "count": 3,
-          "usd": 1406.06
+          "usd": 1401.93
         },
         "borrow": {
           "count": 4,
-          "usd": 2886.85
+          "usd": 2887.06
         },
         "repay": {
           "count": 3,
-          "usd": 599.81
+          "usd": 599.85
         },
         "loan_supply": {
           "count": 2,
-          "usd": 291408.36
+          "usd": 291429.66
         },
         "loan_withdraw": {
           "count": 3,
-          "usd": 318752.29
+          "usd": 318775.59
         }
       },
       {
@@ -8994,7 +9012,7 @@
         },
         "borrow": {
           "count": 1,
-          "usd": 249938.1
+          "usd": 249929.61
         },
         "repay": {
           "count": 0,
@@ -9002,11 +9020,11 @@
         },
         "loan_supply": {
           "count": 43,
-          "usd": 6131407.77
+          "usd": 6131199.5
         },
         "loan_withdraw": {
           "count": 53,
-          "usd": 6285926.33
+          "usd": 6285712.81
         }
       },
       {
@@ -9015,27 +9033,27 @@
         "collateral_asset": "syrupUSDC",
         "collateral_deposit": {
           "count": 16,
-          "usd": 7172237.71
+          "usd": 7172026.6
         },
         "collateral_withdraw": {
           "count": 9,
-          "usd": 578331.06
+          "usd": 578314.04
         },
         "borrow": {
           "count": 14,
-          "usd": 4468256.78
+          "usd": 4467065.63
         },
         "repay": {
           "count": 9,
-          "usd": 631331.57
+          "usd": 631283.38
         },
         "loan_supply": {
           "count": 27,
-          "usd": 4644049.22
+          "usd": 4642799.48
         },
         "loan_withdraw": {
           "count": 36,
-          "usd": 1130798.11
+          "usd": 1130953.91
         }
       }
     ],
@@ -9043,24 +9061,24 @@
       {
         "collateral_asset": "EUTBL",
         "market": "EUTBL/EURCV",
-        "collateral_deposit_usd": 31619.96,
-        "collateral_withdraw_usd": 24090.29,
-        "net_collateral_flow_usd": 7529.67,
-        "borrow_usd": 26596.41,
-        "repay_usd": 22827.41,
-        "loan_supply_usd": 536652.03,
-        "loan_withdraw_usd": 518835.41
+        "collateral_deposit_usd": 31598.92,
+        "collateral_withdraw_usd": 24074.26,
+        "net_collateral_flow_usd": 7524.66,
+        "borrow_usd": 26593.98,
+        "repay_usd": 22825.33,
+        "loan_supply_usd": 536603.1,
+        "loan_withdraw_usd": 518788.11
       },
       {
         "collateral_asset": "PAXG",
         "market": "PAXG/PYUSD",
-        "collateral_deposit_usd": 6946.05,
-        "collateral_withdraw_usd": 320196.51,
-        "net_collateral_flow_usd": -313250.46,
-        "borrow_usd": 6679.34,
-        "repay_usd": 207865.98,
-        "loan_supply_usd": 555084.0,
-        "loan_withdraw_usd": 788720.71
+        "collateral_deposit_usd": 6931.49,
+        "collateral_withdraw_usd": 319525.29,
+        "net_collateral_flow_usd": -312593.8,
+        "borrow_usd": 6680.28,
+        "repay_usd": 207895.29,
+        "loan_supply_usd": 555162.27,
+        "loan_withdraw_usd": 788831.93
       },
       {
         "collateral_asset": "JAAA",
@@ -9068,54 +9086,54 @@
         "collateral_deposit_usd": 10535.81,
         "collateral_withdraw_usd": 3713777.39,
         "net_collateral_flow_usd": -3703241.58,
-        "borrow_usd": 10488.17,
-        "repay_usd": 3129835.55,
-        "loan_supply_usd": 1339635.1,
-        "loan_withdraw_usd": 4779249.88
+        "borrow_usd": 10487.82,
+        "repay_usd": 3129729.24,
+        "loan_supply_usd": 1339589.6,
+        "loan_withdraw_usd": 4779087.54
       },
       {
         "collateral_asset": "mF-ONE",
         "market": "mF-ONE/USDC",
-        "collateral_deposit_usd": 6604653.55,
-        "collateral_withdraw_usd": 11303987.44,
-        "net_collateral_flow_usd": -4699333.88,
-        "borrow_usd": 9837024.41,
-        "repay_usd": 9864736.98,
-        "loan_supply_usd": 168427582.71,
-        "loan_withdraw_usd": 168665634.94
+        "collateral_deposit_usd": 6604053.89,
+        "collateral_withdraw_usd": 11302961.09,
+        "net_collateral_flow_usd": -4698907.21,
+        "borrow_usd": 9836690.27,
+        "repay_usd": 9864401.9,
+        "loan_supply_usd": 168421861.62,
+        "loan_withdraw_usd": 168659905.76
       },
       {
         "collateral_asset": "XAUt",
         "market": "XAUt/tGBP",
-        "collateral_deposit_usd": 2309109.67,
-        "collateral_withdraw_usd": 7438424.87,
-        "net_collateral_flow_usd": -5129315.21,
-        "borrow_usd": 1544555.68,
-        "repay_usd": 4548989.06,
-        "loan_supply_usd": 31157702.42,
-        "loan_withdraw_usd": 34084981.05
+        "collateral_deposit_usd": 2302340.88,
+        "collateral_withdraw_usd": 7416620.32,
+        "net_collateral_flow_usd": -5114279.44,
+        "borrow_usd": 1544628.2,
+        "repay_usd": 4549321.62,
+        "loan_supply_usd": 31157191.66,
+        "loan_withdraw_usd": 34084729.07
       },
       {
         "collateral_asset": "syrupUSDC",
         "market": "syrupUSDC/USDC",
-        "collateral_deposit_usd": 66693370.43,
-        "collateral_withdraw_usd": 77339398.56,
-        "net_collateral_flow_usd": -10646028.13,
-        "borrow_usd": 55558351.23,
-        "repay_usd": 66708242.67,
-        "loan_supply_usd": 171032125.7,
-        "loan_withdraw_usd": 184608005.97
+        "collateral_deposit_usd": 66691407.37,
+        "collateral_withdraw_usd": 77337122.14,
+        "net_collateral_flow_usd": -10645714.77,
+        "borrow_usd": 55545961.54,
+        "repay_usd": 66688973.45,
+        "loan_supply_usd": 171011749.98,
+        "loan_withdraw_usd": 184580076.37
       },
       {
         "collateral_asset": "muBOND",
         "market": "muBOND/USDC",
-        "collateral_deposit_usd": 2265060.95,
-        "collateral_withdraw_usd": 14268601.55,
-        "net_collateral_flow_usd": -12003540.6,
-        "borrow_usd": 1804272.7,
-        "repay_usd": 11573524.69,
-        "loan_supply_usd": 19782404.0,
-        "loan_withdraw_usd": 30267920.48
+        "collateral_deposit_usd": 2264888.05,
+        "collateral_withdraw_usd": 14267512.36,
+        "net_collateral_flow_usd": -12002624.31,
+        "borrow_usd": 1804211.41,
+        "repay_usd": 11573131.56,
+        "loan_supply_usd": 19781732.04,
+        "loan_withdraw_usd": 30266892.35
       }
     ],
     "top10_flow_events": [
@@ -9123,70 +9141,70 @@
         "date": "2026-06-23",
         "market": "mF-ONE/USDC",
         "type": "collateral_withdraw",
-        "usd": 10585428.48,
+        "usd": 10584467.38,
         "tx_hash": "0xb5aaf64138030ca990d2f48f3979a7756b6665b1d1dd4106e690b9250c197f00"
       },
       {
         "date": "2026-06-17",
         "market": "muBOND/USDC",
         "type": "collateral_withdraw",
-        "usd": 4260192.69,
+        "usd": 4259867.49,
         "tx_hash": "0x93419f94b35ec3946c80f405de9380b1433c758837570204f57936591dec0b3f"
       },
       {
         "date": "2026-06-18",
         "market": "syrupUSDC/RLUSD",
         "type": "collateral_deposit",
-        "usd": 4008702.13,
+        "usd": 4008584.14,
         "tx_hash": "0x09a9770f613f094c2d1110f54b1fc4cfaa44bd1df624144cbfcdc19adfb2f367"
       },
       {
         "date": "2026-06-17",
         "market": "muBOND/USDC",
         "type": "repay",
-        "usd": 3375554.91,
+        "usd": 3375440.25,
         "tx_hash": "0x93419f94b35ec3946c80f405de9380b1433c758837570204f57936591dec0b3f"
       },
       {
         "date": "2026-06-22",
         "market": "syrupUSDC/PYUSD",
         "type": "collateral_deposit",
-        "usd": 3268522.91,
+        "usd": 3268426.71,
         "tx_hash": "0xc684a35e3d0dee3a8853e0d299882a4081ddc1f4e96af127ad80e20fd79140c8"
       },
       {
         "date": "2026-06-01",
         "market": "syrupUSDC/RLUSD",
         "type": "collateral_deposit",
-        "usd": 3192030.81,
+        "usd": 3191936.86,
         "tx_hash": "0xbf0044c46b0d76317b9bcf11fb446ae5dd6533afcb09d552600b1f1d3b1e1548"
       },
       {
         "date": "2026-06-30",
         "market": "syrupUSDC/RLUSD",
         "type": "collateral_deposit",
-        "usd": 3001586.17,
+        "usd": 3001497.82,
         "tx_hash": "0x36aa1a12b5b5fd341f68d12c8ac3e08f7223cc959a89875b0afd6aade5a35ca9"
       },
       {
         "date": "2026-06-18",
         "market": "syrupUSDC/RLUSD",
         "type": "borrow",
-        "usd": 3000695.35,
+        "usd": 2999453.65,
         "tx_hash": "0x09a9770f613f094c2d1110f54b1fc4cfaa44bd1df624144cbfcdc19adfb2f367"
       },
       {
         "date": "2026-06-29",
         "market": "syrupUSDC/AUSD",
         "type": "collateral_deposit",
-        "usd": 2954139.71,
+        "usd": 2954052.76,
         "tx_hash": "0x076925a005c40809cf3bf4a078c0ee88101ff4caf49dcf4c89e4cf59df88aec4"
       },
       {
         "date": "2026-06-22",
         "market": "syrupUSDC/AUSD",
         "type": "collateral_deposit",
-        "usd": 2904613.75,
+        "usd": 2904528.25,
         "tx_hash": "0x5653e1b13ccfb0cf4d290866903aeabf47520486deaddcd8003ce51cb49c02c4"
       }
     ],
@@ -9314,7 +9332,7 @@
     ],
     "liquidations_june": {
       "count": 9,
-      "seized_collateral_usd": 7841.28
+      "seized_collateral_usd": 7818.45
     }
   },
   "next_report_metrics": {
@@ -9332,5 +9350,110 @@
       }
     ],
     "note2": "Morpho per-market history (collateral/borrow/utilisation/borrow-APY) is NOT forward-only: it is backfillable from the Morpho API historicalState and is already included for June in section 13."
+  },
+  "data_quality_audit": {
+    "verified_utc": "2026-07-06",
+    "summary": "Every section was independently cross-checked against source (Envio HyperIndex, the Morpho API, Neon Postgres, and the on-chain snapshot). The checks below are recomputed on every build. No data errors were found in this export.",
+    "automated_checks": [
+      {
+        "check": "section0_arithmetic",
+        "pass": true,
+        "detail": "horizon 184024060 + morpho 171545757 == total 355569816"
+      },
+      {
+        "check": "horizon_deployed_matches_snapshot",
+        "pass": true,
+        "detail": "live snapshot non-stable supplied $184.0M == section0 horizon $184.0M"
+      },
+      {
+        "check": "morpho_collateral_consistent_3ways",
+        "pass": true,
+        "detail": "api $171.5M / sum(markets) $171.5M / sum(by_asset) $171.5M"
+      },
+      {
+        "check": "morpho_txn_count_consistent",
+        "pass": true,
+        "detail": "6393 unique txns == 6393 classified events"
+      },
+      {
+        "check": "horizon_flow_count_matches_envio",
+        "pass": true,
+        "detail": "609 Envio actions == 609 section1 events"
+      }
+    ],
+    "all_checks_pass": true,
+    "morpho_flow_reconciliation": {
+      "method": "Price-independent. For each RWA asset, the net collateral flow from the marketTransactions API (tokens supplied - withdrawn - seized) is compared to the collateral-balance change from the independent Morpho historicalState endpoint, aligned per market to daily snapshot timestamps. A ~0% diff proves section 14 flows are complete and correct.",
+      "result": [
+        {
+          "asset": "EUTBL",
+          "collateral_state_change_tokens": 6251.2,
+          "net_flow_tokens": 6251.2,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "JAAA",
+          "collateral_state_change_tokens": -3560056.12,
+          "net_flow_tokens": -3560056.12,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "PAXG",
+          "collateral_state_change_tokens": -75.59,
+          "net_flow_tokens": -75.59,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "XAUt",
+          "collateral_state_change_tokens": -1240.08,
+          "net_flow_tokens": -1240.08,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "mF-ONE",
+          "collateral_state_change_tokens": -4259284.28,
+          "net_flow_tokens": -4259284.28,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "muBOND",
+          "collateral_state_change_tokens": -11393782.69,
+          "net_flow_tokens": -11393782.69,
+          "diff_pct": 0.0,
+          "reconciled": true
+        },
+        {
+          "asset": "syrupUSDC",
+          "collateral_state_change_tokens": -9084160.61,
+          "net_flow_tokens": -9084160.61,
+          "diff_pct": 0.0,
+          "reconciled": true
+        }
+      ],
+      "all_reconciled": true
+    },
+    "transaction_count_forensics": {
+      "shipped_value": 6393,
+      "explanation": "The June Morpho transaction count is 6393, confirmed three independent ways: per-day windowed pagination, the sum of per-market countTotal, and the classified events in this file. Two earlier intermediate numbers were NOT released: 4,999 was a combined-query pagination bug (a mid-stream short page ended pagination early; fixed by paginating per market), and 3,610 was the Morpho API's own countTotal field, which is unreliable (it returned 3,610 and 6,393 for the identical query at different moments)."
+    },
+    "methodology_by_section": {
+      "section_1_2_6_horizon_flows": "Full re-pagination of Envio ReserveAction for June: total count and per-day active addresses matched exactly; top-event USD recomputed from raw amount x price.",
+      "section_3_market_history": "Compared to a fresh Neon read (exact match); scanned for >40% day-over-day rwa_aum jumps (none remain); the 2026-06-29 spike is corrected.",
+      "section_4_reserve_state": "NAV/AUM per reserve matched a fresh Neon read by contract address.",
+      "section_5_holders": "Matched Envio HolderPoint (a source independent of Neon) at June 1 and June 30.",
+      "section_13_14_morpho": "Token-level flow-vs-state reconciliation, see morpho_flow_reconciliation above."
+    },
+    "known_limitations": [
+      "Flow USD uses current price (same basis as Horizon section 1). For price-volatile assets (gold), section 14 USD will not tie to section 13 historical-price USD - token-level flows still reconcile exactly.",
+      "Section 0 Morpho collateral is current-state; section 13 June-end differs slightly by as-of time.",
+      "Section 3 covers June 7-30 (the market_history table was created mid-period).",
+      "Verification is against the same upstream sources; two independent endpoints of one source agreeing is strong evidence but not absolute proof of that source.",
+      "Morpho per-token holder history over June is unavailable (Morpho is not in the event indexer)."
+    ]
   }
 }
