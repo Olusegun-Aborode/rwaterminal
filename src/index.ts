@@ -25,6 +25,7 @@ export interface Env {
   HORIZON_ORACLE: string;
   HORIZON_DATA_PROVIDER: string;
   MORALIS_API_KEY?: string;   // optional secret — enables top-holder labeling of "held elsewhere"
+  INDEXER_GRAPHQL?: string;   // optional override — Envio dev deployments recycle + change ID; set this var to repoint without a code deploy
 }
 // Manually identified contracts Moralis doesn't label (extend over time). Keyed by lowercased address.
 // Identified via on-chain contract name (Blockscout): ALMProxy = Sky/Spark allocator, LockReleaseTokenPool
@@ -154,7 +155,9 @@ async function fetchCentrifuge(): Promise<Record<string, { nav: number; computed
 
 // Envio HyperIndex — event-history projection (holders, active addresses, flows).
 // Keyed: TokenHolders by aToken; ReserveFlow/ReserveAction by reserve (= underlying).
-const INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/3609531/v1/graphql";
+// Dev-tier Envio deployments recycle and the numeric ID changes; the env var INDEXER_GRAPHQL
+// (set at request time from env, below) overrides this default so we can repoint without a code deploy.
+let INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/3609531/v1/graphql";
 const ATOKEN_TO_UNDERLYING: Record<string, string> = {
   "0x946281a2d0dd6e650d08f74833323d66ae4c8b12": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f", // GHO
   "0x68215b6533c47ff9f7125ac95adf00fe4a62f79e": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
@@ -174,11 +177,15 @@ async function fetchEvents(): Promise<any> {
     ReserveAction(distinct_on: [reserve, user], order_by: [{reserve: asc}, {user: asc}]) { reserve }
     chain_metadata { latest_processed_block }
   }`;
-  const r: any = await (await fetch(INDEXER_GRAPHQL, {
-    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }),
-  })).json();
+  let r: any = null;
+  try {
+    const resp = await fetch(INDEXER_GRAPHQL, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }),
+    });
+    if (resp.ok) r = await resp.json();  // a recycled deployment 404s -> resp.ok false -> treated as unavailable
+  } catch { r = null; }
   const d = r?.data;
-  if (!d) return { ok: false, error: r?.errors ?? "no data", by_asset: {} };
+  if (!d) return { ok: false, indexer_available: false, error: r?.errors ?? "indexer unavailable (deployment may have been recycled)", by_asset: {}, totals: { holders: 0, active_addresses: 0, actions: 0 }, synced_block: null };
   const by: Record<string, any> = {};
   const ensure = (a: string) => (by[a] ||= { holders: 0, active: 0, supplied: "0", withdrawn: "0", borrowed: "0", repaid: "0", action_count: 0 });
   for (const t of (d.TokenHolders || [])) {
@@ -193,7 +200,7 @@ async function fetchEvents(): Promise<any> {
   for (const a of (d.ReserveAction || [])) ensure((a.reserve || "").toLowerCase()).active += 1;
   const vals = Object.values(by) as any[];
   return {
-    ok: true, synced_block: Number(d.chain_metadata?.[0]?.latest_processed_block) || null,
+    ok: true, indexer_available: true, synced_block: Number(d.chain_metadata?.[0]?.latest_processed_block) || null,
     by_asset: by,
     totals: { holders: vals.reduce((s, v) => s + v.holders, 0), active_addresses: vals.reduce((s, v) => s + v.active, 0), actions: vals.reduce((s, v) => s + v.action_count, 0) },
   };
@@ -222,7 +229,8 @@ async function fetchFlows(): Promise<any> {
       daily[day][res] = (daily[day][res] || 0) + Number(a.amount); // raw token base units
     }
   }
-  return { ok: true, actions: total, days: Object.keys(daily).length, daily };
+  const indexer_available = pages.some(pg => (pg as any)?.data?.ReserveAction);
+  return { ok: true, indexer_available, actions: total, days: Object.keys(daily).length, daily };
 }
 
 // Asset-class lookup for the event-history aggregations.
@@ -256,7 +264,7 @@ async function fetchHoldersHistory(): Promise<any> {
     for (const [tok, c] of Object.entries(lastByTok)) { const cls = classOfAToken(tok); byClass[cls] = (byClass[cls] || 0) + c; }
     out.push({ d, byClass, total: Object.values(byClass).reduce((s, v) => s + v, 0) });
   }
-  return { ok: true, points: out };
+  return { ok: true, indexer_available: pages.some(pg => (pg as any)?.data?.HolderPoint), points: out };
 }
 
 // Cumulative distinct active addresses per asset class over time (from ReserveAction).
@@ -281,7 +289,7 @@ async function fetchActiveHistory(): Promise<any> {
     }
     out.push({ d, byClass: { ...cum }, total: Object.values(cum).reduce((s, v) => s + v, 0) });
   }
-  return { ok: true, points: out };
+  return { ok: true, indexer_available: pages.some(pg => (pg as any)?.data?.ReserveAction), points: out };
 }
 
 // ── Morpho venue (Phase 2) ────────────────────────────────────────────────
@@ -874,6 +882,7 @@ export default {
   },
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+    if (env.INDEXER_GRAPHQL) INDEXER_GRAPHQL = env.INDEXER_GRAPHQL;  // repoint a recycled Envio deployment via env, no code deploy
     const cors = { "access-control-allow-origin": "*", "content-type": "application/json" };
     if (url.pathname === "/" || url.pathname === "/api/health") {
       return new Response(JSON.stringify({
