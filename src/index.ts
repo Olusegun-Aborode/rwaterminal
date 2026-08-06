@@ -801,8 +801,15 @@ async function persistMorpho(env: Env, m: any) {
 
 export default {
   async scheduled(_e: ScheduledController, env: Env, ctx: ExecutionContext) {
-    const snap = await buildSnapshot(env);
-    if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
+    // buildSnapshot hits RPC; a transient failure must NOT skip the whole write — that is what produced
+    // the multi-hour history gaps. Retry with backoff, and never let one sub-task abort the others.
+    let snap: any = null;
+    for (let i = 0; i < 3 && !snap; i++) {
+      try { snap = await buildSnapshot(env); }
+      catch (err) { console.error(`buildSnapshot attempt ${i + 1} failed:`, err); if (i < 2) await new Promise(r => setTimeout(r, 2000)); }
+    }
+    if (!snap) { console.error("scheduled: buildSnapshot failed after 3 retries; skipping this tick"); return; }
+    if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap)).catch(() => {});
     if (env.DATABASE_URL) {
       const ev = await fetchHolderStats(env).catch(() => null);
       ctx.waitUntil(persist(env, snap, ev).catch(err => console.error("persist failed:", err)));

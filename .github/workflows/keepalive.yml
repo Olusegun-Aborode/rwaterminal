@@ -1,0 +1,26 @@
+name: snapshot-keepalive
+# Independent backup for the Cloudflare cron (*/5). Cloudflare's free-tier cron is best-effort and
+# occasionally skips ticks, which left multi-hour gaps in the Neon history. This pings /api/refresh
+# from GitHub's runners on a separate schedule so a skipped Cloudflare tick still gets a snapshot written.
+# GitHub scheduled workflows are ALSO best-effort (can be delayed under load) — this is redundancy, not a guarantee.
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes (UTC)
+  workflow_dispatch: {}        # allow manual runs
+
+concurrency:
+  group: snapshot-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Refresh snapshot (writes Neon history)
+        run: |
+          code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" --max-time 90 \
+            https://rwa-terminal-worker.aborodeolusegun.workers.dev/api/refresh || echo "000")
+          echo "HTTP $code"; cat /tmp/resp.json 2>/dev/null || true
+          # Non-fatal: a single miss is fine, the next tick (here or on Cloudflare) covers it.
+          if [ "$code" != "200" ]; then echo "::warning::refresh returned $code"; fi
