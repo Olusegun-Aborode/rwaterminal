@@ -958,11 +958,14 @@ export default {
       return new Response(JSON.stringify(await fetchUsage(env)), { headers: { ...cors, "cache-control": "max-age=1800" } });
     }
     if (url.pathname === "/api/snapshot") {
+      // no-store: the snapshot is the freshness heartbeat; never let a browser/edge serve a stale copy
+      // (a cached /api/snapshot once rendered ~60-day-old data). KV is refreshed every cron tick.
+      const fresh = { ...cors, "cache-control": "no-store" };
       const latest = env.HORIZON_KV ? await env.HORIZON_KV.get("latest") : null;
-      if (latest) return new Response(latest, { headers: cors });
+      if (latest) return new Response(latest, { headers: fresh });
       const snap = await buildSnapshot(env);            // no KV cache yet -> compute live
       if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-      return new Response(JSON.stringify(snap), { headers: cors });
+      return new Response(JSON.stringify(snap), { headers: fresh });
     }
     if (url.pathname === "/api/refresh") { // manual trigger for testing
       const snap = await buildSnapshot(env);
