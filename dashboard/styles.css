@@ -280,21 +280,20 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .caps { text-transform: uppercase; letter-spacing: 0.1em; }
 
 /* ─── Loading splash (branded; paints before React mounts AND on navigation) ───
-   Single centered, self-looping Datum brand mark on a full-bleed navy backdrop
-   (Sentora-style), replacing the old skeleton scaffold. The backdrop gradient
-   matches the navy baked into datum-loop.webp (#0C143E → #04083C) so there is no
-   visible rectangle seam around the mark. Theme-independent by design: the loader
-   is a deliberate branded moment, identical in light and dark.
+   Single centered Datum brand mark on a full-bleed backdrop (Sentora-style),
+   replacing the old skeleton scaffold. The backdrop is a SOLID matched to the tile
+   background baked into datum-mark.png (#4A6CF7) so there is no visible rectangle
+   seam around the mark. Theme-independent by design: the loader is a deliberate
+   branded moment, identical in light and dark.
    Appears instantly, removed the moment content is ready (React replaces #root /
    the next page paints) — no artificial minimum display time. */
 .boot-splash {
   position: fixed; inset: 0; z-index: 9999;
   display: grid; place-items: center;
-  /* SOLID fill matched to the navy baked into datum-loop.webp (sampled mean of
-     its corners, #0C143E↔#04083C ≈ #080E3D). A solid — not a gradient — so the
-     backdrop colour equals the asset's own background everywhere the centred mark
-     sits, leaving no visible rectangle seam around it. */
-  background: #080E3D;
+  /* SOLID fill matched to the tile background baked into datum-mark.png (#4A6CF7).
+     A solid — not a gradient — so the backdrop colour equals the asset's own
+     background everywhere the centred mark sits, leaving no visible rectangle seam. */
+  background: #4A6CF7;
   animation: bootFade 0.18s ease-out;
 }
 .boot-splash-mark {
