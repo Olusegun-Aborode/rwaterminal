@@ -24,8 +24,7 @@ export interface Env {
   HORIZON_POOL: string;
   HORIZON_ORACLE: string;
   HORIZON_DATA_PROVIDER: string;
-  MORALIS_API_KEY?: string;   // optional secret — enables top-holder labeling of "held elsewhere"
-  INDEXER_GRAPHQL?: string;   // optional override — Envio dev deployments recycle + change ID; set this var to repoint without a code deploy
+  MORALIS_API_KEY?: string;   // optional secret — holder counts + top-holder labeling of "held elsewhere"
 }
 // Manually identified contracts Moralis doesn't label (extend over time). Keyed by lowercased address.
 // Identified via on-chain contract name (Blockscout): ALMProxy = Sky/Spark allocator, LockReleaseTokenPool
@@ -153,11 +152,10 @@ async function fetchCentrifuge(): Promise<Record<string, { nav: number; computed
   return out;
 }
 
-// Envio HyperIndex — event-history projection (holders, active addresses, flows).
-// Keyed: TokenHolders by aToken; ReserveFlow/ReserveAction by reserve (= underlying).
-// Dev-tier Envio deployments recycle and the numeric ID changes; the env var INDEXER_GRAPHQL
-// (set at request time from env, below) overrides this default so we can repoint without a code deploy.
-let INDEXER_GRAPHQL = "https://indexer.dev.hyperindex.xyz/3609531/v1/graphql";
+// Horizon "holders" = holders of each Horizon aToken (the suppliers), sourced from Moralis.
+// (Was the Envio HyperIndex event indexer; retired 2026-08 to remove dev-tier indexing cost + the
+// deployment-recycling that kept breaking the endpoint. Per-action flow/active-address history is not
+// cheaply reconstructable and was retired with it; only live holder counts remain.) Keyed aToken -> underlying.
 const ATOKEN_TO_UNDERLYING: Record<string, string> = {
   "0x946281a2d0dd6e650d08f74833323d66ae4c8b12": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f", // GHO
   "0x68215b6533c47ff9f7125ac95adf00fe4a62f79e": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
@@ -170,127 +168,45 @@ const ATOKEN_TO_UNDERLYING: Record<string, string> = {
   "0xe1cfd16b8e4b1c86bb5b7a104cfefbc7b09326dd": "0x2255718832bc9fd3be1caf75084f4803da14ff01", // VBILL
   "0xc293744ffbcf46696d589f5c415e71bc491519cd": "0x17418038ecf73ba4026c4f428547bf099706f27b", // ACRED
 };
-async function fetchEvents(): Promise<any> {
-  const query = `{
-    TokenHolders { token holderCount lastBlock }
-    ReserveFlow { reserve totalSupplied totalWithdrawn totalBorrowed totalRepaid actionCount }
-    ReserveAction(distinct_on: [reserve, user], order_by: [{reserve: asc}, {user: asc}]) { reserve }
-    chain_metadata { latest_processed_block }
-  }`;
-  let r: any = null;
-  try {
-    const resp = await fetch(INDEXER_GRAPHQL, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }),
-    });
-    if (resp.ok) r = await resp.json();  // a recycled deployment 404s -> resp.ok false -> treated as unavailable
-  } catch { r = null; }
-  const d = r?.data;
-  if (!d) return { ok: false, indexer_available: false, error: r?.errors ?? "indexer unavailable (deployment may have been recycled)", by_asset: {}, totals: { holders: 0, active_addresses: 0, actions: 0 }, synced_block: null };
+// Holder counts per Horizon asset via Moralis token-holder stats (replaces the retired Envio indexer).
+// One call per Horizon aToken -> totalHolders; mapped back to the underlying reserve. active_addresses
+// and per-action counts are retired (they needed event history); they return null so the UI shows n/a.
+async function fetchHolderStats(env: Env): Promise<any> {
+  if (!env.MORALIS_API_KEY)
+    return { ok: false, source: "none", by_asset: {}, totals: { holders: null, active_addresses: null, actions: null } };
+  const aTokens = Object.keys(ATOKEN_TO_UNDERLYING);
+  const results = await Promise.all(aTokens.map(a =>
+    fetch(`https://deep-index.moralis.io/api/v2.2/erc20/${a}/holders?chain=eth`, { headers: { "X-API-Key": env.MORALIS_API_KEY! } })
+      .then(r => (r.ok ? r.json() : null)).catch(() => null)));
   const by: Record<string, any> = {};
-  const ensure = (a: string) => (by[a] ||= { holders: 0, active: 0, supplied: "0", withdrawn: "0", borrowed: "0", repaid: "0", action_count: 0 });
-  for (const t of (d.TokenHolders || [])) {
-    const u = ATOKEN_TO_UNDERLYING[(t.token || "").toLowerCase()];
-    if (u) ensure(u).holders = Number(t.holderCount) || 0;
-  }
-  for (const f of (d.ReserveFlow || [])) {
-    const e = ensure((f.reserve || "").toLowerCase());
-    e.supplied = String(f.totalSupplied); e.withdrawn = String(f.totalWithdrawn);
-    e.borrowed = String(f.totalBorrowed); e.repaid = String(f.totalRepaid); e.action_count = Number(f.actionCount) || 0;
-  }
-  for (const a of (d.ReserveAction || [])) ensure((a.reserve || "").toLowerCase()).active += 1;
+  let anyOk = false;
+  aTokens.forEach((a, i) => {
+    const j: any = results[i];
+    if (!j) return;
+    anyOk = true;
+    const holders = Number(j.totalHolders ?? j.total_holders ?? j.result?.totalHolders ?? 0) || 0;
+    const chg = j.holderChange?.["30d"]?.change ?? null;  // signed holder delta over 30d, when Moralis provides it
+    const u = ATOKEN_TO_UNDERLYING[a];
+    if (u) by[u] = { holders, holders_change_30d: (chg != null ? Number(chg) : null) };
+  });
   const vals = Object.values(by) as any[];
   return {
-    ok: true, indexer_available: true, synced_block: Number(d.chain_metadata?.[0]?.latest_processed_block) || null,
+    ok: anyOk, source: "moralis",
     by_asset: by,
-    totals: { holders: vals.reduce((s, v) => s + v.holders, 0), active_addresses: vals.reduce((s, v) => s + v.active, 0), actions: vals.reduce((s, v) => s + v.action_count, 0) },
+    totals: { holders: vals.reduce((s, v) => s + (v.holders || 0), 0), active_addresses: null, actions: null },
   };
 }
 
-// Daily transfer-volume time series from ReserveAction (powers the Transfer Volume
-// area chart). Hasura caps 1000 rows/query + exposes no aggregates, so we page in
-// parallel and bucket by (day, reserve) into raw token units (UI converts to USD).
-async function fetchFlows(): Promise<any> {
-  const PAGE = 1000, MAX_PAGES = 12; // 12k-action headroom; offsets past the data return []
-  const pages = await Promise.all(Array.from({ length: MAX_PAGES }, (_, p) =>
-    fetch(INDEXER_GRAPHQL, {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: `{ ReserveAction(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { timestamp reserve amount } }` }),
-    }).then(r => r.json()).catch(() => null)
-  ));
-  const daily: Record<string, Record<string, number>> = {};
-  let total = 0;
-  for (const pg of pages) {
-    const rows = (pg as any)?.data?.ReserveAction || [];
-    total += rows.length;
-    for (const a of rows) {
-      const day = new Date(Number(a.timestamp) * 1000).toISOString().slice(0, 10);
-      const res = (a.reserve || "").toLowerCase();
-      (daily[day] ||= {});
-      daily[day][res] = (daily[day][res] || 0) + Number(a.amount); // raw token base units
-    }
-  }
-  const indexer_available = pages.some(pg => (pg as any)?.data?.ReserveAction);
-  return { ok: true, indexer_available, actions: total, days: Object.keys(daily).length, daily };
-}
-
-// Asset-class lookup for the event-history aggregations.
+// Asset-class lookup (label -> class) for the holder-history aggregation.
 function classOfUnderlying(addr: string): string {
   const [label] = KNOWN[addr.toLowerCase()] ?? ["?", ""];
   return ASSET_CLASS[label] ?? "Other";
 }
-function classOfAToken(aTok: string): string {
-  const u = ATOKEN_TO_UNDERLYING[aTok.toLowerCase()];
-  return u ? classOfUnderlying(u) : "Other";
-}
 
-// Holder count per asset class over time — last HolderPoint per token per day, carried
-// forward. Powers the Holders trend line + real 30d delta (backfilled from genesis).
-async function fetchHoldersHistory(): Promise<any> {
-  const PAGE = 1000, MAX = 20;
-  const pages = await Promise.all(Array.from({ length: MAX }, (_, p) =>
-    fetch(INDEXER_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: `{ HolderPoint(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { token holderCount timestamp } }` }) }).then(r => r.json()).catch(() => null)));
-  const pts: any[] = [];
-  for (const pg of pages) for (const r of ((pg as any)?.data?.HolderPoint || [])) pts.push(r);
-  pts.sort((a, b) => a.timestamp - b.timestamp);
-  const ptsByDay: Record<string, any[]> = {};
-  for (const p of pts) { const d = new Date(p.timestamp * 1000).toISOString().slice(0, 10); (ptsByDay[d] ||= []).push(p); }
-  const days = Object.keys(ptsByDay).sort();
-  const lastByTok: Record<string, number> = {};
-  const out: any[] = [];
-  for (const d of days) {
-    for (const p of ptsByDay[d]) lastByTok[(p.token || "").toLowerCase()] = Number(p.holderCount);
-    const byClass: Record<string, number> = {};
-    for (const [tok, c] of Object.entries(lastByTok)) { const cls = classOfAToken(tok); byClass[cls] = (byClass[cls] || 0) + c; }
-    out.push({ d, byClass, total: Object.values(byClass).reduce((s, v) => s + v, 0) });
-  }
-  return { ok: true, indexer_available: pages.some(pg => (pg as any)?.data?.HolderPoint), points: out };
-}
-
-// Cumulative distinct active addresses per asset class over time (from ReserveAction).
-async function fetchActiveHistory(): Promise<any> {
-  const PAGE = 1000, MAX = 12;
-  const pages = await Promise.all(Array.from({ length: MAX }, (_, p) =>
-    fetch(INDEXER_GRAPHQL, { method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: `{ ReserveAction(limit: ${PAGE}, offset: ${p * PAGE}, order_by: {timestamp: asc}) { timestamp reserve user } }` }) }).then(r => r.json()).catch(() => null)));
-  const acts: any[] = [];
-  for (const pg of pages) for (const r of ((pg as any)?.data?.ReserveAction || [])) acts.push(r);
-  acts.sort((a, b) => a.timestamp - b.timestamp);
-  const ptsByDay: Record<string, any[]> = {};
-  for (const a of acts) { const d = new Date(a.timestamp * 1000).toISOString().slice(0, 10); (ptsByDay[d] ||= []).push(a); }
-  const days = Object.keys(ptsByDay).sort();
-  const seen = new Set<string>();
-  const cum: Record<string, number> = {};
-  const out: any[] = [];
-  for (const d of days) {
-    for (const a of ptsByDay[d]) {
-      const key = `${a.reserve}-${a.user}`.toLowerCase();
-      if (!seen.has(key)) { seen.add(key); const cls = classOfUnderlying(a.reserve); cum[cls] = (cum[cls] || 0) + 1; }
-    }
-    out.push({ d, byClass: { ...cum }, total: Object.values(cum).reduce((s, v) => s + v, 0) });
-  }
-  return { ok: true, indexer_available: pages.some(pg => (pg as any)?.data?.ReserveAction), points: out };
-}
+// Holder count per asset class over time — served from the forward-only horizon_holder_history
+// Neon table (written each cron from fetchHolderStats). Builds up from the migration date; there is
+// no backfill (the genesis history lived only in the retired Envio indexer). See the /api/holders-history route.
+// Active-address and transfer-volume history are retired (they needed per-action event history).
 
 // ── Morpho venue (Phase 2) ────────────────────────────────────────────────
 // Morpho is a singleton-market protocol; "RWA" here is a CURATED allowlist of the
@@ -784,6 +700,10 @@ async function persist(env: Env, snap: any, ev?: any) {
     ts timestamptz, reserve text, symbol text, supplied_usd double precision, supply_apy_pct double precision,
     ltv_pct double precision, liq_threshold_pct double precision, oracle_price double precision,
     nav double precision, PRIMARY KEY (ts, reserve))`);
+  // Forward-only Horizon holder-count history (per reserve), from Moralis via fetchHolderStats. Replaces
+  // the retired Envio HolderPoint series; accumulates from now so the Holders trend rebuilds over time.
+  stmts.push(sql`CREATE TABLE IF NOT EXISTS horizon_holder_history (
+    ts timestamptz, reserve text, symbol text, asset_class text, holders integer, PRIMARY KEY (ts, reserve))`);
   // Per-reserve AUM guard: an issuer-API misread once inflated USTB/USCC AUM ~40x for ~21h while
   // supply stayed flat (2026-06-29). Reject a >50% day-over-day AUM move that isn't backed by a
   // comparable (>20%) supply move — a real mint/burn moves both, a bad read moves only AUM.
@@ -819,6 +739,15 @@ async function persist(env: Env, snap: any, ev?: any) {
       FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
     stmts.push(sql`INSERT INTO reserve_state_history (ts, reserve, symbol, supplied_usd, supply_apy_pct, ltv_pct, liq_threshold_pct, oracle_price, nav)
       VALUES (${ts}, ${addr}, ${r.label && r.label !== "?" ? r.label : r.symbol_onchain}, ${r.supplied_usd ?? null}, ${r.supply_apy_pct ?? null}, ${r.ltv_pct ?? null}, ${r.liq_threshold_pct ?? null}, ${r.oracle_price_usd ?? null}, ${r.nav_value ?? null})
+      ON CONFLICT DO NOTHING`);
+  }
+  // Forward-only holder history — written straight from ev.by_asset (keyed by underlying address) so ALL
+  // aTokens are captured regardless of snapshot-address alignment. Class via the KNOWN registry.
+  for (const [uAddr, v] of Object.entries((ev?.by_asset || {}) as Record<string, any>)) {
+    if (v?.holders == null) continue;
+    const label = (KNOWN[uAddr.toLowerCase()] ?? [null])[0];
+    stmts.push(sql`INSERT INTO horizon_holder_history (ts, reserve, symbol, asset_class, holders)
+      VALUES (${ts}, ${uAddr.toLowerCase()}, ${label}, ${classOfUnderlying(uAddr)}, ${Number(v.holders)})
       ON CONFLICT DO NOTHING`);
   }
   const t = snap.totals, e = ev?.totals || {};
@@ -875,14 +804,13 @@ export default {
     const snap = await buildSnapshot(env);
     if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
     if (env.DATABASE_URL) {
-      const ev = await fetchEvents().catch(() => null);
+      const ev = await fetchHolderStats(env).catch(() => null);
       ctx.waitUntil(persist(env, snap, ev).catch(err => console.error("persist failed:", err)));
       ctx.waitUntil(fetchMorpho(env).then(m => persistMorpho(env, m)).catch(err => console.error("morpho persist failed:", err)));
     }
   },
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
-    if (env.INDEXER_GRAPHQL) INDEXER_GRAPHQL = env.INDEXER_GRAPHQL;  // repoint a recycled Envio deployment via env, no code deploy
     const cors = { "access-control-allow-origin": "*", "content-type": "application/json" };
     if (url.pathname === "/" || url.pathname === "/api/health") {
       return new Response(JSON.stringify({
@@ -978,18 +906,38 @@ export default {
       } catch { return new Response(JSON.stringify({ points: [] }), { headers: cors }); }
     }
     if (url.pathname === "/api/events") {
-      const ev = await fetchEvents();
-      return new Response(JSON.stringify(ev), { headers: { ...cors, "cache-control": "max-age=60" } });
-    }
-    if (url.pathname === "/api/flows") {
-      const fl = await fetchFlows();
-      return new Response(JSON.stringify(fl), { headers: { ...cors, "cache-control": "max-age=300" } });
+      const ev = await fetchHolderStats(env);   // holder counts via Moralis (Envio retired)
+      return new Response(JSON.stringify(ev), { headers: { ...cors, "cache-control": "max-age=300" } });
     }
     if (url.pathname === "/api/holders-history") {
-      return new Response(JSON.stringify(await fetchHoldersHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
+      // Forward-only: served from horizon_holder_history (cron-written). Builds up from the migration
+      // date; no backfill (the genesis series lived only in the retired Envio indexer).
+      if (!env.DATABASE_URL) return new Response(JSON.stringify({ points: [], source: "moralis-forward", building: true }), { headers: cors });
+      try {
+        const sql = neon(env.DATABASE_URL);
+        // Latest holders PER RESERVE per day, then sum per class (a class spans multiple reserves).
+        const rows = await sql`
+          SELECT d, asset_class, SUM(holders)::int AS holders FROM (
+            SELECT DISTINCT ON (date_trunc('day', ts), reserve)
+                   to_char(date_trunc('day', ts), 'YYYY-MM-DD') AS d, reserve, asset_class, holders
+            FROM horizon_holder_history
+            ORDER BY date_trunc('day', ts), reserve, ts DESC
+          ) latest GROUP BY d, asset_class ORDER BY d`;
+        const byDay: Record<string, any> = {};
+        for (const r of rows as any[]) {
+          (byDay[r.d] ||= { d: r.d, byClass: {}, total: 0 });
+          byDay[r.d].byClass[r.asset_class] = Number(r.holders) || 0;
+          byDay[r.d].total += Number(r.holders) || 0;
+        }
+        const points = Object.values(byDay);
+        return new Response(JSON.stringify({ ok: true, source: "moralis-forward", building: points.length < 2, points }), { headers: { ...cors, "cache-control": "max-age=300" } });
+      } catch { return new Response(JSON.stringify({ points: [], source: "moralis-forward", building: true }), { headers: cors }); }
     }
-    if (url.pathname === "/api/active-history") {
-      return new Response(JSON.stringify(await fetchActiveHistory()), { headers: { ...cors, "cache-control": "max-age=300" } });
+    if (url.pathname === "/api/flows" || url.pathname === "/api/active-history") {
+      // Retired with the Envio indexer: per-action transfer-volume + distinct-active-address history
+      // required event history, which is not cheaply reconstructable. Live holder counts are in /api/events.
+      return new Response(JSON.stringify({ ok: true, retired: true, points: [], daily: {},
+        reason: "Horizon per-action history was retired with the Envio event indexer to remove indexing cost. Current holder counts remain live via /api/events." }), { headers: { ...cors, "cache-control": "max-age=3600" } });
     }
     if (url.pathname === "/api/morpho") {
       return new Response(JSON.stringify(await fetchMorpho(env)), { headers: { ...cors, "cache-control": "max-age=120" } });
@@ -1012,7 +960,7 @@ export default {
     if (url.pathname === "/api/refresh") { // manual trigger for testing
       const snap = await buildSnapshot(env);
       if (env.HORIZON_KV) await env.HORIZON_KV.put("latest", JSON.stringify(snap));
-      const ev = await fetchEvents().catch(() => null);
+      const ev = await fetchHolderStats(env).catch(() => null);
       if (env.DATABASE_URL) {
         await persist(env, snap, ev).catch(e => console.error(e));
         await fetchMorpho(env).then(m => persistMorpho(env, m)).catch(e => console.error("morpho persist:", e));
