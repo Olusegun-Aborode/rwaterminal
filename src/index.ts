@@ -813,6 +813,72 @@ async function persistMorpho(env: Env, m: any) {
   await sql.transaction(stmts);
 }
 
+// ── Horizon user activity (borrowers) — NO indexer ────────────────────────────
+// Enumerate borrowers from the pool's Borrow events via eth_getLogs (adaptive-split on
+// provider limits), then one getUserAccountData multicall for loans/collateral/health.
+// Heavy-ish -> served from its own 1h-cached endpoint, not the 5-min cron.
+const BORROW_EVENT = {
+  type: "event", name: "Borrow", inputs: [
+    { indexed: true, name: "reserve", type: "address" }, { indexed: false, name: "user", type: "address" },
+    { indexed: true, name: "onBehalfOf", type: "address" }, { indexed: false, name: "amount", type: "uint256" },
+    { indexed: false, name: "interestRateMode", type: "uint8" }, { indexed: false, name: "borrowRate", type: "uint256" },
+    { indexed: true, name: "referralCode", type: "uint16" },
+  ],
+} as const;
+const userAccountAbi = [{ name: "getUserAccountData", type: "function", stateMutability: "view",
+  inputs: [{ type: "address" }], outputs: [{ type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }] }] as const;
+const HORIZON_GENESIS = 23125535n; // pool deploy block
+
+async function getLogsAdaptive(client: any, params: any, from: bigint, to: bigint): Promise<any[]> {
+  try {
+    return await client.getLogs({ ...params, fromBlock: from, toBlock: to });
+  } catch (e) {
+    if (to - from <= 10000n) return []; // give up on a tiny range rather than fail the whole scan
+    const mid = (from + to) / 2n;
+    const [a, b] = await Promise.all([getLogsAdaptive(client, params, from, mid), getLogsAdaptive(client, params, mid + 1n, to)]);
+    return [...a, ...b];
+  }
+}
+
+async function fetchHorizonUsers(env: Env): Promise<any> {
+  const client = createPublicClient({ chain: mainnet, transport: http(env.RPC_URL) });
+  const pool = getAddress(env.HORIZON_POOL);
+  const latest = await client.getBlockNumber();
+  // discover unique borrowers (onBehalfOf owns the debt); start at 500k windows, halve on limit errors
+  const users = new Set<string>();
+  const STEP = 500000n;
+  for (let from = HORIZON_GENESIS; from <= latest; from += STEP + 1n) {
+    const to = from + STEP > latest ? latest : from + STEP;
+    const logs = await getLogsAdaptive(client, { address: pool, event: BORROW_EVENT }, from, to);
+    for (const l of logs) { const u = l.args?.onBehalfOf; if (u) users.add((u as string).toLowerCase()); }
+  }
+  const uarr = [...users];
+  if (!uarr.length) return { ok: true, fetched_at: Math.floor(Date.now() / 1000), scanned_to_block: Number(latest), totals: { borrowers: 0, unique_addresses: 0, total_collateral_usd: 0, total_debt_usd: 0, min_health_factor: null, health: { at_risk: 0, tight: 0, moderate: 0, safe: 0 } }, top_borrowers: [] };
+  const res: any[] = await client.multicall({ contracts: uarr.map(u => ({ address: pool, abi: userAccountAbi, functionName: "getUserAccountData", args: [getAddress(u)] })), allowFailure: true });
+  const rows: any[] = [];
+  uarr.forEach((u, i) => {
+    if (res[i]?.status !== "success") return;
+    const t = res[i].result as bigint[];
+    const collateral = Number(t[0]) / 1e8, debt = Number(t[1]) / 1e8, hfRaw = Number(t[5]) / 1e18;
+    rows.push({ user: u, collateral_usd: collateral, debt_usd: debt, ltv_pct: Number(t[4]) / 100,
+      health_factor: (isFinite(hfRaw) && hfRaw < 1e6) ? +hfRaw.toFixed(3) : null });
+  });
+  const borrowers = rows.filter(r => r.debt_usd > 0.01);
+  const hfs = borrowers.map(r => r.health_factor).filter((h): h is number => h != null);
+  const health = { at_risk: 0, tight: 0, moderate: 0, safe: 0 };
+  for (const h of hfs) { if (h < 1.05) health.at_risk++; else if (h < 1.25) health.tight++; else if (h < 1.75) health.moderate++; else health.safe++; }
+  return {
+    ok: true, fetched_at: Math.floor(Date.now() / 1000), scanned_to_block: Number(latest),
+    totals: {
+      borrowers: borrowers.length, unique_addresses: rows.length,
+      total_collateral_usd: rows.reduce((s, r) => s + r.collateral_usd, 0),
+      total_debt_usd: borrowers.reduce((s, r) => s + r.debt_usd, 0),
+      min_health_factor: hfs.length ? Math.min(...hfs) : null, health,
+    },
+    top_borrowers: borrowers.sort((a, b) => b.debt_usd - a.debt_usd).slice(0, 15),
+  };
+}
+
 export default {
   async scheduled(_e: ScheduledController, env: Env, ctx: ExecutionContext) {
     // buildSnapshot hits RPC; a transient failure must NOT skip the whole write — that is what produced
@@ -839,7 +905,7 @@ export default {
         secrets_visible: { RPC_URL: !!env.RPC_URL, DATABASE_URL: !!env.DATABASE_URL },
         kv_bound: !!env.HORIZON_KV,
         rpc_host: env.RPC_URL ? new URL(env.RPC_URL).host : "(none — falling back to public default)",
-        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/flows", "/api/holders-history", "/api/active-history", "/api/morpho", "/api/refresh", "/api/health"],
+        routes: ["/api/snapshot", "/api/history", "/api/market-history", "/api/events", "/api/holders-history", "/api/morpho", "/api/usage", "/api/horizon-users", "/api/refresh", "/api/health"],
       }), { headers: cors });
     }
     try {
@@ -970,6 +1036,10 @@ export default {
     if (url.pathname === "/api/usage") {
       // Where each RWA's supply sits across DeFi (balanceOf vs labeled-address registry). Slow-moving.
       return new Response(JSON.stringify(await fetchUsage(env)), { headers: { ...cors, "cache-control": "max-age=1800" } });
+    }
+    if (url.pathname === "/api/horizon-users") {
+      // Borrower activity via eth_getLogs + getUserAccountData. Heavy scan -> cache 1h.
+      return new Response(JSON.stringify(await fetchHorizonUsers(env)), { headers: { ...cors, "cache-control": "max-age=3600" } });
     }
     if (url.pathname === "/api/snapshot") {
       // no-store: the snapshot is the freshness heartbeat; never let a browser/edge serve a stale copy

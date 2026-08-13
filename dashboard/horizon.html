@@ -88,6 +88,12 @@
         load(); const id = setInterval(load, 60000);
         return () => { alive = false; clearInterval(id); };
       }, []);
+      const [U, setU] = React.useState(null);
+      React.useEffect(() => {
+        if (!WORKER_URL) return; let alive = true;
+        fetch(WORKER_URL.replace(/\/$/,'') + '/api/horizon-users').then(r=>r.json()).then(j=>{ if (alive && j && j.ok) setU(j); }).catch(()=>{});
+        return () => { alive = false; };
+      }, []);
       const T = D.totals;
       const asOf = new Date(D.fetched_at*1000);
       const grade = T.grade;
@@ -197,6 +203,50 @@
                       </tr>);})}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <div className="panel" style={{marginTop:16}}>
+              <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> User Activity · borrowers</span>{U && <span className="panel-badge">{U.totals.borrowers} BORROWERS · LIVE</span>}</div>
+              <div className="panel-caption">Every address <b>borrowing against RWA collateral</b> here, scanned from on-chain Borrow events. <b>Health factor</b> is the liquidation buffer: below 1.0 a position can be liquidated. Horizon borrowers run leveraged, so this distribution is the venue's live liquidation risk.</div>
+              <div className="panel-body">
+                {!U ? <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg-muted)',padding:'8px 0'}}>Scanning borrowers…</div> : (<>
+                  <div className="grid grid-4" style={{marginBottom:16}}>
+                    <KPI label="Borrowers" value={U.totals.borrowers.toLocaleString()} sub={`${U.totals.unique_addresses} addresses with a position`} />
+                    <KPI label="Outstanding Loans" value={money(U.totals.total_debt_usd)} sub="total debt across borrowers" />
+                    <KPI label="Collateral Posted" value={money(U.totals.total_collateral_usd)} sub="backing those loans" />
+                    <KPI label="Min Health Factor" value={U.totals.min_health_factor!=null?U.totals.min_health_factor.toFixed(3):'n/a'} sub={U.totals.min_health_factor!=null&&U.totals.min_health_factor<1.05?'a position is near liquidation':'lowest of any borrower'} subColor={U.totals.min_health_factor!=null&&U.totals.min_health_factor<1.05?'var(--red)':undefined} />
+                  </div>
+                  <div style={{marginBottom:6,fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-dim)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Health-factor distribution</div>
+                  <div style={{display:'flex',height:14,borderRadius:4,overflow:'hidden',marginBottom:8,background:'var(--bg-2)'}}>
+                    {[['at_risk','var(--red)'],['tight','var(--orange)'],['moderate','var(--yellow)'],['safe','var(--green)']].map(([k,c])=>{
+                      const n=U.totals.health[k]||0, tot=Object.values(U.totals.health).reduce((s,v)=>s+v,0)||1;
+                      return n?<div key={k} style={{width:(n/tot*100)+'%',background:c}}></div>:null;
+                    })}
+                  </div>
+                  <div style={{display:'flex',gap:16,flexWrap:'wrap',marginBottom:18,fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-muted)'}}>
+                    {[['At risk (<1.05)','var(--red)',U.totals.health.at_risk],['Tight (<1.25)','var(--orange)',U.totals.health.tight],['Moderate','var(--yellow)',U.totals.health.moderate],['Safe (≥1.75)','var(--green)',U.totals.health.safe]].map(([lbl,c,n])=>(
+                      <span key={lbl} style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:8,height:8,borderRadius:2,background:c}}></span>{lbl}: {n}</span>
+                    ))}
+                  </div>
+                  <table className="datatable">
+                    <thead><tr><th>Borrower</th><th className="num">Collateral</th><th className="num">Debt</th><th className="num">Max LTV</th><th className="num">Health Factor</th></tr></thead>
+                    <tbody>
+                      {U.top_borrowers.map((b,i)=>{
+                        const hf=b.health_factor;
+                        const hfc=hf==null?'var(--fg-muted)':hf<1.05?'var(--red)':hf<1.25?'var(--orange)':hf<1.75?'var(--yellow)':'var(--green)';
+                        return (<tr key={i}>
+                          <td><a href={'https://etherscan.io/address/'+b.user} target="_blank" rel="noopener" style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--blue)'}}>{b.user.slice(0,10)}…{b.user.slice(-4)}</a></td>
+                          <td className="num">{money(b.collateral_usd)}</td>
+                          <td className="num">{money(b.debt_usd)}</td>
+                          <td className="num">{b.ltv_pct.toFixed(0)}%</td>
+                          <td className="num" style={{color:hfc,fontWeight:600}}>{hf==null?'n/a':hf.toFixed(3)}</td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                  <div style={{marginTop:8,fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-dim)'}}>Top {U.top_borrowers.length} by debt · scanned to block {U.scanned_to_block.toLocaleString()}</div>
+                </>)}
               </div>
             </div>
           </main>
