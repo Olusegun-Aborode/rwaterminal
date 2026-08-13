@@ -40,6 +40,45 @@
       const c={red:['var(--red-soft)','var(--red)'],yellow:['var(--orange-soft)','var(--orange)'],green:['var(--green-soft)','var(--green)'],muted:['var(--bg-2)','var(--fg-muted)']}[tone||'muted'];
       return <span className="risk-pill" style={{background:c[0],color:c[1]}}>{children}</span>;
     }
+    // Horizontal stacked liquidity bars: width = supplied (market size), split into borrowed + available
+    // (available = net supplied = supplied − borrowed). The trailing % is utilization.
+    function LiquidityBars({rows}) {
+      const max = Math.max(...rows.map(r=>r.supplied_usd||0), 1);
+      return (<div style={{display:'flex',flexDirection:'column',gap:11}}>
+        {rows.map((r,i)=>{
+          const wSup=(r.supplied_usd||0)/max*100;
+          const wBor=r.supplied_usd>0 ? (r.borrowed_usd/r.supplied_usd)*wSup : 0;
+          const util=r.utilization_pct||0;
+          return (<div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:64,flexShrink:0,fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg)'}}>{r.label}</div>
+            <div style={{flex:1,height:18,background:'var(--bg-2)',borderRadius:4,overflow:'hidden',display:'flex'}}>
+              <div style={{width:wBor+'%',background:'var(--blue)'}} title={'borrowed '+money(r.borrowed_usd)}></div>
+              <div style={{width:(wSup-wBor)+'%',background:'rgba(74,108,247,0.22)'}} title={'available '+money(r.available_usd)}></div>
+            </div>
+            <div style={{width:172,flexShrink:0,textAlign:'right',fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-muted)'}}>
+              {money(r.supplied_usd)} · <span style={{color:util>0?'var(--fg)':'var(--fg-dim)'}}>{util.toFixed(0)}% util</span>
+            </div>
+          </div>);
+        })}
+      </div>);
+    }
+    // Grouped rate bars: supply APY (green) vs borrow APY (orange) per reserve.
+    function RatesBars({rows}) {
+      const max = Math.max(...rows.flatMap(r=>[r.supply_apy_pct||0, r.borrow_apy_pct||0]), 0.01);
+      const Bar=({v,color,tag})=>(<div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{height:9,width:Math.max((v||0)/max*100,v>0?2:0)+'%',background:color,borderRadius:3}}></div>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-muted)',whiteSpace:'nowrap'}}>{(v||0).toFixed(2)}% {tag}</span>
+      </div>);
+      return (<div style={{display:'flex',flexDirection:'column',gap:13}}>
+        {rows.map((r,i)=>(<div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
+          <div style={{width:64,flexShrink:0,fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg)'}}>{r.label}</div>
+          <div style={{flex:1,display:'flex',flexDirection:'column',gap:3}}>
+            <Bar v={r.supply_apy_pct} color="var(--green)" tag="supply" />
+            <Bar v={r.borrow_apy_pct} color="var(--orange)" tag="borrow" />
+          </div>
+        </div>))}
+      </div>);
+    }
 
     function App() {
       const [D, setD] = React.useState(window.HORIZON_DATA);
@@ -56,6 +95,7 @@
       const reserves = D.reserves;
       const rwa = reserves.filter(r=>!r.is_stable);
       const stables = reserves.filter(r=>r.is_stable);
+      const liqRows = reserves.filter(r=>r.supplied_usd>0).sort((a,b)=>b.supplied_usd-a.supplied_usd);
       return (
         <>
           <header className="topbar">
@@ -96,9 +136,22 @@
 
             <div className="grid grid-4" style={{marginBottom:16}}>
               <KPI label="Total Supplied" value={money(T.horizon_supplied_usd)} sub={`${T.reserve_count} reserves · venue lens`} />
-              <KPI label="RWA Collateral" value={money(T.horizon_supplied_usd - T.horizon_stablecoin_supplied_usd)} sub={`${T.rwa_count} assets · supplied here`} />
-              <KPI label="Stablecoin Liquidity" value={money(T.horizon_stablecoin_supplied_usd)} sub="GHO · USDC · RLUSD" />
-              <KPI label="Supplied Split" value={`${Math.round((T.horizon_supplied_usd-T.horizon_stablecoin_supplied_usd)/T.horizon_supplied_usd*100)}% RWA`} sub={`${Math.round(T.horizon_stablecoin_supplied_usd/T.horizon_supplied_usd*100)}% stablecoin`} />
+              <KPI label="Total Borrowed" value={money(T.horizon_borrowed_usd)} sub="stablecoins vs RWA collateral" />
+              <KPI label="Utilization" value={`${(T.horizon_utilization_pct||0).toFixed(1)}%`} sub="borrowed / supplied" />
+              <KPI label="RWA Collateral" value={money(T.horizon_supplied_usd - T.horizon_stablecoin_supplied_usd)} sub={`${T.rwa_count} assets · supply-only`} />
+            </div>
+
+            <div className="grid grid-2" style={{marginBottom:16}}>
+              <div className="panel">
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Liquidity by token</span><span className="panel-badge">market size · borrowed · available</span></div>
+                <div className="panel-caption">Bar width = <b>market size</b> (supplied). Each splits into <b style={{color:'var(--blue)'}}>borrowed</b> and <b>available</b> — the available part is <b>net supplied</b> (supplied − borrowed). The trailing % is <b>utilization</b>. RWA collateral is supply-only (0% borrowed); the stablecoins carry the borrowing.</div>
+                <div className="panel-body"><LiquidityBars rows={liqRows} /></div>
+              </div>
+              <div className="panel">
+                <div className="panel-header"><span className="panel-title"><span className="bullet">●</span> Rates by token</span><span className="panel-badge">supply vs borrow APY</span></div>
+                <div className="panel-caption"><b style={{color:'var(--green)'}}>Supply APY</b> (what lenders earn) vs <b style={{color:'var(--orange)'}}>borrow APY</b> (what borrowers pay), per reserve. Zero on RWA collateral (not borrowable); the spread on the stablecoins is the venue's live cost of leverage.</div>
+                <div className="panel-body"><RatesBars rows={liqRows} /></div>
+              </div>
             </div>
 
             <div className="panel" style={{marginBottom:16}}>

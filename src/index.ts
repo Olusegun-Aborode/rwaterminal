@@ -609,8 +609,10 @@ async function buildSnapshot(env: Env) {
     const cfg = r1[i * 5]?.status === "success" ? (r1[i * 5].result as any[]) : [8, 0, 0];
     const dec = Number(cfg[0]); const ltv = Number(cfg[1]) / 100; const lqt = Number(cfg[2]) / 100;
     const rd = r1[i * 5 + 1]?.status === "success" ? (r1[i * 5 + 1].result as any[]) : null;
-    const supplied = rd ? Number(rd[2]) / 10 ** dec : 0;
-    const supplyApy = rd ? Number(rd[5]) / 1e27 * 100 : 0;
+    const supplied = rd ? Number(rd[2]) / 10 ** dec : 0;               // rd[2] totalAToken
+    const supplyApy = rd ? Number(rd[5]) / 1e27 * 100 : 0;             // rd[5] liquidityRate (ray)
+    const borrowed = rd ? (Number(rd[3]) + Number(rd[4])) / 10 ** dec : 0; // rd[3] stable + rd[4] variable debt
+    const borrowApy = rd ? Number(rd[6]) / 1e27 * 100 : 0;             // rd[6] variableBorrowRate (ray)
     const price = r1[i * 5 + 2]?.status === "success" ? Number(r1[i * 5 + 2].result) / 1e8 : 0;
     const totalSupply = r1[i * 5 + 4]?.status === "success" ? Number(r1[i * 5 + 4].result) / 10 ** dec : null;
     const src = sources[i];
@@ -635,6 +637,9 @@ async function buildSnapshot(env: Env) {
       navValue = cf.nav; navState = "fresh"; navFreshSrc = "centrifuge_graphql"; navUpdated = cf.computedAt;
     }
     const suppliedUsd = price * supplied;
+    const borrowedUsd = price * borrowed;
+    const availableUsd = suppliedUsd - borrowedUsd;                       // = net supplied (supplied - borrowed)
+    const utilizationPct = suppliedUsd > 0 ? (borrowedUsd / suppliedUsd) * 100 : 0;
     const navForAum = navValue ?? price;
     const assetAum = (iss && iss.aum) ? iss.aum : (totalSupply != null ? totalSupply * navForAum : null);
     const aumSource = (iss && iss.aum) ? iss.source : (totalSupply != null ? "onchain_derived" : null);
@@ -642,6 +647,8 @@ async function buildSnapshot(env: Env) {
     out.push({ symbol_onchain: symbol, label, issuer, asset_class: assetClass, address: addr, decimals: dec, ltv_pct: ltv, liq_threshold_pct: lqt,
       token_total_supply: totalSupply, asset_aum: assetAum, aum_source: aumSource,
       total_supplied: supplied, supplied_usd: suppliedUsd, supply_apy_pct: +supplyApy.toFixed(3), oracle_price_usd: price,
+      total_borrowed: borrowed, borrowed_usd: borrowedUsd, available_usd: availableUsd,
+      utilization_pct: +utilizationPct.toFixed(2), borrow_apy_pct: +borrowApy.toFixed(3),
       oracle_source: src, nav_value: navValue, nav_state: navState, nav_freshness_source: navFreshSrc, nav_updated_at: navUpdated,
       offchain_nav: offNav, offchain_nav_asof_ts: offAsofTs, offchain_aum: offAum, offchain_source: offSrc,
       is_stable: STABLE.has(label), known: label !== "?" && !issuer.startsWith("?") });
@@ -650,6 +657,7 @@ async function buildSnapshot(env: Env) {
   const sum = (arr: any[], f: (r: any) => number) => arr.reduce((s, r) => s + (f(r) || 0), 0);
   const suppliedTot = sum(out, r => r.supplied_usd);
   const suppliedStable = sum(out.filter(r => r.is_stable), r => r.supplied_usd);
+  const borrowedTot = sum(out, r => r.borrowed_usd);
   // ASSET-LEVEL AUM (the market-size number; venue-supplied is a separate lens)
   const rwaAum = sum(out.filter(r => !r.is_stable), r => r.asset_aum);
   const stableAum = sum(out.filter(r => r.is_stable), r => r.asset_aum);
@@ -674,6 +682,7 @@ async function buildSnapshot(env: Env) {
       by_class: groupAum("asset_class"), by_issuer: groupAum("issuer"),
       // venue lens (Horizon-supplied) kept distinct
       horizon_supplied_usd: suppliedTot, horizon_stablecoin_supplied_usd: suppliedStable,
+      horizon_borrowed_usd: borrowedTot, horizon_utilization_pct: suppliedTot > 0 ? (borrowedTot / suppliedTot) * 100 : 0,
       reconciliation: recon,
       reserve_count: out.length, rwa_count: out.filter(r => !r.is_stable).length,
       grade, major_issues: major, minor_issues: minor, nav_value_only: minor,
@@ -699,7 +708,12 @@ async function persist(env: Env, snap: any, ev?: any) {
   stmts.push(sql`CREATE TABLE IF NOT EXISTS reserve_state_history (
     ts timestamptz, reserve text, symbol text, supplied_usd double precision, supply_apy_pct double precision,
     ltv_pct double precision, liq_threshold_pct double precision, oracle_price double precision,
-    nav double precision, PRIMARY KEY (ts, reserve))`);
+    nav double precision, borrowed_usd double precision, utilization_pct double precision, borrow_apy_pct double precision,
+    PRIMARY KEY (ts, reserve))`);
+  // borrow-side columns added later — ensure they exist on tables created before this change
+  stmts.push(sql`ALTER TABLE reserve_state_history ADD COLUMN IF NOT EXISTS borrowed_usd double precision`);
+  stmts.push(sql`ALTER TABLE reserve_state_history ADD COLUMN IF NOT EXISTS utilization_pct double precision`);
+  stmts.push(sql`ALTER TABLE reserve_state_history ADD COLUMN IF NOT EXISTS borrow_apy_pct double precision`);
   // Forward-only Horizon holder-count history (per reserve), from Moralis via fetchHolderStats. Replaces
   // the retired Envio HolderPoint series; accumulates from now so the Holders trend rebuilds over time.
   stmts.push(sql`CREATE TABLE IF NOT EXISTS horizon_holder_history (
@@ -737,8 +751,8 @@ async function persist(env: Env, snap: any, ev?: any) {
     stmts.push(sql`INSERT INTO token_supply_history (token_id, ts, total_supply)
       SELECT t.token_id, ${ts}, ${r.total_supplied}
       FROM token t WHERE t.contract_address = ${addr} ON CONFLICT DO NOTHING`);
-    stmts.push(sql`INSERT INTO reserve_state_history (ts, reserve, symbol, supplied_usd, supply_apy_pct, ltv_pct, liq_threshold_pct, oracle_price, nav)
-      VALUES (${ts}, ${addr}, ${r.label && r.label !== "?" ? r.label : r.symbol_onchain}, ${r.supplied_usd ?? null}, ${r.supply_apy_pct ?? null}, ${r.ltv_pct ?? null}, ${r.liq_threshold_pct ?? null}, ${r.oracle_price_usd ?? null}, ${r.nav_value ?? null})
+    stmts.push(sql`INSERT INTO reserve_state_history (ts, reserve, symbol, supplied_usd, supply_apy_pct, ltv_pct, liq_threshold_pct, oracle_price, nav, borrowed_usd, utilization_pct, borrow_apy_pct)
+      VALUES (${ts}, ${addr}, ${r.label && r.label !== "?" ? r.label : r.symbol_onchain}, ${r.supplied_usd ?? null}, ${r.supply_apy_pct ?? null}, ${r.ltv_pct ?? null}, ${r.liq_threshold_pct ?? null}, ${r.oracle_price_usd ?? null}, ${r.nav_value ?? null}, ${r.borrowed_usd ?? null}, ${r.utilization_pct ?? null}, ${r.borrow_apy_pct ?? null})
       ON CONFLICT DO NOTHING`);
   }
   // Forward-only holder history — written straight from ev.by_asset (keyed by underlying address) so ALL
